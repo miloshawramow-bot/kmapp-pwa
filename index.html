@@ -1615,12 +1615,19 @@ function doLogout() {
 
 // Na učitavanju stranice: ako korisnik nije prijavljen, prikaži ekran za prijavu
 (function initAuthGate() {
-  document.addEventListener('DOMContentLoaded', () => {
+  function gateCheck() {
     initDarkMode();
     if (!isLoggedIn()) {
       switchTab('login');
+    } else {
+      switchTab('mapa');
     }
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', gateCheck);
+  } else {
+    gateCheck();
+  }
 })();
 
 // ===== DOKUMENTI =====
