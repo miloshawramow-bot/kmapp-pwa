@@ -14410,12 +14410,30 @@ function locateMe() {
 }
 
 // ===== PWA: registracija Service Workera =====
+
+// Version check - forces reload if version mismatch
+const KM_VERSION = 'v2.1';
+if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
+  sessionStorage.setItem('km_version', KM_VERSION);
+  caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+  location.reload(true);
+} else {
+  sessionStorage.setItem('km_version', KM_VERSION);
+}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Clear all old caches on every load
+    if (window.caches) {
+      caches.keys().then(names => {
+        names.forEach(n => {
+          if (n !== 'kmapp-v2') caches.delete(n);
+        });
+      });
+    }
     navigator.serviceWorker.register('sw.js').then(reg => {
-      // Check for updates every 30 seconds
+      reg.update();
       setInterval(() => reg.update(), 30000);
-      // If new SW takes over, reload page
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         location.reload();
       });
