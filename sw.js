@@ -1,5 +1,5 @@
-// KMapp Service Worker - offline-capable PWA
-const CACHE_NAME = 'kmapp-v2';
+// KMapp Service Worker v3 - network-first for HTML, cache-first for assets
+const CACHE_NAME = 'kmapp-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ const STATIC_ASSETS = [
   './icons/favicon-16.png'
 ];
 
-// ===== INSTALL: pre-cache static assets =====
+// ===== INSTALL: pre-cache static assets, force immediate activation =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -24,35 +24,61 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ===== ACTIVATE: clean up old caches =====
+// ===== ACTIVATE: delete ALL old caches, claim all clients, force reload =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        keys.map((k) => caches.delete(k))  // Delete ALL old caches including v1, v2
       ))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((clients) => {
+        clients.forEach((client) => {
+          client.navigate(client.url);  // Force each open tab to reload fresh
+        });
+      })
   );
 });
 
-// ===== FETCH: cache-first for static assets, network-first for everything else =====
+// ===== FETCH: network-first for HTML, cache-first for assets =====
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
   // Skip non-GET requests
   if (req.method !== 'GET') return;
 
-  // Skip cross-origin requests (e.g. maps, external APIs)
   const url = new URL(req.url);
+
+  // Cross-origin: try network, fall back to cache
   if (url.origin !== self.location.origin) {
-    // Try network, fall back to cache for cross-origin
     event.respondWith(
       fetch(req).catch(() => caches.match(req))
     );
     return;
   }
 
-  // Cache-first for same-origin requests
+  // Navigation requests (HTML pages) → NETWORK FIRST
+  if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          // Cache the fresh HTML
+          if (res && res.status === 200) {
+            const resClone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          }
+          return res;
+        })
+        .catch(() => {
+          // Offline: serve from cache
+          return caches.match('./index.html');
+        })
+    );
+    return;
+  }
+
+  // Static assets → CACHE FIRST (with background update)
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) {
@@ -65,19 +91,12 @@ self.addEventListener('fetch', (event) => {
         return cached;
       }
 
-      // Not in cache - fetch from network, cache if successful
+      // Not in cache - fetch from network
       return fetch(req).then((res) => {
-        if (!res || res.status !== 200 || res.type === 'opaque') {
-          return res;
-        }
+        if (!res || res.status !== 200) return res;
         const resClone = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
         return res;
-      }).catch(() => {
-        // Offline fallback - serve cached index.html for navigation requests
-        if (req.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
       });
     })
   );
