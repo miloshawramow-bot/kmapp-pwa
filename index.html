@@ -475,7 +475,14 @@
     <h1>KMapp</h1>
     <p>@milos.avramov</p>
   </div>
-  <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; margin-left: auto; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.72rem; font-weight: 700; align-items: center; gap: 5px; cursor: pointer; flex-shrink: 0;">⬇️ Instaliraj</button>
+  <div id="weather-widget" onclick="openWeatherForecast()" style="display:none;flex-direction:column;align-items:center;cursor:pointer;flex-shrink:0;margin-right:8px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,0.1);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+    <div style="display:flex;align-items:center;gap:4px;">
+      <span id="weather-icon" style="font-size:1.1rem;line-height:1;">🌤️</span>
+      <span id="weather-temp" style="font-size:0.9rem;font-weight:700;color:#fff;line-height:1;">--°</span>
+    </div>
+    <div id="weather-loc" style="font-size:0.55rem;color:rgba(255,255,255,0.7);line-height:1;margin-top:2px;">—</div>
+  </div>
+  <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.72rem; font-weight: 700; align-items: center; gap: 5px; cursor: pointer; flex-shrink: 0;">⬇️ Instaliraj</button>
 </header>
 
 <nav>
@@ -1383,6 +1390,25 @@
   </div>
 </div>
 
+<div id="weather-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9995;justify-content:center;align-items:flex-start;padding-top:60px;overflow-y:auto;" onclick="if(event.target===this)closeWeatherForecast()">
+  <div style="background:#fff;border-radius:16px;width:92%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#1a365d,#2a5491);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:1.1rem;font-weight:700;color:#fff;">🌤️ Vremenska prognoza</div>
+        <div id="wf-loc" style="font-size:0.75rem;color:rgba(255,255,255,0.7);margin-top:2px;">—</div>
+      </div>
+      <button onclick="closeWeatherForecast()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div id="wf-current" style="padding:16px 20px;text-align:center;"></div>
+    <div id="wf-hourly-title" style="padding:0 20px;font-size:0.7rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:1px;">Naredna 24 sata</div>
+    <div id="wf-hourly" style="padding:8px 20px 16px;display:flex;overflow-x:auto;gap:8px;"></div>
+    <div id="wf-daily-title" style="padding:0 20px;font-size:0.7rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:1px;">7-dnevna prognoza</div>
+    <div id="wf-daily" style="padding:8px 20px 20px;"></div>
+    <div style="padding:8px 20px 16px;font-size:0.6rem;color:#999;text-align:center;">Podaci: Open-Meteo · Ažurirano: <span id="wf-updated">—</span></div>
+  </div>
+</div>
+<div id="watermark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(0,0,0,0.15);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;">@milosavramov</div>
+<div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
 
 <script>
@@ -1410,6 +1436,161 @@
     forceLogin();
   }
 })();
+</script>
+
+<script>
+// ===== WEATHER (Open-Meteo API - free, no key needed) =====
+var weatherData = null;
+var weatherLoc = null;
+
+function wmoCodeToEmoji(code) {
+  var map = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
+    51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',
+    61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',
+    71:'🌨️',73:'🌨️',75:'❄️',77:'❄️',
+    80:'🌦️',81:'🌧️',82:'🌧️',
+    85:'🌨️',86:'❄️',
+    95:'⛈️',96:'⛈️',99:'⛈️'};
+  return map[code] || '🌡️';
+}
+
+function wmoCodeToDesc(code) {
+  var map = {0:'Vedro',1:'Pretežno vedro',2:'Delimično oblačno',3:'Oblačno',
+    45:'Magla',48:'Magla',
+    51:'Laka kiša',53:'Kiša',55:'Jaka kiša',
+    56:'Ledena kiša',57:'Ledena kiša',
+    61:'Kiša',63:'Kiša',65:'Jaka kiša',
+    66:'Ledena kiša',67:'Ledena kiša',
+    71:'Sneg',73:'Sneg',75:'Jak sneg',77:'Zrnasti sneg',
+    80:'Proliv kiše',81:'Kiša',82:'Jaka kiša',
+    85:'Sneg',86:'Jak sneg',
+    95:'Grmljavina',96:'Grmljavina sa gradom',99:'Grmljavina sa gradom'};
+  return map[code] || '—';
+}
+
+function initWeather() {
+  if (!navigator.geolocation) { console.log('[Weather] No geolocation'); return; }
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude.toFixed(4);
+    var lon = pos.coords.longitude.toFixed(4);
+    fetchWeather(lat, lon);
+    fetchLocationName(lat, lon);
+  }, function(err) {
+    console.log('[Weather] Geolocation denied:', err.message);
+    // Fallback: Belgrade
+    fetchWeather(44.8125, 20.4612);
+    document.getElementById('weather-loc').textContent = 'Beograd';
+  }, { timeout: 10000, enableHighAccuracy: true });
+}
+
+function fetchWeather(lat, lon) {
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+    '&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,apparent_temperature' +
+    '&hourly=temperature_2m,weather_code,precipitation_probability' +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max' +
+    '&timezone=auto&forecast_days=7';
+  fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+    weatherData = data;
+    var temp = Math.round(data.current.temperature_2m);
+    var code = data.current.weather_code;
+    document.getElementById('weather-icon').textContent = wmoCodeToEmoji(code);
+    document.getElementById('weather-temp').textContent = temp + '°';
+    document.getElementById('weather-widget').style.display = 'flex';
+  }).catch(function(e) { console.log('[Weather] Fetch error:', e); });
+}
+
+function fetchLocationName(lat, lon) {
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon, {
+    headers: { 'Accept-Language': 'sr' }
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var addr = data.address || {};
+    var name = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || addr.county || '—';
+    weatherLoc = name;
+    document.getElementById('weather-loc').textContent = name;
+  }).catch(function(e) {
+    document.getElementById('weather-loc').textContent = 'Lokacija';
+  });
+}
+
+function openWeatherForecast() {
+  if (!weatherData) { showToast('⏳ Učitavanje vremena...'); return; }
+  var modal = document.getElementById('weather-modal');
+  modal.style.display = 'flex';
+
+  var cur = weatherData.current;
+  var temp = Math.round(cur.temperature_2m);
+  var feel = Math.round(cur.apparent_temperature);
+  var code = cur.weather_code;
+  var humidity = cur.relative_humidity_2m;
+  var wind = Math.round(cur.wind_speed_10m);
+
+  var curHtml = '<div style="font-size:3.5rem;line-height:1;">' + wmoCodeToEmoji(code) + '</div>' +
+    '<div style="font-size:2.5rem;font-weight:700;color:#1a365d;margin:4px 0;">' + temp + '°C</div>' +
+    '<div style="font-size:0.9rem;color:#666;margin-bottom:8px;">' + wmoCodeToDesc(code) + '</div>' +
+    '<div style="display:flex;justify-content:center;gap:16px;font-size:0.75rem;color:#888;">' +
+      '<span>🤔 Oseća se ' + feel + '°</span>' +
+      '<span>💧 ' + humidity + '%</span>' +
+      '<span>💨 ' + wind + ' km/h</span>' +
+    '</div>';
+  document.getElementById('wf-current').innerHTML = curHtml;
+  document.getElementById('wf-loc').textContent = weatherLoc || 'Lokacija';
+
+  // Hourly forecast - next 24 hours
+  var now = new Date();
+  var hourlyHtml = '';
+  var count = 0;
+  for (var i = 0; i < weatherData.hourly.time.length && count < 24; i++) {
+    var hTime = new Date(weatherData.hourly.time[i]);
+    if (hTime < now) continue;
+    var hTemp = Math.round(weatherData.hourly.temperature_2m[i]);
+    var hCode = weatherData.hourly.weather_code[i];
+    var hPrec = weatherData.hourly.precipitation_probability[i] || 0;
+    var hLabel = hTime.getHours().toString().padStart(2,'0') + 'h';
+    hourlyHtml += '<div style="min-width:52px;text-align:center;padding:6px 2px;border-radius:8px;background:#f0f4f8;">' +
+      '<div style="font-size:0.65rem;color:#888;">' + hLabel + '</div>' +
+      '<div style="font-size:1.3rem;">' + wmoCodeToEmoji(hCode) + '</div>' +
+      '<div style="font-size:0.75rem;font-weight:600;color:#1a365d;">' + hTemp + '°</div>' +
+      '<div style="font-size:0.55rem;color:#3b82f6;">💧' + hPrec + '%</div>' +
+    '</div>';
+    count++;
+  }
+  document.getElementById('wf-hourly').innerHTML = hourlyHtml;
+
+  // 7-day forecast
+  var days = ['Ned','Pon','Uto','Sre','Čet','Pet','Sub'];
+  var dailyHtml = '';
+  for (var d = 0; d < weatherData.daily.time.length; d++) {
+    var dTime = new Date(weatherData.daily.time[d]);
+    var dName = d === 0 ? 'Danas' : days[dTime.getDay()];
+    var dMax = Math.round(weatherData.daily.temperature_2m_max[d]);
+    var dMin = Math.round(weatherData.daily.temperature_2m_min[d]);
+    var dCode = weatherData.daily.weather_code[d];
+    var dPrec = weatherData.daily.precipitation_probability_max[d] || 0;
+    var dWind = Math.round(weatherData.daily.wind_speed_10m_max[d]);
+    dailyHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">' +
+      '<div style="width:42px;font-size:0.78rem;font-weight:600;color:#1a365d;">' + dName + '</div>' +
+      '<div style="font-size:1.5rem;flex-shrink:0;">' + wmoCodeToEmoji(dCode) + '</div>' +
+      '<div style="font-size:0.7rem;color:#3b82f6;width:38px;text-align:center;">💧' + dPrec + '%</div>' +
+      '<div style="font-size:0.7rem;color:#888;width:50px;text-align:center;">💨' + dWind + '</div>' +
+      '<div style="font-size:0.8rem;color:#666;width:32px;text-align:right;">' + dMin + '°</div>' +
+      '<div style="width:60px;height:4px;background:linear-gradient(90deg,#3b82f6,#f6e05e,#e53e3e);border-radius:2px;margin:0 8px;"></div>' +
+      '<div style="font-size:0.8rem;font-weight:700;color:#1a365d;width:32px;">' + dMax + '°</div>' +
+    '</div>';
+  }
+  document.getElementById('wf-daily').innerHTML = dailyHtml;
+  document.getElementById('wf-updated').textContent = new Date().toLocaleTimeString('sr-RS');
+}
+
+function closeWeatherForecast() {
+  document.getElementById('weather-modal').style.display = 'none';
+}
+
+// Init weather after page load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initWeather);
+} else {
+  initWeather();
+}
 </script>
 <script>
 // ===== STATE =====
@@ -13575,6 +13756,8 @@ function toggleDarkMode() {
   document.body.classList.toggle('dark-mode');
   const isDark = document.body.classList.contains('dark-mode');
   localStorage.setItem('km_dark_mode', isDark ? '1' : '0');
+  document.getElementById('watermark').style.display = isDark ? 'none' : 'block';
+  document.getElementById('watermark-dark').style.display = isDark ? 'block' : 'none';
   const slider = document.getElementById('dark-mode-slider');
   if (slider) {
     slider.style.background = isDark ? 'var(--accent)' : 'var(--border)';
@@ -13585,6 +13768,8 @@ function toggleDarkMode() {
 function initDarkMode() {
   if (localStorage.getItem('km_dark_mode') === '1') {
     document.body.classList.add('dark-mode');
+    document.getElementById('watermark').style.display = 'none';
+    document.getElementById('watermark-dark').style.display = 'block';
     const toggle = document.getElementById('dark-mode-toggle');
     if (toggle) toggle.checked = true;
     const slider = document.getElementById('dark-mode-slider');
