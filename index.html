@@ -530,15 +530,20 @@
         <div style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Prijava</div>
       </div>
 
-      <input id="login-username" type="text" placeholder="Korisničko ime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
+      <input id="login-username" type="text" placeholder="Ime.Prezime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
 
-      <input id="login-password" type="password" placeholder="Šifra" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="login-password" type="password" placeholder="Broj telefona" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
 
-      <div id="login-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;">Pogrešno korisničko ime ili šifra!</div>
+      <div id="login-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;">Pogrešno korisničko ime ili šifra! Koristite Ime.Prezime i broj telefona iz imenika.</div>
 
       <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:12px;">Prijavi se</button>
 
-      <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="text-align:center;margin-top:14px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:0.72rem;color:#3b5998;line-height:1.5;">
+        <strong>Prijava za korisnike imenika:</strong><br>
+        Korisničko ime: <b>Ime.Prezime</b><br>
+        Šifra: <b>broj telefona</b> iz imenika
+      </div>
+      <div style="text-align:center;margin-top:12px;"><div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <span onclick="showRegisterForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">Nemate nalog? Registrujte se</span>
       </div>
     </div>
@@ -549,9 +554,9 @@
         <div style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Registracija</div>
       </div>
 
-      <input id="reg-username" type="text" placeholder="Korisničko ime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
+      <input id="reg-username" type="text" placeholder="Ime.Prezime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
 
-      <input id="reg-password" type="password" placeholder="Šifra (min. 4 karaktera)" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;" onkeydown="if(event.key==='Enter')doRegister()">
+      <input id="reg-password" type="password" placeholder="Broj telefona (min. 4 karaktera)" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;" onkeydown="if(event.key==='Enter')doRegister()">
 
       <input id="reg-password2" type="password" placeholder="Ponovite šifru" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doRegister()">
 
@@ -1479,19 +1484,52 @@ function switchTab(name) {
 const KM_AUTH_KEY = 'km_auth_v1';
 const KM_USERS_KEY = 'km_users_v1';
 const KM_CURRENT_USER = 'km_current_user';
+const KM_DISPLAY_NAME = 'km_display_name';
 
 // Get users from localStorage, seed with default if empty
+function transliterateSerbian(text) {
+  const map = {
+    '\u010d': 'c', '\u010c': 'C', '\u0107': 'c', '\u0106': 'C',
+    '\u0111': 'dj', '\u0110': 'Dj', '\u0161': 's', '\u0160': 'S',
+    '\u017e': 'z', '\u017d': 'Z'
+  };
+  return text.replace(/[\u010d\u010c\u0107\u0106\u0111\u0110\u0161\u0160\u017e\u017d]/g, ch => map[ch] || ch);
+}
+
+function imenikToUsername(name) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return transliterateSerbian(parts[0] || '').toLowerCase();
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  return transliterateSerbian(first + '.' + last);
+}
+
+function getImenikUsers() {
+  return (typeof imenikData !== 'undefined' ? imenikData : []).map(c => ({
+    username: imenikToUsername(c.name),
+    password: (c.phones && c.phones[0]) ? c.phones[0] : '',
+    displayName: c.name,
+    role: 'user',
+    source: 'imenik'
+  })).filter(u => u.username && u.password);
+}
+
 function getKMUsers() {
   let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || 'null');
   if (!users) {
-    users = [{ username: 'Korisnik', password: '1234', role: 'admin', created: Date.now() }];
+    users = [{ username: 'admin', password: 'admin', role: 'admin', created: Date.now() }];
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
-  return users;
+  const imenikUsers = getImenikUsers();
+  return [...users, ...imenikUsers];
 }
 
 function getCurrentUser() {
-  return localStorage.getItem(KM_CURRENT_USER) || '';
+  return localStorage.getItem(KM_DISPLAY_NAME) || localStorage.getItem(KM_CURRENT_USER) || '';
+}
+
+function updateCurrentUserDisplay() {
+  if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
 }
 
 function isLoggedIn() {
@@ -1516,13 +1554,13 @@ function doRegister() {
   const p2 = document.getElementById('reg-password2').value || '';
   const errEl = document.getElementById('register-error');
 
-  if (u.length < 3) { errEl.textContent = 'Korisničko ime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
-  if (p.length < 4) { errEl.textContent = 'Šifra mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
+  if (u.length < 3) { errEl.textContent = 'Ime.Prezime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
+  if (p.length < 4) { errEl.textContent = 'Broj telefona mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
   if (p !== p2) { errEl.textContent = 'Šifre se ne poklapaju!'; errEl.style.display = 'block'; return; }
 
   const users = getKMUsers();
   if (users.find(x => x.username.toLowerCase() === u.toLowerCase())) {
-    errEl.textContent = 'Korisničko ime već postoji!'; errEl.style.display = 'block'; return;
+    errEl.textContent = 'Ime.Prezime već postoji!'; errEl.style.display = 'block'; return;
   }
 
   users.push({ username: u, password: p, role: 'user', created: Date.now() });
@@ -1541,19 +1579,26 @@ function doRegister() {
 
 function doLogin() {
   const u = (document.getElementById('login-username').value || '').trim();
-  const p = document.getElementById('login-password').value || '';
+  const p = (document.getElementById('login-password').value || '').trim();
   const errEl = document.getElementById('login-error');
   const users = getKMUsers();
-  const user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+  const normPhone = ph => (ph || '').replace(/[^0-9+]/g, '');
+  let user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+  if (!user) {
+    user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password && normPhone(x.password) === normPhone(p));
+  }
 
   if (user) {
     localStorage.setItem(KM_AUTH_KEY, '1');
     localStorage.setItem(KM_CURRENT_USER, user.username);
+    localStorage.setItem(KM_DISPLAY_NAME, user.displayName || user.username);
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
     document.getElementById('tab-login').style.display = 'none';
     switchTab('mapa');
-    if (typeof showToast === 'function') showToast('✅ Dobrodošli, ' + user.username);
+    const displayName = user.displayName || user.username;
+    if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
+    if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
