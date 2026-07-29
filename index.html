@@ -14412,7 +14412,14 @@ function locateMe() {
 // ===== PWA: registracija Service Workera =====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Check for updates every 30 seconds
+      setInterval(() => reg.update(), 30000);
+      // If new SW takes over, reload page
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        location.reload();
+      });
+    }).catch(err => {
       console.warn('SW registracija neuspešna:', err);
     });
   });
