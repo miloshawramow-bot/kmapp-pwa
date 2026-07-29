@@ -1512,8 +1512,8 @@ function showLoginForm() {
 
 function doRegister() {
   const u = (document.getElementById('reg-username').value || '').trim();
-  const p = (document.getElementById('reg-password').value || '';
-  const p2 = (document.getElementById('reg-password2').value || '';
+  const p = document.getElementById('reg-password').value || '';
+  const p2 = document.getElementById('reg-password2').value || '';
   const errEl = document.getElementById('register-error');
 
   if (u.length < 3) { errEl.textContent = 'Korisničko ime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
@@ -1541,7 +1541,7 @@ function doRegister() {
 
 function doLogin() {
   const u = (document.getElementById('login-username').value || '').trim();
-  const p = (document.getElementById('login-password').value || '';
+  const p = document.getElementById('login-password').value || '';
   const errEl = document.getElementById('login-error');
   const users = getKMUsers();
   const user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
