@@ -1,5 +1,5 @@
 // KMapp Service Worker - offline-capable PWA
-const CACHE_NAME = 'kmapp-v1';
+const CACHE_NAME = 'kmapp-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',

@@ -37,37 +37,6 @@
     --danger: #c0392b;
   }
 
-  /* DARK MODE */
-  body.dark-mode {
-    --light: #0f1929;
-    --white: #1a2a3a;
-    --text: #d0dde8;
-    --muted: #7a8da0;
-    --border: #2a3f55;
-    --navy: #0a1a30;
-    --navy2: #112338;
-  }
-  body.dark-mode .doc-card,
-  body.dark-mode .akt-card,
-  body.dark-mode .settings-section,
-  body.dark-mode .search-bar,
-  body.dark-mode .doc-toolbar,
-  body.dark-mode #doc-title,
-  body.dark-mode #doc-editor,
-  body.dark-mode .doc-actions {
-    background: var(--white) !important;
-    color: var(--text) !important;
-  }
-  body.dark-mode .tb-btn {
-    background: var(--light);
-    color: var(--text);
-  }
-  body.dark-mode .search-wrap {
-    background: var(--light);
-    border-color: var(--border);
-  }
-
-
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: var(--light);
@@ -515,57 +484,29 @@
 <!-- ===== LOGIN / PRIJAVA ===== -->
 <div class="screen" id="screen-login" style="display: none;">
   <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);">
+    <img src="data:image/png;base64,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" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);margin-bottom:14px;" alt="KMapp">
+    <h1 style="color:white;font-size:1.4rem;font-weight:900;margin:0 0 2px;">KMapp</h1>
+    <p style="color:#c8d6ea;font-size:0.8rem;margin:0 0 28px;">Prijavite se za pristup aplikaciji</p>
 
-    <!-- Logo grb Beograda -->
-    <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);margin-bottom:16px;">
-      <img src="icons/icon-192.png" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
+    <div style="width:100%;max-width:340px;background:white;border-radius:16px;padding:24px 20px;box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.72rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Korisničko ime</label>
+        <input type="text" id="login-username" autocomplete="username" placeholder="Unesite korisničko ime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;">
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="display:block;font-size:0.72rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Šifra</label>
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="Unesite šifru" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+
+      <div id="login-error" style="display:none;color:#c0392b;background:#fdecea;border-radius:8px;padding:8px 10px;font-size:0.78rem;font-weight:600;margin-bottom:10px;">Pogrešno korisničko ime ili šifra.</div>
+
+      <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:4px;">Prijavi se</button>
     </div>
 
-    <h1 style="color:white;font-size:1.5rem;font-weight:800;letter-spacing:1px;margin-bottom:4px;">KMapp</h1>
-    <p style="color:#8fa7c9;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;">Komunalna milicija Beograd</p>
-
-    <!-- LOGIN FORM -->
-    <div id="login-form-box" style="width:100%;max-width:320px;background:white;border-radius:16px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-      <div style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Prijava</div>
-      </div>
-
-      <input id="login-username" type="text" placeholder="Korisničko ime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
-
-      <input id="login-password" type="password" placeholder="Šifra" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
-
-      <div id="login-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;">Pogrešno korisničko ime ili šifra!</div>
-
-      <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:12px;">Prijavi se</button>
-
-      <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <span onclick="showRegisterForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">Nemate nalog? Registrujte se</span>
-      </div>
-    </div>
-
-    <!-- REGISTER FORM -->
-    <div id="register-form-box" style="display:none;width:100%;max-width:320px;background:white;border-radius:16px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-      <div style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Registracija</div>
-      </div>
-
-      <input id="reg-username" type="text" placeholder="Korisničko ime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
-
-      <input id="reg-password" type="password" placeholder="Šifra (min. 4 karaktera)" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;" onkeydown="if(event.key==='Enter')doRegister()">
-
-      <input id="reg-password2" type="password" placeholder="Ponovite šifru" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doRegister()">
-
-      <div id="register-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;"></div>
-
-      <button onclick="doRegister()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:12px;">Registruj se</button>
-
-      <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <span onclick="showLoginForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">← Nazad na prijavu</span>
-      </div>
-    </div>
-
-    <p style="color:#8fa7c9;font-size:0.68rem;margin-top:22px;text-align:center;max-width:300px;">Pristup aplikaciji je ograničen na ovlašćene korisnike Komunalne milicije.</p>
+    <p style="color:#8fa7c9;font-size:0.68rem;margin-top:22px;text-align:center;max-width:300px;">Pristup aplikaciji je ograničen samo na ovlašćene korisnike Komunalne milicije.</p>
   </div>
+</div>
+
 <div class="screen" id="screen-docs" style="display: none;">
   <div id="view-list">
     <div style="display:flex; gap:8px; margin:12px 12px 0;">
@@ -636,34 +577,6 @@
   </div>
 
   <div class="settings-section">
-    <div class="settings-title">Izgled</div>
-    <div class="settings-row">
-      <span class="s-icon">🌙</span>
-      <span class="s-label">Dark mode</span>
-      <label style="position:relative;display:inline-block;width:44px;height:24px;">
-        <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
-        <span id="dark-mode-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
-          <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;"></span>
-        </span>
-      </label>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <div class="settings-title">Korisnik</div>
-    <div class="settings-row">
-      <span class="s-icon">👤</span>
-      <span class="s-label">Prijavljeni korisnik</span>
-      <span class="s-val" id="current-user-display">—</span>
-    </div>
-    <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
-      <span class="s-icon">🚪</span>
-      <span class="s-label">Odjava</span>
-      <span class="s-val">↗</span>
-    </div>
-  </div>
-
-<div class="settings-section">
     <div class="settings-title">Aplikacija</div>
     <div class="settings-row">
       <span class="s-icon">📱</span>
@@ -701,18 +614,7 @@
     <div class="settings-row" onclick="clearAll()" style="cursor:pointer;">
       <span class="s-icon">🗑️</span>
       <span class="s-label" style="color:var(--danger)">Obriši sve dokumente</span>
-    
-  <div class="settings-row" onclick="exportAllData()" style="cursor:pointer;">
-      <span class="s-icon">💾</span>
-      <span class="s-label">Backup podataka</span>
-      <span class="s-val">Preuzmi →</span>
     </div>
-    <div class="settings-row" onclick="importData()" style="cursor:pointer;">
-      <span class="s-icon">📂</span>
-      <span class="s-label">Uvoz podataka</span>
-      <span class="s-val">← Učitaj</span>
-    </div>
-</div>
   </div>
 
   <div class="settings-section">
@@ -1477,83 +1379,24 @@ function switchTab(name) {
 // Napomena: ovo je jednostavna zaštita na nivou klijenta (fiksni korisnik/šifra),
 // dovoljna da spreči slučajan pristup, ali nije prava serverska autentikacija.
 const KM_AUTH_KEY = 'km_auth_v1';
-const KM_USERS_KEY = 'km_users_v1';
-const KM_CURRENT_USER = 'km_current_user';
-
-// Get users from localStorage, seed with default if empty
-function getKMUsers() {
-  let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || 'null');
-  if (!users) {
-    users = [{ username: 'Korisnik', password: '1234', role: 'admin', created: Date.now() }];
-    localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
-  }
-  return users;
-}
-
-function getCurrentUser() {
-  return localStorage.getItem(KM_CURRENT_USER) || '';
-}
+const KM_VALID_USER = 'Korisnik';
+const KM_VALID_PASS = '1234';
 
 function isLoggedIn() {
   return localStorage.getItem(KM_AUTH_KEY) === '1';
 }
 
-function showRegisterForm() {
-  document.getElementById('login-form-box').style.display = 'none';
-  document.getElementById('register-form-box').style.display = 'block';
-  document.getElementById('reg-username').focus();
-}
-
-function showLoginForm() {
-  document.getElementById('register-form-box').style.display = 'none';
-  document.getElementById('login-form-box').style.display = 'block';
-  document.getElementById('login-username').focus();
-}
-
-function doRegister() {
-  const u = (document.getElementById('reg-username').value || '').trim();
-  const p = (document.getElementById('reg-password').value || '';
-  const p2 = (document.getElementById('reg-password2').value || '';
-  const errEl = document.getElementById('register-error');
-
-  if (u.length < 3) { errEl.textContent = 'Korisničko ime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
-  if (p.length < 4) { errEl.textContent = 'Šifra mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
-  if (p !== p2) { errEl.textContent = 'Šifre se ne poklapaju!'; errEl.style.display = 'block'; return; }
-
-  const users = getKMUsers();
-  if (users.find(x => x.username.toLowerCase() === u.toLowerCase())) {
-    errEl.textContent = 'Korisničko ime već postoji!'; errEl.style.display = 'block'; return;
-  }
-
-  users.push({ username: u, password: p, role: 'user', created: Date.now() });
-  localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
-  errEl.style.display = 'none';
-
-  // Auto-login
-  localStorage.setItem(KM_AUTH_KEY, '1');
-  localStorage.setItem(KM_CURRENT_USER, u);
-  document.getElementById('reg-password').value = '';
-  document.getElementById('reg-password2').value = '';
-  document.getElementById('tab-login').style.display = 'none';
-  switchTab('mapa');
-  showToast('✅ Nalog kreiran! Dobrodošli, ' + u);
-}
-
 function doLogin() {
   const u = (document.getElementById('login-username').value || '').trim();
-  const p = (document.getElementById('login-password').value || '';
+  const p = document.getElementById('login-password').value || '';
   const errEl = document.getElementById('login-error');
-  const users = getKMUsers();
-  const user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
-
-  if (user) {
+  if (u === KM_VALID_USER && p === KM_VALID_PASS) {
     localStorage.setItem(KM_AUTH_KEY, '1');
-    localStorage.setItem(KM_CURRENT_USER, user.username);
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
     document.getElementById('tab-login').style.display = 'none';
     switchTab('mapa');
-    if (typeof showToast === 'function') showToast('✅ Dobrodošli, ' + user.username);
+    if (typeof showToast === 'function') showToast('✅ Uspešno ste prijavljeni');
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
@@ -1562,20 +1405,15 @@ function doLogin() {
 
 function doLogout() {
   localStorage.removeItem(KM_AUTH_KEY);
-  localStorage.removeItem(KM_CURRENT_USER);
-  showLoginForm();
   switchTab('login');
   if (typeof showToast === 'function') showToast('👋 Odjavljeni ste');
 }
 
 // Na učitavanju stranice: ako korisnik nije prijavljen, prikaži ekran za prijavu
 (function initAuthGate() {
-  document.addEventListener('DOMContentLoaded', () => {
-    initDarkMode();
-    if (!isLoggedIn()) {
-      switchTab('login');
-    }
-  });
+  if (!isLoggedIn()) {
+    document.addEventListener('DOMContentLoaded', () => switchTab('login'));
+  }
 })();
 
 // ===== DOKUMENTI =====
@@ -13434,50 +13272,6 @@ function updateSettings() {
   document.getElementById('doc-count').textContent = docs.length + ' doc.';
 }
 
-function exportAllData() {
-  const data = {
-    docs: JSON.parse(localStorage.getItem('bk_docs') || '[]'),
-    photos: JSON.parse(localStorage.getItem('bk_photos') || '[]'),
-    folders: JSON.parse(localStorage.getItem('bk_folders') || '[]'),
-    users: JSON.parse(localStorage.getItem('km_users_v1') || '[]'),
-    exportDate: new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'kmapp-backup-' + new Date().toISOString().slice(0,10) + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
-  showToast('💾 Backup preuzet!');
-}
-
-function importData() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  input.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      try {
-        const data = JSON.parse(ev.target.result);
-        if (data.docs) localStorage.setItem('bk_docs', JSON.stringify(data.docs));
-        if (data.photos) localStorage.setItem('bk_photos', JSON.stringify(data.photos));
-        if (data.folders) localStorage.setItem('bk_folders', JSON.stringify(data.folders));
-        showToast('✅ Podaci uvezeni! Osvežite stranicu.');
-        setTimeout(() => location.reload(), 1500);
-      } catch(err) {
-        showToast('❌ Greška u importu fajla');
-      }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-}
-
 function clearAll() {
   if (!confirm('Obrisati sve dokumente? Ova akcija ne može biti poništena.')) return;
   docs = [];
@@ -13487,32 +13281,6 @@ function clearAll() {
 }
 
 // ===== TOAST =====
-function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem('km_dark_mode', isDark ? '1' : '0');
-  const slider = document.getElementById('dark-mode-slider');
-  if (slider) {
-    slider.style.background = isDark ? 'var(--accent)' : 'var(--border)';
-    slider.querySelector('span').style.transform = isDark ? 'translateX(20px)' : 'translateX(0)';
-  }
-}
-
-function initDarkMode() {
-  if (localStorage.getItem('km_dark_mode') === '1') {
-    document.body.classList.add('dark-mode');
-    const toggle = document.getElementById('dark-mode-toggle');
-    if (toggle) toggle.checked = true;
-    const slider = document.getElementById('dark-mode-slider');
-    if (slider) {
-      slider.style.background = 'var(--accent)';
-      slider.querySelector('span').style.transform = 'translateX(20px)';
-    }
-  }
-  const userDisplay = document.getElementById('current-user-display');
-  if (userDisplay) userDisplay.textContent = getCurrentUser() || 'Korisnik';
-}
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -14370,26 +14138,16 @@ function goTo(lat, lon, name) {
   info.style.display = 'block';
 }
 
-async function searchAddress() {
+function searchAddress() {
   const q = document.getElementById('map-search').value.trim();
   if (!q) return;
-  showToast('🔍 Tražim adresu...');
-  try {
-    const query = encodeURIComponent(q + ', Beograd, Srbija');
-    const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`);
-    const results = await resp.json();
-    if (results.length > 0) {
-      const r = results[0];
-      const lat = parseFloat(r.lat);
-      const lon = parseFloat(r.lon);
-      goTo(lat, lon, r.display_name.split(',')[0]);
-      showToast('✅ Adresa pronađena!');
-    } else {
-      showToast('❌ Adresa nije pronađena');
-    }
-  } catch(e) {
-    showToast('❌ Greška u pretrazi');
-  }
+  // Open Nominatim search in OpenStreetMap
+  const query = encodeURIComponent(q + ', Beograd, Srbija');
+  document.getElementById('map-frame').src =
+    `https://www.openstreetmap.org/export/embed.html?bbox=20.2617%2C44.6878%2C20.5737%2C44.9404&layer=mapnik`;
+  // Open full search in new tab for best results
+  window.open(`https://www.openstreetmap.org/search?query=${query}`, '_blank');
+  showToast('🔍 Pretraga otvorena u pretraživaču');
 }
 
 function locateMe() {
