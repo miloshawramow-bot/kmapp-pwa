@@ -1643,21 +1643,15 @@ function doLogout() {
 (function initAuthGate() {
   function gateCheck() {
     try {
-      console.log('[KMapp] gateCheck running, readyState:', document.readyState);
       initDarkMode();
-      console.log('[KMapp] initDarkMode OK, isLoggedIn:', isLoggedIn());
       if (!isLoggedIn()) {
-        console.log('[KMapp] switching to login');
         switchTab('login');
       } else {
-        console.log('[KMapp] switching to mapa');
         switchTab('mapa');
       }
     } catch(e) {
-      console.error('[KMapp] gateCheck error:', e.message, e.stack);
-      // Fallback: force login screen
       document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
-      const ls = document.getElementById('screen-login');
+      var ls = document.getElementById('screen-login');
       if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
     }
   }
