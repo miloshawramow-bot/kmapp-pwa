@@ -1838,7 +1838,11 @@ async function porukeCheckNew() {
         new Notification('KMapp - Nova poruka', { body: 'Imate ' + count + ' neproicitanih poruka', icon: 'icons/icon-192.png' });
       }
     }
-    if (count > 0) showMsgToast(count);
+    if (count > 0) {
+      showMsgToast(count);
+      const lastSeen = parseInt(sessionStorage.getItem('_km_last_msg_count') || '0');
+      if (count > lastSeen) playMsgSound();
+    }
     sessionStorage.setItem('_km_last_msg_count', count);
   } catch (e) {
     console.error('checkNew error:', e);
@@ -1891,13 +1895,25 @@ async function porukeRenderInbox() {
     const unread = !msg.read;
     const senderName = msg.senderName || msg.sender || 'Nepoznato';
     const text = (msg.text || '').substring(0, 100);
-    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'inbox\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;' + (unread ? 'border-left:3px solid var(--navy);' : '') + '">' +
+    let senderPhoto = null;
+    if (typeof imenikData !== 'undefined') {
+      const contact = imenikData.find(p => imenikToUsername(p.ime || p.name || '') === (msg.sender || ''));
+      if (contact && contact.photo) senderPhoto = contact.photo;
+    }
+    const initial = senderName.charAt(0).toUpperCase();
+    const avatar = senderPhoto
+      ? '<img src="' + senderPhoto + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;">' + initial + '</div>';
+    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'inbox\')" style="display:flex;gap:10px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;' + (unread ? 'border-left:3px solid var(--navy);' : '') + '">' +
+      avatar +
+      '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="font-weight:' + (unread ? '700' : '500') + ';font-size:0.9rem;color:var(--text);">' + senderName + '</div>' +
-      '<div style="font-size:0.72rem;color:var(--muted);">' + time + '</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);flex-shrink:0;">' + time + '</div>' +
       '</div>' +
       '<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text + '</div>' +
-      (unread ? '<div style="font-size:0.68rem;color:var(--navy);margin-top:4px;font-weight:600;">\u{2022} Neprocitano</div>' : '') +
+      (unread ? '<div style="font-size:0.68rem;color:var(--navy);margin-top:4px;font-weight:600;">\u2022 Neprocitano</div>' : '') +
+      '</div>' +
       '</div>';
   });
   content.innerHTML = html;
@@ -1916,6 +1932,28 @@ async function porukeRenderSent() {
   porukeSent.forEach(msg => {
     const dt = new Date(msg.created_date || msg.createdAt || Date.now());
     const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const recipientName = msg.recipientName || msg.recipient || 'Nepoznato';
+    const text = (msg.text || '').substring(0, 100);
+    let recPhoto = null;
+    if (typeof imenikData !== 'undefined') {
+      const contact = imenikData.find(p => imenikToUsername(p.ime || p.name || '') === (msg.recipient || ''));
+      if (contact && contact.photo) recPhoto = contact.photo;
+    }
+    const initial = recipientName.charAt(0).toUpperCase();
+    const avatar = recPhoto
+      ? '<img src="' + recPhoto + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;">' + initial + '</div>';
+    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="display:flex;gap:10px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
+      avatar +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+      '<div style="font-weight:500;font-size:0.9rem;color:var(--text);">\u2192 ' + recipientName + '</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);flex-shrink:0;">' + time + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text + '</div>' +
+      '</div>' +
+      '</div>';
+  });
     const recipientName = msg.recipientName || msg.recipient || 'Nepoznato';
     const text = (msg.text || '').substring(0, 100);
     html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
@@ -15444,6 +15482,23 @@ function adminDeleteAkt(id) {
 }
 
 // ===== IN-APP MESSAGE NOTIFICATION TOAST =====
+function playMsgSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) { console.log('Audio error:', e); }
+}
+
 function showMsgToast(count) {
   let t = document.getElementById('msg-toast');
   if (!t) {
