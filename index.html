@@ -1979,29 +1979,7 @@ function downloadDocx() {
       <h1>${title}</h1>
       ${content}
     
-<script>
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    const screen = document.getElementById('screen-pelceri');
-    if (screen) {
-      const cs = window.getComputedStyle(screen);
-      const rect = screen.getBoundingClientRect();
-      const child = screen.firstElementChild;
-      let childInfo = 'no child';
-      if (child) {
-        const ccs = window.getComputedStyle(child);
-        const crect = child.getBoundingClientRect();
-        childInfo = 'display:' + ccs.display + ' height:' + ccs.height + ' overflow:' + ccs.overflow + ' rect.h:' + crect.height + ' rect.top:' + crect.top;
-      }
-      const debug = document.createElement('div');
-      debug.id = 'debug-info';
-      debug.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:yellow;color:black;padding:8px;font-size:10px;z-index:9999;font-family:monospace;';
-      debug.textContent = 'SCREEN-PELCERI: display=' + cs.display + ' height=' + cs.height + ' overflow=' + cs.overflow + ' rect.h=' + rect.height + ' rect.top=' + rect.top + ' | CHILD: ' + childInfo;
-      document.body.appendChild(debug);
-    }
-  }, 2000);
-});
-</script>
+
 
 </body>
     </html>`;
@@ -14768,28 +14746,34 @@ window.addEventListener('appinstalled', () => {
 
 
 
+
+
+
 <script>
-window.addEventListener('load', function() {
+const _origSwitchTab = window.switchTab;
+window.switchTab = function(name) {
+  _origSwitchTab(name);
   setTimeout(function() {
-    const screen = document.getElementById('screen-pelceri');
-    if (screen) {
-      const cs = window.getComputedStyle(screen);
-      const rect = screen.getBoundingClientRect();
-      const child = screen.firstElementChild;
-      let childInfo = 'no child';
-      if (child) {
-        const ccs = window.getComputedStyle(child);
-        const crect = child.getBoundingClientRect();
-        childInfo = 'display:' + ccs.display + ' height:' + ccs.height + ' overflow:' + ccs.overflow + ' rect.h:' + crect.height + ' rect.top:' + crect.top;
-      }
-      const debug = document.createElement('div');
+    var screen = document.getElementById('screen-' + name);
+    if (!screen) return;
+    var cs = window.getComputedStyle(screen);
+    var rect = screen.getBoundingClientRect();
+    var childInfo = '';
+    var child = screen.firstElementChild;
+    if (child) {
+      var ccs = window.getComputedStyle(child);
+      var crect = child.getBoundingClientRect();
+      childInfo = ' CHILD: display=' + ccs.display + ' h=' + ccs.height + ' rect.h=' + crect.height + ' rect.t=' + crect.top;
+    }
+    var debug = document.getElementById('debug-info');
+    if (!debug) {
+      debug = document.createElement('div');
       debug.id = 'debug-info';
-      debug.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:yellow;color:black;padding:8px;font-size:10px;z-index:9999;font-family:monospace;';
-      debug.textContent = 'SCREEN-PELCERI: display=' + cs.display + ' height=' + cs.height + ' overflow=' + cs.overflow + ' rect.h=' + rect.height + ' rect.top=' + rect.top + ' | CHILD: ' + childInfo;
+      debug.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:yellow;color:black;padding:6px;font-size:9px;z-index:9999;font-family:monospace;';
       document.body.appendChild(debug);
     }
-  }, 2000);
-});
+    debug.textContent = 'SCREEN-' + name + ': display=' + cs.display + ' h=' + cs.height + ' ov=' + cs.overflow + ' rect.h=' + rect.height + ' rect.t=' + rect.top + ' rect.b=' + rect.bottom + childInfo;
+  }, 100);
+};
 </script>
-
 </body></html>
