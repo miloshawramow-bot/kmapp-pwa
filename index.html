@@ -2309,6 +2309,53 @@ function shareDoc(via) {
 
 function fmt(cmd) { document.getElementById('doc-editor').focus(); document.execCommand(cmd, false, null); }
 
+let savedRange = null;
+function saveSelection() {
+  const sel = window.getSelection();
+  if (sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+}
+document.addEventListener('selectionchange', function() {
+  const editor = document.getElementById('doc-editor');
+  if (editor && editor.contains(document.activeElement)) saveSelection();
+});
+
+function insertCameraPhoto() {
+  document.getElementById('camera-capture').click();
+}
+
+function handlePhoto(event, fromCamera) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const editor = document.getElementById('doc-editor');
+    editor.focus();
+    // Restore cursor position
+    if (savedRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+    // Insert image as base64 — resized for storage
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxW = 800, maxH = 1000;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      document.execCommand('insertHTML', false, '<div style="text-align:center;margin:10px 0;"><img src="' + dataUrl + '" style="max-width:100%;border:1px solid #ccc;border-radius:8px;"></div>');
+      savedRange = null;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
 function downloadDocx() {
   const title = document.getElementById('doc-title').value.trim() || 'Dokument';
   const content = document.getElementById('doc-editor').innerHTML;
