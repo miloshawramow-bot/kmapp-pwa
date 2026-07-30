@@ -1894,7 +1894,7 @@ async function porukeRenderInbox() {
     const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     const unread = !msg.read;
     const senderName = msg.senderName || msg.sender || 'Nepoznato';
-    const text = (msg.text || '').substring(0, 100);
+    const text = porukePreviewText(msg.text || '');
     let senderPhoto = null;
     if (typeof imenikData !== 'undefined') {
       const contact = imenikData.find(p => imenikToUsername(p.ime || p.name || '') === (msg.sender || ''));
@@ -1933,7 +1933,7 @@ async function porukeRenderSent() {
     const dt = new Date(msg.created_date || msg.createdAt || Date.now());
     const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     const recipientName = msg.recipientName || msg.recipient || 'Nepoznato';
-    const text = (msg.text || '').substring(0, 100);
+    const text = porukePreviewText(msg.text || '');
     let recPhoto = null;
     if (typeof imenikData !== 'undefined') {
       const contact = imenikData.find(p => imenikToUsername(p.ime || p.name || '') === (msg.recipient || ''));
@@ -1955,7 +1955,7 @@ async function porukeRenderSent() {
       '</div>';
   });
     const recipientName = msg.recipientName || msg.recipient || 'Nepoznato';
-    const text = (msg.text || '').substring(0, 100);
+    const text = porukePreviewText(msg.text || '');
     html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="font-weight:500;font-size:0.9rem;color:var(--text);">\u{2192} ' + recipientName + '</div>' +
@@ -1984,6 +1984,11 @@ function porukeRenderCompose() {
     '<button onclick="porukeClearRecipient()" style="margin-left:auto;background:rgba(255,255,255,0.2);border:none;color:white;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.7rem;">\u2715</button>' +
     '</div>' +
     '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+    '<button onclick="porukeAttachPhoto()" style="flex:1;padding:10px;background:white;border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcf7 Slika</button>' +
+    '<button onclick="porukeAttachFile()" style="flex:1;padding:10px;background:white;border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcc1 Fajl</button>' +
+    '</div>' +
+    '<div id="poruke-attachments" style="display:none;margin-bottom:8px;"></div>' +
     '<button onclick="porukeSend()" style="width:100%;padding:14px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;">Posalji poruku</button>' +
     '<div id="poruke-send-status" style="text-align:center;margin-top:8px;font-size:0.82rem;"></div>' +
     '</div>';
@@ -2042,6 +2047,87 @@ function porukeClearRecipient() {
   porukeFilterContacts();
 }
 
+let porukeAttachments = [];
+
+function porukeAttachPhoto() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      // Compress image
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const maxW = 800, maxH = 1000;
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        if (h > maxH) { w = w * maxH / h; h = maxH; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        porukeAttachments.push({ type: 'image', data: dataUrl, name: file.name });
+        porukeRenderAttachments();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function porukeAttachFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 500000) {
+      alert('Fajl je prevelik. Maximum 500KB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      porukeAttachments.push({ type: 'file', data: ev.target.result, name: file.name, mime: file.type });
+      porukeRenderAttachments();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function porukeRenderAttachments() {
+  const el = document.getElementById('poruke-attachments');
+  if (!el) return;
+  if (porukeAttachments.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  let html = '';
+  porukeAttachments.forEach((a, i) => {
+    if (a.type === 'image') {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:white;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
+        '<img src="' + a.data + '" style="width:40px;height:40px;border-radius:6px;object-fit:cover;">' +
+        '<span style="flex:1;font-size:0.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + a.name + '</span>' +
+        '<button onclick="porukeRemoveAttachment(' + i + ')" style="background:#e53935;color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.65rem;">\u2715</button>' +
+        '</div>';
+    } else {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:white;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
+        '<div style="width:40px;height:40px;border-radius:6px;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">\ud83d\udcc1</div>' +
+        '<span style="flex:1;font-size:0.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + a.name + '</span>' +
+        '<button onclick="porukeRemoveAttachment(' + i + ')" style="background:#e53935;color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.65rem;">\u2715</button>' +
+        '</div>';
+    }
+  });
+  el.innerHTML = html;
+}
+
+function porukeRemoveAttachment(idx) {
+  porukeAttachments.splice(idx, 1);
+  porukeRenderAttachments();
+}
+
 async function porukeSend() {
   const recipient = porukeSelectedRecipient;
   const text = document.getElementById('poruke-text')?.value?.trim();
@@ -2053,8 +2139,8 @@ async function porukeSend() {
     if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Izaberite primaoca'; statusEl.style.color = '#e53935'; }
     return;
   }
-  if (!text) {
-    if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Unesite tekst poruke'; statusEl.style.color = '#e53935'; }
+  if (!text && porukeAttachments.length === 0) {
+    if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Unesite tekst ili dodajte fajl'; statusEl.style.color = '#e53935'; }
     return;
   }
   
@@ -2067,15 +2153,26 @@ async function porukeSend() {
   if (statusEl) { statusEl.textContent = 'Slanje...'; statusEl.style.color = 'var(--muted)'; }
   
   try {
+    let fullText = text || '';
+    if (porukeAttachments.length > 0) {
+      porukeAttachments.forEach(a => {
+        if (a.type === 'image') {
+          fullText += (fullText ? '\n' : '') + '[IMG]' + a.data + '[/IMG]';
+        } else {
+          fullText += (fullText ? '\n' : '') + '[FILE]' + a.name + '|' + a.data + '[/FILE]';
+        }
+      });
+    }
     const res = await fetch(KM_API_BASE + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender, recipient, text, senderName, recipientName })
+      body: JSON.stringify({ sender, recipient, text: fullText, senderName, recipientName })
     });
     const data = await res.json();
     if (data.success) {
       if (statusEl) { statusEl.textContent = '\u2705 Poruka poslata!'; statusEl.style.color = '#43a047'; }
       document.getElementById('poruke-text').value = '';
+      porukeAttachments = [];
       setTimeout(() => porukeView('sent'), 1200);
     } else {
       if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Greska: ' + (data.error || 'Nepoznata'); statusEl.style.color = '#e53935'; }
@@ -2083,6 +2180,34 @@ async function porukeSend() {
   } catch (e) {
     if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Greska pri slanju'; statusEl.style.color = '#e53935'; }
   }
+}
+
+function porukePreviewText(text) {
+  if (!text) return '';
+  let t = text.replace(/\[IMG\]data:image\/[^\]]+\[\/IMG\]/g, '\ud83d\udcf7 [Slika]');
+  t = t.replace(/\[FILE\][^|]+\|[^\]]+\[\/FILE\]/g, function(match) {
+    const name = match.match(/\[FILE\]([^|]+)/);
+    return '\ud83d\udcc1 ' + (name ? name[1] : 'Fajl');
+  });
+  return t.substring(0, 100);
+}
+
+function porukeFormatMessage(text) {
+  if (!text) return '';
+  let html = text;
+  // Images
+  html = html.replace(/\[IMG\](data:image\/[^\]]+)\[\/IMG\]/g, '<img src="$1" style="max-width:100%;border-radius:8px;margin:6px 0;cursor:pointer;" onclick="porukeZoomImage(this.src)">');
+  // Files
+  html = html.replace(/\[FILE\]([^|]+)\|([^\]]+)\[\/FILE\]/g, '<a href="$2" download="$1" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:var(--navy);color:white;border-radius:8px;text-decoration:none;font-size:0.82rem;margin:6px 0;">\ud83d\udcc1 $1</a>');
+  return html;
+}
+
+function porukeZoomImage(src) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+  overlay.innerHTML = '<img src="' + src + '" style="max-width:95%;max-height:90%;border-radius:8px;">';
+  overlay.onclick = function() { overlay.remove(); };
+  document.body.appendChild(overlay);
 }
 
 function porukeOpenMessage(msgId, type) {
@@ -2103,7 +2228,7 @@ function porukeOpenMessage(msgId, type) {
     '<div style="font-size:0.72rem;color:var(--muted);">' + (isReceived ? 'Od' : 'Primalac') + '</div>' +
     '<div style="font-weight:700;font-size:0.95rem;color:var(--text);margin-bottom:6px;">' + otherName + '</div>' +
     '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">' + time + '</div>' +
-    '<div style="font-size:0.88rem;color:var(--text);line-height:1.5;white-space:pre-wrap;">' + text + '</div>' +
+    '<div style="font-size:0.88rem;color:var(--text);line-height:1.5;white-space:pre-wrap;">' + porukeFormatMessage(text) + '</div>' +
     '</div>' +
     (isReceived ? '<button onclick="porukeReply(\'' + (msg.sender || '') + '\')" style="width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;margin-top:10px;">\u21A9\uFE0F Odgovori</button>' : '') +
     '</div>';
@@ -2123,15 +2248,12 @@ function porukeOpenMessage(msgId, type) {
 function porukeReply(recipientUsername) {
   porukeView('compose');
   setTimeout(() => {
-    const sel = document.getElementById('poruke-recipient');
-    if (sel) {
-      for (let i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value === recipientUsername) {
-          sel.selectedIndex = i;
-          break;
-        }
-      }
+    let displayName = recipientUsername;
+    if (typeof imenikData !== 'undefined') {
+      const found = imenikData.find(p => imenikToUsername(p.ime || p.name || '') === recipientUsername);
+      if (found) displayName = found.ime || found.name || recipientUsername;
     }
+    porukeSelectRecipient(recipientUsername, displayName);
     const txt = document.getElementById('poruke-text');
     if (txt) txt.focus();
   }, 100);
@@ -15496,6 +15618,7 @@ function playMsgSound() {
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.4);
+    if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
   } catch(e) { console.log('Audio error:', e); }
 }
 
