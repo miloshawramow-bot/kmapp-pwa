@@ -1858,8 +1858,23 @@ function porukeStartPolling() {
   porukePollTimer = setInterval(porukeCheckNew, 30000);
 }
 
+let porukeSentRefreshTimer = null;
+
 function porukeView(view) {
   porukeCurrentView = view;
+  // Auto-refresh sent messages every 30s when viewing sent tab
+  if (porukeSentRefreshTimer) { clearInterval(porukeSentRefreshTimer); porukeSentRefreshTimer = null; }
+  if (view === 'sent') {
+    porukeSentRefreshTimer = setInterval(async () => {
+      if (porukeCurrentView === 'sent') {
+        porukeSent = await porukeFetchSent();
+        porukeRenderSent();
+      } else {
+        clearInterval(porukeSentRefreshTimer);
+        porukeSentRefreshTimer = null;
+      }
+    }, 30000);
+  }
   const tabs = ['inbox', 'sent', 'compose'];
   tabs.forEach(t => {
     const btn = document.getElementById('poruke-tab-' + t);
