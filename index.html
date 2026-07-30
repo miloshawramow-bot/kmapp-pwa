@@ -1582,8 +1582,18 @@ function fetchLocationName(lat, lon) {
   }).then(function(r) { return r.json(); }).then(function(data) {
     var addr = data.address || {};
     var name = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || addr.county || '—';
-    // Strip "Grad ", "Opština ", "Gradska opština " prefixes
-    name = name.replace(/^(Gradska opština|Grad|Opština|Opstina)\s+/i, '').trim();
+    // Strip prefixes: "Gradska opština", "Gradska opstina", "Grad", "Opština", "Opstina"
+    name = name.replace(/^Gradska\s+op[šs]tina\s+/i, '')
+               .replace(/^Gradska\s+opstina\s+/i, '')
+               .replace(/^Op[šs]tina\s+/i, '')
+               .replace(/^Opstina\s+/i, '')
+               .replace(/^Grad\s+/i, '')
+               .trim();
+    // Fallback: if name still contains opstina/opština, take the last word
+    if (/op[šs]tina/i.test(name)) {
+      var parts = name.split(/\s+/);
+      name = parts[parts.length - 1];
+    }
     weatherLoc = name;
     document.getElementById('weather-loc').textContent = name;
   }).catch(function(e) {
