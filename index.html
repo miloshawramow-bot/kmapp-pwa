@@ -516,6 +516,10 @@
   <button onclick="switchTab(&#39;imenik&#39;)" id="tab-imenik">
     <span class="nav-icon">👥</span>Imenik
   </button>
+  <button onclick="switchTab(&#39;poruke&#39;)" id="tab-poruke" style="position:relative;">
+    <span class="nav-icon">💬</span>Poruke
+    <span id="poruke-badge" style="position:absolute;top:-2px;right:-2px;background:#e53935;color:white;font-size:0.6rem;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 3px;"></span>
+  </button>
   <button onclick="switchTab(&#39;podesavanja&#39;)" id="tab-podesavanja">
     <span class="nav-icon">ℹ️</span>Info
   </button>
@@ -738,6 +742,18 @@
       <span class="s-icon">🔐</span>
       <span class="s-label" style="color:var(--danger)">Odjavi se</span>
     </div>
+  </div>
+</div>
+
+<!-- ===== PORUKE ===== -->
+<div class="screen" id="screen-poruke" style="display: none;flex-direction:column;flex:1;">
+  <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:6px;">
+    <button id="poruke-tab-inbox" onclick="porukeView('inbox')" style="flex:1;padding:10px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📥 Primljene</button>
+    <button id="poruke-tab-sent" onclick="porukeView('sent')" style="flex:1;padding:10px;background:white;color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📤 Poslate</button>
+    <button id="poruke-tab-compose" onclick="porukeView('compose')" style="flex:1;padding:10px;background:white;color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">✍️ Nova</button>
+  </div>
+  <div id="poruke-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;">
+    <div style="text-align:center;color:var(--muted);padding:40px 0;">Učitavanje poruka...</div>
   </div>
 </div>
 
@@ -1685,9 +1701,291 @@ function switchTab(name) {
   if (name === 'pelceri') renderPelceri(pelceriData);
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
+  if (name === 'poruke') porukeView('inbox');
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
   }
+}
+
+// ===== PORUKE / CHAT =====
+const KM_API_BASE = 'https://solas-799a3993.base44.app/functions';
+let porukeCurrentView = 'inbox';
+let porukeInbox = [];
+let porukeSent = [];
+let porukePollTimer = null;
+
+function getCurrentUsername() {
+  return localStorage.getItem(KM_CURRENT_USER) || '';
+}
+
+function getDisplayName() {
+  return localStorage.getItem(KM_DISPLAY_NAME) || localStorage.getItem(KM_CURRENT_USER) || '';
+}
+
+async function porukeFetchInbox() {
+  const username = getCurrentUsername();
+  if (!username) return [];
+  try {
+    const res = await fetch(KM_API_BASE + '/getInbox', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const data = await res.json();
+    return data.messages || [];
+  } catch (e) {
+    console.error('getInbox error:', e);
+    return [];
+  }
+}
+
+async function porukeFetchSent() {
+  const username = getCurrentUsername();
+  if (!username) return [];
+  try {
+    const res = await fetch(KM_API_BASE + '/getSent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const data = await res.json();
+    return data.messages || [];
+  } catch (e) {
+    console.error('getSent error:', e);
+    return [];
+  }
+}
+
+async function porukeCheckNew() {
+  const username = getCurrentUsername();
+  if (!username) return;
+  try {
+    const res = await fetch(KM_API_BASE + '/checkNew', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const data = await res.json();
+    const count = data.count || 0;
+    const badge = document.getElementById('poruke-badge');
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+    if (count > 0 && 'Notification' in window && Notification.permission === 'granted') {
+      const lastSeen = parseInt(sessionStorage.getItem('_km_last_msg_count') || '0');
+      if (count > lastSeen) {
+        new Notification('KMapp - Nova poruka', { body: 'Imate ' + count + ' neproicitanih poruka', icon: 'icons/icon-192.png' });
+      }
+    }
+    sessionStorage.setItem('_km_last_msg_count', count);
+  } catch (e) {
+    console.error('checkNew error:', e);
+  }
+}
+
+function porukeStartPolling() {
+  if (porukePollTimer) return;
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  porukeCheckNew();
+  porukePollTimer = setInterval(porukeCheckNew, 30000);
+}
+
+function porukeView(view) {
+  porukeCurrentView = view;
+  const tabs = ['inbox', 'sent', 'compose'];
+  tabs.forEach(t => {
+    const btn = document.getElementById('poruke-tab-' + t);
+    if (!btn) return;
+    if (t === view) {
+      btn.style.background = 'var(--navy)';
+      btn.style.color = 'white';
+      btn.style.border = 'none';
+    } else {
+      btn.style.background = 'white';
+      btn.style.color = 'var(--text)';
+      btn.style.border = '1.5px solid var(--border)';
+    }
+  });
+  if (view === 'inbox') porukeRenderInbox();
+  else if (view === 'sent') porukeRenderSent();
+  else if (view === 'compose') porukeRenderCompose();
+}
+
+async function porukeRenderInbox() {
+  const content = document.getElementById('poruke-content');
+  if (!content) return;
+  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
+  porukeInbox = await porukeFetchInbox();
+  if (porukeInbox.length === 0) {
+    content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\u{1F4ED}</div>Nemate primljenih poruka</div>';
+    return;
+  }
+  let html = '';
+  porukeInbox.forEach(msg => {
+    const dt = new Date(msg.created_date || msg.createdAt || Date.now());
+    const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const unread = !msg.data?.read;
+    const senderName = msg.data?.senderName || msg.data?.sender || 'Nepoznato';
+    const text = (msg.data?.text || '').substring(0, 100);
+    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'inbox\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;' + (unread ? 'border-left:3px solid var(--navy);' : '') + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+      '<div style="font-weight:' + (unread ? '700' : '500') + ';font-size:0.9rem;color:var(--text);">' + senderName + '</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);">' + time + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text + '</div>' +
+      (unread ? '<div style="font-size:0.68rem;color:var(--navy);margin-top:4px;font-weight:600;">\u{2022} Neprocitano</div>' : '') +
+      '</div>';
+  });
+  content.innerHTML = html;
+}
+
+async function porukeRenderSent() {
+  const content = document.getElementById('poruke-content');
+  if (!content) return;
+  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
+  porukeSent = await porukeFetchSent();
+  if (porukeSent.length === 0) {
+    content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\u{1F4E4}</div>Niste poslali nijednu poruku</div>';
+    return;
+  }
+  let html = '';
+  porukeSent.forEach(msg => {
+    const dt = new Date(msg.created_date || msg.createdAt || Date.now());
+    const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const recipientName = msg.data?.recipientName || msg.data?.recipient || 'Nepoznato';
+    const text = (msg.data?.text || '').substring(0, 100);
+    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+      '<div style="font-weight:500;font-size:0.9rem;color:var(--text);">\u{2192} ' + recipientName + '</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);">' + time + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text + '</div>' +
+      '</div>';
+  });
+  content.innerHTML = html;
+}
+
+function porukeRenderCompose() {
+  const content = document.getElementById('poruke-content');
+  if (!content) return;
+  let options = '<option value="">-- Izaberite primaoca --</option>';
+  if (typeof imenikData !== 'undefined') {
+    imenikData.forEach(p => {
+      const username = imenikToUsername(p.ime || p.name || '');
+      const name = p.ime || p.name || username;
+      if (username) options += '<option value="' + username + '">' + name + ' (' + username + ')</option>';
+    });
+  }
+  content.innerHTML = 
+    '<div style="padding:8px 0;">' +
+    '<div style="font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:8px;">Nova poruka</div>' +
+    '<select id="poruke-recipient" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;">' + options + '</select>' +
+    '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:150px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
+    '<button onclick="porukeSend()" style="width:100%;padding:14px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;">Posalji poruku</button>' +
+    '<div id="poruke-send-status" style="text-align:center;margin-top:8px;font-size:0.82rem;"></div>' +
+    '</div>';
+}
+
+async function porukeSend() {
+  const recipient = document.getElementById('poruke-recipient')?.value;
+  const text = document.getElementById('poruke-text')?.value?.trim();
+  const statusEl = document.getElementById('poruke-send-status');
+  const sender = getCurrentUsername();
+  const senderName = getDisplayName();
+  
+  if (!recipient) {
+    if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Izaberite primaoca'; statusEl.style.color = '#e53935'; }
+    return;
+  }
+  if (!text) {
+    if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Unesite tekst poruke'; statusEl.style.color = '#e53935'; }
+    return;
+  }
+  
+  let recipientName = recipient;
+  if (typeof imenikData !== 'undefined') {
+    const found = imenikData.find(p => imenikToUsername(p.ime || p.name || '') === recipient);
+    if (found) recipientName = found.ime || found.name || recipient;
+  }
+  
+  if (statusEl) { statusEl.textContent = 'Slanje...'; statusEl.style.color = 'var(--muted)'; }
+  
+  try {
+    const res = await fetch(KM_API_BASE + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender, recipient, text, senderName, recipientName })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (statusEl) { statusEl.textContent = '\u2705 Poruka poslata!'; statusEl.style.color = '#43a047'; }
+      document.getElementById('poruke-text').value = '';
+      setTimeout(() => porukeView('sent'), 1200);
+    } else {
+      if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Greska: ' + (data.error || 'Nepoznata'); statusEl.style.color = '#e53935'; }
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Greska pri slanju'; statusEl.style.color = '#e53935'; }
+  }
+}
+
+function porukeOpenMessage(msgId, type) {
+  const list = type === 'inbox' ? porukeInbox : porukeSent;
+  const msg = list.find(m => m.id === msgId);
+  if (!msg) return;
+  const isReceived = type === 'inbox';
+  const otherName = isReceived ? (msg.data?.senderName || msg.data?.sender || 'Nepoznato') : (msg.data?.recipientName || msg.data?.recipient || 'Nepoznato');
+  const dt = new Date(msg.created_date || msg.createdAt || Date.now());
+  const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const text = msg.data?.text || '';
+  const content = document.getElementById('poruke-content');
+  if (!content) return;
+  content.innerHTML = 
+    '<div style="padding:8px 0;">' +
+    '<button onclick="porukeView(\'' + type + '\')" style="background:none;border:none;color:var(--navy);font-size:0.82rem;cursor:pointer;margin-bottom:12px;">\u2190 Nazad</button>' +
+    '<div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px;">' +
+    '<div style="font-size:0.72rem;color:var(--muted);">' + (isReceived ? 'Od' : 'Primalac') + '</div>' +
+    '<div style="font-weight:700;font-size:0.95rem;color:var(--text);margin-bottom:6px;">' + otherName + '</div>' +
+    '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">' + time + '</div>' +
+    '<div style="font-size:0.88rem;color:var(--text);line-height:1.5;white-space:pre-wrap;">' + text + '</div>' +
+    '</div>' +
+    (isReceived ? '<button onclick="porukeReply(\'' + (msg.data?.sender || '') + '\')" style="width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;margin-top:10px;">\u21A9\uFE0F Odgovori</button>' : '') +
+    '</div>';
+  
+  if (isReceived && !msg.data?.read) {
+    fetch(KM_API_BASE + '/markAsRead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId: msgId })
+    }).then(() => {
+      if (msg.data) msg.data.read = true;
+      porukeCheckNew();
+    }).catch(() => {});
+  }
+}
+
+function porukeReply(recipientUsername) {
+  porukeView('compose');
+  setTimeout(() => {
+    const sel = document.getElementById('poruke-recipient');
+    if (sel) {
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === recipientUsername) {
+          sel.selectedIndex = i;
+          break;
+        }
+      }
+    }
+    const txt = document.getElementById('poruke-text');
+    if (txt) txt.focus();
+  }, 100);
 }
 
 // ===== PRIJAVA / AUTENTIKACIJA =====
@@ -1782,6 +2080,7 @@ function doRegister() {
   // Auto-login
   localStorage.setItem(KM_AUTH_KEY, '1');
   localStorage.setItem(KM_CURRENT_USER, u);
+  porukeStartPolling();
   document.getElementById('reg-password').value = '';
   document.getElementById('reg-password2').value = '';
   document.getElementById('tab-login').style.display = 'none';
