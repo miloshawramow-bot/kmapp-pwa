@@ -1,5 +1,5 @@
-// KMapp Service Worker v4 - network-first for HTML, cache-first for assets
-const CACHE = 'kmapp-v21';
+// KMapp Service Worker v22 - network-first for HTML, cache-first for assets
+const CACHE = 'kmapp-v22';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -17,7 +17,7 @@ const STATIC_ASSETS = [
 // ===== INSTALL: pre-cache static assets, force immediate activation =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(CACHE)
       .then((cache) => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
       .catch((err) => console.warn('SW install: some assets failed to cache', err))
@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
           // Cache the fresh HTML
           if (res && res.status === 200) {
             const resClone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+            caches.open(CACHE).then((cache) => cache.put(req, resClone));
           }
           return res;
         })
@@ -85,7 +85,7 @@ self.addEventListener('fetch', (event) => {
         // Update cache in background
         fetch(req).then((res) => {
           if (res && res.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, res));
+            caches.open(CACHE).then((cache) => cache.put(req, res));
           }
         }).catch(() => {});
         return cached;
@@ -95,7 +95,7 @@ self.addEventListener('fetch', (event) => {
       return fetch(req).then((res) => {
         if (!res || res.status !== 200) return res;
         const resClone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+        caches.open(CACHE).then((cache) => cache.put(req, resClone));
         return res;
       });
     })
