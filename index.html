@@ -647,8 +647,12 @@
       <button class="tb-btn" onclick="fmt(&#39;justifyRight&#39;)">═▶</button>
       <div class="tb-sep"></div>
       <button class="tb-btn" onclick="fmt(&#39;insertUnorderedList&#39;)">• Lista</button>
+      <button class="tb-btn" onclick="insertCameraPhoto()" style="font-size:0.9rem;">📷 Slika</button>
+      <button class="tb-btn" onclick="document.getElementById('image-upload').click()" style="font-size:0.9rem;">🖼️ Uvoz</button>
       <button class="tb-btn" onclick="backToList()">← Nazad</button>
     </div>
+    <input type="file" id="camera-capture" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event, true)">
+    <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="handlePhoto(event, false)">
     <input type="text" id="doc-title" placeholder="Naziv dokumenta...">
     <div id="doc-editor" contenteditable="true" spellcheck="true"></div>
     <div class="doc-actions">
