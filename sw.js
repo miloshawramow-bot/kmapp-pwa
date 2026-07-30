@@ -1,5 +1,5 @@
-// KMapp Service Worker v22 - network-first for HTML, cache-first for assets
-const CACHE = 'kmapp-v22';
+// KMapp Service Worker v23 - network-first for HTML, cache-first for assets
+const CACHE = 'kmapp-v23';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -32,12 +32,6 @@ self.addEventListener('activate', (event) => {
         keys.map((k) => caches.delete(k))  // Delete ALL old caches including v1, v2
       ))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: 'window' }))
-      .then((clients) => {
-        clients.forEach((client) => {
-          client.navigate(client.url);  // Force each open tab to reload fresh
-        });
-      })
   );
 });
 

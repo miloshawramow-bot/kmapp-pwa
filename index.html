@@ -2,7 +2,7 @@
 <!-- KMapp PWA -->
 <html lang="sr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>KMapp</title>
 
 <!-- PWA -->
@@ -14,7 +14,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KMapp">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png">
 
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
@@ -14720,8 +14722,13 @@ if ('serviceWorker' in navigator) {
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
+      // Spreci reload petlju na Safari-ju
+      let _reloaded = sessionStorage.getItem('_sw_reloaded');
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        location.reload();
+        if (!_reloaded) {
+          sessionStorage.setItem('_sw_reloaded', '1');
+          location.reload();
+        }
       });
     }).catch(err => {
       console.warn('SW registracija neuspešna:', err);
