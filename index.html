@@ -703,12 +703,35 @@
     </div>
   </div>
 
-  <div class="settings-section" id="admin-panel-link" style="display:none;">
-    <div class="settings-title">Admin</div>
-    <div class="settings-row" onclick="switchTab('admin')" style="cursor:pointer;">
-      <span class="s-icon">⚙️</span>
-      <span class="s-label">Admin panel</span>
-      <span class="s-val">↗</span>
+  <div class="settings-section" id="admin-panel-section" style="display:none;">
+    <div class="settings-title">⚙️ Admin panel</div>
+    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:12px;">📝 Dodaj novi akt</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tip akta</label>
+        <select id="admin-akt-tip" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+          <option value="zakon">Zakon</option>
+          <option value="odluka">Odluka</option>
+        </select>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
+        <input id="admin-akt-naziv" type="text" placeholder="npr. Zakon o komunalnoj miliciji" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Broj / Glasnik</label>
+        <input id="admin-akt-broj" type="text" placeholder="npr. Sl. glasnik RS, br. 49/2019" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Sadržaj (tekst akta)</label>
+        <textarea id="admin-akt-sadrzaj" placeholder="Unesite tekst akta..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;"></textarea>
+      </div>
+      <div id="admin-akt-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+      <button onclick="adminSaveAkt()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj akt</button>
+    </div>
+    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:10px;">📋 Dodati akti</div>
+      <div id="admin-akti-list" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
   </div>
 
@@ -1725,12 +1748,11 @@ function switchTab(name) {
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
   if (name === 'akti') filterAkti();
-  if (name === 'podesavanja') updateSettings();
+  if (name === 'podesavanja') { updateSettings(); renderAdminAktiList(); }
   if (name === 'pelceri') renderPelceri(pelceriData);
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
   if (name === 'kalendar') renderCalendar();
-  if (name === 'admin') renderAdminAktiList();
   if (name === 'poruke') porukeView('inbox');
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
@@ -15253,8 +15275,9 @@ function getCurrentUserRole() {
 
 function checkAdminAccess() {
   const role = getCurrentUserRole();
-  const el = document.getElementById('admin-panel-link');
+  const el = document.getElementById('admin-panel-section');
   if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
+  if (role === 'admin') renderAdminAktiList();
 }
 
 function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
@@ -15363,43 +15386,6 @@ checkAdminAccess();
 </div>
 
 <!-- ===== ADMIN PANEL SCREEN ===== -->
-<div class="screen" id="screen-admin" style="display:none;flex-direction:column;flex:1;">
-  <div style="background:white;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;">
-    <span style="font-size:1.2rem;">⚙️</span>
-    <span style="font-size:0.9rem;font-weight:700;color:var(--text);">Admin Panel</span>
-  </div>
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;">
-    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:12px;">📝 Dodaj novi akt</div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tip akta</label>
-        <select id="admin-akt-tip" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
-          <option value="zakon">Zakon</option>
-          <option value="odluka">Odluka</option>
-        </select>
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
-        <input id="admin-akt-naziv" type="text" placeholder="npr. Zakon o komunalnoj miliciji" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Broj / Glasnik</label>
-        <input id="admin-akt-broj" type="text" placeholder="npr. Sl. glasnik RS, br. 49/2019" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Sadržaj (tekst akta)</label>
-        <textarea id="admin-akt-sadrzaj" placeholder="Unesite tekst akta..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;"></textarea>
-      </div>
-      <div id="admin-akt-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
-      <button onclick="adminSaveAkt()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj akt</button>
-    </div>
-    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:10px;">📋 Dodati akti</div>
-      <div id="admin-akti-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-    </div>
-  </div>
-</div>
-
 <!-- ===== KALENDAR ===== -->
 <div class="screen" id="screen-kalendar" style="display:none;flex-direction:column;flex:1;">
   <div style="background:white;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;">
