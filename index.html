@@ -1948,23 +1948,18 @@ async function porukeRenderSent() {
       '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="font-weight:500;font-size:0.9rem;color:var(--text);">\u2192 ' + recipientName + '</div>' +
-      '<div style="font-size:0.72rem;color:var(--muted);flex-shrink:0;">' + time + '</div>' +
+      '<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">' +
+        (msg.read
+          ? '<span title="Procitano" style="color:#43a047;font-size:0.8rem;">\u2713\u2713</span>'
+          : '<span title="Poslato" style="color:var(--muted);font-size:0.8rem;">\u2713</span>') +
+        '<span style="font-size:0.72rem;color:var(--muted);">' + time + '</span>' +
+        '</div>' +
       '</div>' +
       '<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text + '</div>' +
+      (msg.read ? '' : '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px;">\u2713 Poslato, nije procitano</div>') +
       '</div>' +
       '</div>';
   });
-    const recipientName = msg.recipientName || msg.recipient || 'Nepoznato';
-    const text = porukePreviewText(msg.text || '');
-    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
-      '<div style="font-weight:500;font-size:0.9rem;color:var(--text);">\u{2192} ' + recipientName + '</div>' +
-      '<div style="font-size:0.72rem;color:var(--muted);">' + time + '</div>' +
-      '</div>' +
-      '<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text + '</div>' +
-      '</div>';
-  });
-  content.innerHTML = html;
 }
 
 let porukeSelectedRecipient = null;
@@ -2227,7 +2222,7 @@ function porukeOpenMessage(msgId, type) {
     '<div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px;">' +
     '<div style="font-size:0.72rem;color:var(--muted);">' + (isReceived ? 'Od' : 'Primalac') + '</div>' +
     '<div style="font-weight:700;font-size:0.95rem;color:var(--text);margin-bottom:6px;">' + otherName + '</div>' +
-    '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">' + time + '</div>' +
+    '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">' + time + (isReceived ? '' : (msg.read ? ' \u00b7 \u2713\u2713 Procitano' : ' \u00b7 \u2713 Poslato')) + '</div>' +
     '<div style="font-size:0.88rem;color:var(--text);line-height:1.5;white-space:pre-wrap;">' + porukeFormatMessage(text) + '</div>' +
     '</div>' +
     (isReceived ? '<button onclick="porukeReply(\'' + (msg.sender || '') + '\')" style="width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;margin-top:10px;">\u21A9\uFE0F Odgovori</button>' : '') +
