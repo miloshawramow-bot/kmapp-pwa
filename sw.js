@@ -1,5 +1,5 @@
-// KMapp Service Worker v3 - network-first for HTML, cache-first for assets
-const CACHE_NAME = 'kmapp-v3';
+// KMapp Service Worker v4 - network-first for HTML, cache-first for assets
+const CACHE_NAME = 'kmapp-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
