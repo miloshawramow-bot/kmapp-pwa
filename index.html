@@ -2085,8 +2085,8 @@ function porukeAttachFile() {
   input.onchange = function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 500000) {
-      alert('Fajl je prevelik. Maximum 500KB.');
+    if (file.size > 2000000) {
+      alert('Fajl je prevelik. Maximum 2MB.');
       return;
     }
     const reader = new FileReader();
