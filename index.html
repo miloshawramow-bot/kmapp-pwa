@@ -691,9 +691,23 @@
       <span class="s-label">Prijavljeni korisnik</span>
       <span class="s-val" id="current-user-display">—</span>
     </div>
+    <div class="settings-row" onclick="showPasswordChange()" style="cursor:pointer;">
+      <span class="s-icon">🔑</span>
+      <span class="s-label">Promena lozinke</span>
+      <span class="s-val">↗</span>
+    </div>
     <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
       <span class="s-icon">🚪</span>
       <span class="s-label">Odjava</span>
+      <span class="s-val">↗</span>
+    </div>
+  </div>
+
+  <div class="settings-section" id="admin-panel-link" style="display:none;">
+    <div class="settings-title">Admin</div>
+    <div class="settings-row" onclick="switchTab('admin')" style="cursor:pointer;">
+      <span class="s-icon">⚙️</span>
+      <span class="s-label">Admin panel</span>
       <span class="s-val">↗</span>
     </div>
   </div>
@@ -1716,6 +1730,7 @@ function switchTab(name) {
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
   if (name === 'kalendar') renderCalendar();
+  if (name === 'admin') renderAdminAktiList();
   if (name === 'poruke') porukeView('inbox');
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
@@ -1797,6 +1812,7 @@ async function porukeCheckNew() {
         new Notification('KMapp - Nova poruka', { body: 'Imate ' + count + ' neproicitanih poruka', icon: 'icons/icon-192.png' });
       }
     }
+    if (count > 0) showMsgToast(count);
     sessionStorage.setItem('_km_last_msg_count', count);
   } catch (e) {
     console.error('checkNew error:', e);
@@ -2125,6 +2141,7 @@ function doLogin() {
     const displayName = user.displayName || user.username;
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
+    checkAdminAccess();
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
@@ -15173,6 +15190,152 @@ function nextMonth() {
 updateClock();
 setInterval(updateClock, 1000);
 
+
+// ===== PASSWORD CHANGE =====
+function showPasswordChange() {
+  const username = localStorage.getItem(KM_CURRENT_USER) || '';
+  document.getElementById('pwd-username-display').textContent = username;
+  document.getElementById('pwd-old').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-new2').value = '';
+  document.getElementById('pwd-error').style.display = 'none';
+  document.getElementById('pwd-change-modal').style.display = 'flex';
+}
+
+function closePwdModal() {
+  document.getElementById('pwd-change-modal').style.display = 'none';
+}
+
+function changePassword() {
+  const oldPwd = document.getElementById('pwd-old').value;
+  const newPwd = document.getElementById('pwd-new').value;
+  const newPwd2 = document.getElementById('pwd-new2').value;
+  const errEl = document.getElementById('pwd-error');
+  const currentUsername = localStorage.getItem(KM_CURRENT_USER);
+  if (!currentUsername) { errEl.textContent = 'Greška: niste prijavljeni.'; errEl.style.display = 'block'; return; }
+  if (newPwd.length < 4) { errEl.textContent = 'Nova lozinka mora imati min. 4 karaktera.'; errEl.style.display = 'block'; return; }
+  if (newPwd !== newPwd2) { errEl.textContent = 'Nove lozinke se ne poklapaju.'; errEl.style.display = 'block'; return; }
+  const normPhone = ph => (ph || '').replace(/[^0-9+]/g, '');
+  let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
+  let userIdx = users.findIndex(x => x.username.toLowerCase() === currentUsername.toLowerCase());
+  if (userIdx >= 0) {
+    if (users[userIdx].password !== oldPwd && normPhone(users[userIdx].password) !== normPhone(oldPwd)) {
+      errEl.textContent = 'Trenutna lozinka nije tačna.'; errEl.style.display = 'block'; return;
+    }
+    users[userIdx].password = newPwd;
+    localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  } else {
+    const imenikUsers = getImenikUsers();
+    const imUser = imenikUsers.find(x => x.username.toLowerCase() === currentUsername.toLowerCase());
+    if (!imUser) { errEl.textContent = 'Korisnik nije pronađen.'; errEl.style.display = 'block'; return; }
+    if (imUser.password !== oldPwd && normPhone(imUser.password) !== normPhone(oldPwd)) {
+      errEl.textContent = 'Trenutna lozinka nije tačna.'; errEl.style.display = 'block'; return;
+    }
+    users.push({ username: imUser.username, password: newPwd, displayName: imUser.displayName, role: 'user', source: 'local', created: Date.now() });
+    localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  }
+  closePwdModal();
+  showToast('✅ Lozinka uspešno promenjena!');
+}
+
+// ===== ADMIN PANEL =====
+const KM_CUSTOM_AKTI_KEY = 'km_custom_akti';
+const ADMIN_USERNAMES = ['admin', 'milos.avramov'];
+
+function getCurrentUserRole() {
+  const username = (localStorage.getItem(KM_CURRENT_USER) || '').toLowerCase();
+  if (!username) return null;
+  if (ADMIN_USERNAMES.includes(username)) return 'admin';
+  const users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
+  const user = users.find(x => x.username.toLowerCase() === username);
+  return user ? user.role : 'user';
+}
+
+function checkAdminAccess() {
+  const role = getCurrentUserRole();
+  const el = document.getElementById('admin-panel-link');
+  if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
+}
+
+function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
+function saveCustomAkti(a) { localStorage.setItem(KM_CUSTOM_AKTI_KEY, JSON.stringify(a)); }
+
+function getNextAktId() {
+  let maxId = 0;
+  aktiData.forEach(a => { if (a.id > maxId) maxId = a.id; });
+  getCustomAkti().forEach(a => { if (a.id > maxId) maxId = a.id; });
+  return maxId + 1;
+}
+
+function loadCustomAkti() {
+  getCustomAkti().forEach(a => { if (!aktiData.find(x => x.id === a.id)) aktiData.push(a); });
+}
+
+function adminSaveAkt() {
+  const tip = document.getElementById('admin-akt-tip').value;
+  const naziv = document.getElementById('admin-akt-naziv').value.trim();
+  const broj = document.getElementById('admin-akt-broj').value.trim();
+  const sadrzaj = document.getElementById('admin-akt-sadrzaj').value.trim();
+  const errEl = document.getElementById('admin-akt-error');
+  if (!naziv) { errEl.textContent = 'Unesite naziv akta.'; errEl.style.display = 'block'; return; }
+  if (!sadrzaj) { errEl.textContent = 'Unesite sadržaj akta.'; errEl.style.display = 'block'; return; }
+  const custom = getCustomAkti();
+  const id = getNextAktId();
+  custom.push({ id, tip, naziv, broj, sadrzaj });
+  saveCustomAkti(custom);
+  aktiData.push({ id, tip, naziv, broj, sadrzaj });
+  document.getElementById('admin-akt-naziv').value = '';
+  document.getElementById('admin-akt-broj').value = '';
+  document.getElementById('admin-akt-sadrzaj').value = '';
+  errEl.style.display = 'none';
+  renderAdminAktiList();
+  showToast('✅ Akt sačuvan: ' + naziv);
+}
+
+function renderAdminAktiList() {
+  const el = document.getElementById('admin-akti-list');
+  const custom = getCustomAkti();
+  if (!custom.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodanih akata.</div>'; return; }
+  const tipLabel = { zakon: 'Zakon', odluka: 'Odluka' };
+  const tipColor = { zakon: '#1a4a8a', odluka: '#8e44ad' };
+  el.innerHTML = custom.map(a => '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:white;">' +
+    '<span style="background:' + tipColor[a.tip] + ';color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;">' + tipLabel[a.tip] + '</span>' +
+    '<div style="flex:1;"><div style="font-size:0.8rem;font-weight:600;color:var(--navy);">' + a.naziv + '</div><div style="font-size:0.7rem;color:var(--muted);">' + (a.broj||'') + '</div></div>' +
+    '<button onclick="adminDeleteAkt(' + a.id + ')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;">Obriši</button></div>'
+  ).join('');
+}
+
+function adminDeleteAkt(id) {
+  if (!confirm('Obrisati ovaj akt?')) return;
+  let custom = getCustomAkti().filter(a => a.id !== id);
+  saveCustomAkti(custom);
+  const idx = aktiData.findIndex(a => a.id === id);
+  if (idx >= 0) aktiData.splice(idx, 1);
+  renderAdminAktiList();
+  showToast('🗑️ Akt obrisan.');
+}
+
+// ===== IN-APP MESSAGE NOTIFICATION TOAST =====
+function showMsgToast(count) {
+  let t = document.getElementById('msg-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'msg-toast';
+    t.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 18px;border-radius:20px;font-size:0.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:150;display:none;transition:opacity 0.3s;cursor:pointer;';
+    document.body.appendChild(t);
+  }
+  t.textContent = '📬 ' + count + ' nepročitana' + (count > 1 ? ' poruke' : ' poruka');
+  t.onclick = function() { t.style.display = 'none'; switchTab('poruke'); };
+  t.style.display = 'block';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.style.opacity = '0'; setTimeout(function(){ t.style.display = 'none'; }, 300); }, 5000);
+}
+
+// Load custom akti on startup
+loadCustomAkti();
+checkAdminAccess();
+
 </script>
 
 
@@ -15182,6 +15345,60 @@ setInterval(updateClock, 1000);
 
 
 
+
+<!-- ===== PASSWORD CHANGE MODAL ===== -->
+<div id="pwd-change-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)closePwdModal()">
+  <div style="background:white;border-radius:14px;padding:20px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+    <h3 style="font-size:1rem;font-weight:700;margin:0 0 16px;color:var(--text);">🔑 Promena lozinke</h3>
+    <p style="font-size:0.75rem;color:var(--muted);margin:0 0 12px;">Korisničko ime ostaje nepromenjeno: <b id="pwd-username-display"></b></p>
+    <input id="pwd-old" type="password" placeholder="Trenutna lozinka" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
+    <input id="pwd-new" type="password" placeholder="Nova lozinka (min. 4)" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
+    <input id="pwd-new2" type="password" placeholder="Ponovi novu lozinku" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:12px;">
+    <div id="pwd-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closePwdModal()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;background:white;color:var(--text);">Otkaži</button>
+      <button onclick="changePassword()" style="flex:1;padding:10px;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">Promeni</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL SCREEN ===== -->
+<div class="screen" id="screen-admin" style="display:none;flex-direction:column;flex:1;">
+  <div style="background:white;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:1.2rem;">⚙️</span>
+    <span style="font-size:0.9rem;font-weight:700;color:var(--text);">Admin Panel</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;">
+    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:12px;">📝 Dodaj novi akt</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tip akta</label>
+        <select id="admin-akt-tip" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+          <option value="zakon">Zakon</option>
+          <option value="odluka">Odluka</option>
+        </select>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
+        <input id="admin-akt-naziv" type="text" placeholder="npr. Zakon o komunalnoj miliciji" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Broj / Glasnik</label>
+        <input id="admin-akt-broj" type="text" placeholder="npr. Sl. glasnik RS, br. 49/2019" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Sadržaj (tekst akta)</label>
+        <textarea id="admin-akt-sadrzaj" placeholder="Unesite tekst akta..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;"></textarea>
+      </div>
+      <div id="admin-akt-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+      <button onclick="adminSaveAkt()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj akt</button>
+    </div>
+    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:10px;">📋 Dodati akti</div>
+      <div id="admin-akti-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== KALENDAR ===== -->
 <div class="screen" id="screen-kalendar" style="display:none;flex-direction:column;flex:1;">
