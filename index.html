@@ -1831,9 +1831,9 @@ async function porukeRenderInbox() {
   porukeInbox.forEach(msg => {
     const dt = new Date(msg.created_date || msg.createdAt || Date.now());
     const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    const unread = !msg.data?.read;
-    const senderName = msg.data?.senderName || msg.data?.sender || 'Nepoznato';
-    const text = (msg.data?.text || '').substring(0, 100);
+    const unread = !msg.read;
+    const senderName = msg.senderName || msg.sender || 'Nepoznato';
+    const text = (msg.text || '').substring(0, 100);
     html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'inbox\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;' + (unread ? 'border-left:3px solid var(--navy);' : '') + '">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="font-weight:' + (unread ? '700' : '500') + ';font-size:0.9rem;color:var(--text);">' + senderName + '</div>' +
@@ -1859,8 +1859,8 @@ async function porukeRenderSent() {
   porukeSent.forEach(msg => {
     const dt = new Date(msg.created_date || msg.createdAt || Date.now());
     const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    const recipientName = msg.data?.recipientName || msg.data?.recipient || 'Nepoznato';
-    const text = (msg.data?.text || '').substring(0, 100);
+    const recipientName = msg.recipientName || msg.recipient || 'Nepoznato';
+    const text = (msg.text || '').substring(0, 100);
     html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="font-weight:500;font-size:0.9rem;color:var(--text);">\u{2192} ' + recipientName + '</div>' +
@@ -1941,10 +1941,10 @@ function porukeOpenMessage(msgId, type) {
   const msg = list.find(m => m.id === msgId);
   if (!msg) return;
   const isReceived = type === 'inbox';
-  const otherName = isReceived ? (msg.data?.senderName || msg.data?.sender || 'Nepoznato') : (msg.data?.recipientName || msg.data?.recipient || 'Nepoznato');
+  const otherName = isReceived ? (msg.senderName || msg.sender || 'Nepoznato') : (msg.recipientName || msg.recipient || 'Nepoznato');
   const dt = new Date(msg.created_date || msg.createdAt || Date.now());
   const time = dt.toLocaleString('sr-RS', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const text = msg.data?.text || '';
+  const text = msg.text || '';
   const content = document.getElementById('poruke-content');
   if (!content) return;
   content.innerHTML = 
@@ -1956,16 +1956,16 @@ function porukeOpenMessage(msgId, type) {
     '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">' + time + '</div>' +
     '<div style="font-size:0.88rem;color:var(--text);line-height:1.5;white-space:pre-wrap;">' + text + '</div>' +
     '</div>' +
-    (isReceived ? '<button onclick="porukeReply(\'' + (msg.data?.sender || '') + '\')" style="width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;margin-top:10px;">\u21A9\uFE0F Odgovori</button>' : '') +
+    (isReceived ? '<button onclick="porukeReply(\'' + (msg.sender || '') + '\')" style="width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;margin-top:10px;">\u21A9\uFE0F Odgovori</button>' : '') +
     '</div>';
   
-  if (isReceived && !msg.data?.read) {
+  if (isReceived && !msg.read) {
     fetch(KM_API_BASE + '/markAsRead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messageId: msgId })
     }).then(() => {
-      if (msg.data) msg.data.read = true;
+      msg.read = true;
       porukeCheckNew();
     }).catch(() => {});
   }
