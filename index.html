@@ -1674,7 +1674,7 @@ function switchTab(name) {
   const screen = document.getElementById('screen-' + name);
   if (screen) {
     screen.classList.add('active');
-    screen.style.display = 'flex';
+    screen.style.display = (name === 'mapa' || name === 'kamera') ? 'flex' : 'block';
   }
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
