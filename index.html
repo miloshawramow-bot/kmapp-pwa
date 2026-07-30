@@ -478,6 +478,10 @@
     <h1>KMapp</h1>
     <p>@milos.avramov</p>
   </div>
+  <div id="clock-widget" onclick="switchTab('kalendar')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;flex-shrink:0;margin-left:auto;margin-right:8px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,0.1);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Kalendar">
+    <span id="clock-time" style="font-size:0.9rem;font-weight:700;color:#fff;line-height:1;font-variant-numeric:tabular-nums;">--:--</span>
+    <span id="clock-date" style="font-size:0.55rem;color:rgba(255,255,255,0.7);line-height:1;margin-top:2px;">--</span>
+  </div>
   <div id="weather-widget" onclick="openWeatherForecast()" style="display:none;flex-direction:column;align-items:center;cursor:pointer;flex-shrink:0;margin-right:8px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,0.1);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
     <div style="display:flex;align-items:center;gap:4px;">
       <span id="weather-icon" style="font-size:1.1rem;line-height:1;">🌤️</span>
@@ -1702,6 +1706,7 @@ function switchTab(name) {
   if (name === 'pelceri') renderPelceri(pelceriData);
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
+  if (name === 'kalendar') renderCalendar();
   if (name === 'poruke') porukeView('inbox');
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
@@ -15060,6 +15065,97 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.style.display = 'none';
   showToast('✅ KMapp je instaliran');
 });
+
+// ===== CLOCK & CALENDAR =====
+let calCurrentDate = new Date();
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const days = ['Ned','Pon','Uto','Sre','Cet','Pet','Sub'];
+  const months = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
+  const dayName = days[now.getDay()];
+  const dateStr = now.getDate() + '.' + (now.getMonth()+1) + '.';
+  const timeEl = document.getElementById('clock-time');
+  const dateEl = document.getElementById('clock-date');
+  if (timeEl) timeEl.textContent = h + ':' + m;
+  if (dateEl) dateEl.textContent = dayName + ' ' + dateStr;
+}
+
+function renderCalendar() {
+  const year = calCurrentDate.getFullYear();
+  const month = calCurrentDate.getMonth();
+  const monthsSr = ['Januar','Februar','Mart','April','Maj','Jun','Jul','Avgust','Septembar','Oktobar','Novembar','Decembar'];
+  const daysSr = ['Pon','Uto','Sre','Cet','Pet','Sub','Ned'];
+  
+  const titleEl = document.getElementById('kalendar-title');
+  if (titleEl) titleEl.textContent = monthsSr[month] + ' ' + year;
+  
+  const content = document.getElementById('kalendar-content');
+  if (!content) return;
+  
+  const today = new Date();
+  const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === month);
+  
+  const firstDay = new Date(year, month, 1);
+  let startDay = firstDay.getDay();
+  if (startDay === 0) startDay = 7; // Sunday = 7 in our layout
+  startDay--; // Make Monday = 0
+  
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px;">';
+  
+  // Day headers
+  daysSr.forEach(d => {
+    html += '<div style="text-align:center;font-size:0.7rem;font-weight:700;color:var(--muted);padding:6px 0;">' + d + '</div>';
+  });
+  
+  // Empty cells before first day
+  for (let i = 0; i < startDay; i++) {
+    html += '<div></div>';
+  }
+  
+  // Day cells
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = isCurrentMonth && d === today.getDate();
+    const dayDate = new Date(year, month, d);
+    const dayOfWeek = dayDate.getDay();
+    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+    const bg = isToday ? 'background:var(--navy);color:white;' : (isWeekend ? 'background:rgba(0,0,0,0.04);' : 'background:white;');
+    const weight = isToday ? 'font-weight:700;' : 'font-weight:500;';
+    html += '<div style="text-align:center;padding:10px 0;border-radius:8px;font-size:0.85rem;' + bg + weight + 'border:1px solid var(--border);">' + d + '</div>';
+  }
+  
+  html += '</div>';
+  
+  // Today info card
+  const fullDate = today.toLocaleDateString('sr-RS', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const timeStr = String(today.getHours()).padStart(2,'0') + ':' + String(today.getMinutes()).padStart(2,'0');
+  html += '<div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-top:8px;">';
+  html += '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;">Današnji datum</div>';
+  html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text);">' + fullDate + '</div>';
+  html += '<div style="font-size:0.82rem;color:var(--muted);margin-top:6px;">Trenutno vreme: <span style="font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;">' + timeStr + '</span></div>';
+  html += '</div>';
+  
+  content.innerHTML = html;
+}
+
+function prevMonth() {
+  calCurrentDate.setMonth(calCurrentDate.getMonth() - 1);
+  renderCalendar();
+}
+
+function nextMonth() {
+  calCurrentDate.setMonth(calCurrentDate.getMonth() + 1);
+  renderCalendar();
+}
+
+// Update clock every second
+updateClock();
+setInterval(updateClock, 1000);
+
 </script>
 
 
@@ -15069,4 +15165,16 @@ window.addEventListener('appinstalled', () => {
 
 
 
+
+<!-- ===== KALENDAR ===== -->
+<div class="screen" id="screen-kalendar" style="display:none;flex-direction:column;flex:1;">
+  <div style="background:white;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:1.2rem;">📅</span>
+    <span id="kalendar-title" style="font-size:0.9rem;font-weight:700;color:var(--text);flex:1;">Kalendar</span>
+    <button onclick="prevMonth()" style="background:var(--navy);color:white;border:none;border-radius:6px;padding:6px 10px;font-size:0.8rem;cursor:pointer;font-weight:700;">◀</button>
+    <button onclick="nextMonth()" style="background:var(--navy);color:white;border:none;border-radius:6px;padding:6px 10px;font-size:0.8rem;cursor:pointer;font-weight:700;">▶</button>
+  </div>
+  <div id="kalendar-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;">
+  </div>
+</div>
 </body></html>
