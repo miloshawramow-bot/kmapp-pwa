@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Clear Cache</title></head>
+<body>
+<h2>Ciscenje kesa...</h2>
+<div id="log"></div>
+<script>
+const log = document.getElementById('log');
+function msg(t) { log.innerHTML += t + '<br>'; }
+caches.keys().then(names => {
+  msg('Brisanje keseva: ' + names.join(', '));
+  return Promise.all(names.map(n => caches.delete(n)));
+}).then(() => {
+  msg('Svi kesevi obrisani.');
+  return navigator.serviceWorker.getRegistrations();
+}).then(regs => {
+  msg('Unregister SW: ' + regs.length);
+  return Promise.all(regs.map(r => r.unregister()));
+}).then(() => {
+  msg('Service worker obrisan.');
+  msg('Preusmeravanje za 2 sekunde...');
+  setTimeout(() => location.href = './', 2000);
+}).catch(err => {
+  msg('Greska: ' + err.message);
+  setTimeout(() => location.href = './', 3000);
+});
+</script>
+</body></html>
