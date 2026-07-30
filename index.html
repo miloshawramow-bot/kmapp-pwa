@@ -506,6 +506,53 @@
     50% { opacity: 0.9; }
   }
 
+
+  /* ===== Imenik dark mode fixes ===== */
+  body.dark-mode #screen-imenik > div[style*="background:white"],
+  body.dark-mode #imenik-alpha {
+    background: var(--white) !important;
+  }
+  body.dark-mode #imenik-list > div > div[style*="background:white"],
+  body.dark-mode #imenik-list .imenik-card {
+    background: var(--white) !important;
+    color: var(--text) !important;
+  }
+  body.dark-mode #imenik-list .imenik-name {
+    color: var(--text) !important;
+  }
+  body.dark-mode #imenik-list .imenik-phone {
+    color: var(--muted) !important;
+  }
+  body.dark-mode #imenik-alpha button {
+    background: var(--light) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  body.dark-mode #imenik-search {
+    color: var(--text) !important;
+  }
+  body.dark-mode #imenik-search::placeholder {
+    color: var(--muted) !important;
+    opacity: 0.7;
+  }
+  body.dark-mode #imenik-modal-bg > div {
+    background: var(--white) !important;
+    color: var(--text) !important;
+  }
+  body.dark-mode #im-modal-name {
+    color: var(--text) !important;
+  }
+  body.dark-mode #im-modal-org {
+    color: var(--muted) !important;
+  }
+  body.dark-mode #im-modal-phones a {
+    background: var(--light) !important;
+    color: var(--text) !important;
+  }
+  body.dark-mode #im-modal-note {
+    color: var(--muted) !important;
+  }
+
 </style>
 </head>
 <body>
@@ -1007,7 +1054,7 @@
 <div class="screen" id="screen-imenik" style="display:none;flex-direction:column;flex:1;">
 
   <!-- Search bar -->
-  <div style="background:white;padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
+  <div style="background:var(--white);padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
     <div style="display:flex;align-items:center;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
       <input type="text" id="imenik-search" placeholder="Pretraži po imenu ili broju..." oninput="filterImenik()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
@@ -1016,7 +1063,7 @@
   </div>
 
   <!-- Alpha index -->
-  <div id="imenik-alpha" style="background:white;border-bottom:1px solid var(--border);padding:6px 10px;display:flex;flex-wrap:wrap;gap:3px;"></div>
+  <div id="imenik-alpha" style="background:var(--white);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;flex-wrap:wrap;gap:3px;"></div>
 
   <!-- Contact list -->
   <div id="imenik-list" style=""></div>
@@ -1024,11 +1071,11 @@
 
 <!-- Imenik contact detail modal -->
 <div id="imenik-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeImenikModal()">
-  <div style="background:white;border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:20px 16px 36px;max-height:85vh;overflow-y:auto;">
+  <div style="background:var(--white);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:20px 16px 36px;max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
       <img id="im-modal-photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:#e0e8f0;flex-shrink:0;" src="icons/icon-192.png">
       <div>
-        <div id="im-modal-name" style="font-size:1.05rem;font-weight:800;color:var(--navy);"></div>
+        <div id="im-modal-name" style="font-size:1.05rem;font-weight:800;color:var(--text);"></div>
         <div id="im-modal-org" style="font-size:0.75rem;color:var(--muted);margin-top:2px;"></div>
       </div>
       <button onclick="closeImenikModal()" style="margin-left:auto;background:none;border:none;font-size:1.3rem;color:var(--muted);cursor:pointer;">✕</button>
@@ -14821,7 +14868,7 @@ function buildAlphaIndex() {
     return l;
   }))].sort((a,b) => a.localeCompare(b,'sr'));
   alpha.innerHTML = letters.map(l =>
-    `<button onclick="scrollToLetter('${l}')" style="padding:3px 7px;font-size:0.7rem;font-weight:700;border:1px solid var(--border);border-radius:5px;background:var(--light);color:var(--navy);cursor:pointer;">${l}</button>`
+    `<button onclick="scrollToLetter('${l}')" style="padding:3px 7px;font-size:0.7rem;font-weight:700;border:1px solid var(--border);border-radius:5px;background:var(--light);color:var(--text);cursor:pointer;">${l}</button>`
   ).join('');
 }
 
@@ -14875,11 +14922,11 @@ function renderImenik(data) {
         : `<div style="width:44px;height:44px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;">${initials}</div>`;
       const phone = c.phones[0] || '';
       return `
-        <div onclick="openImenikModal(${globalIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #f0f4fa;background:white;cursor:pointer;">
+        <div class="imenik-card" onclick="openImenikModal(${globalIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--white);cursor:pointer;">
           ${photoHtml}
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;font-size:0.9rem;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:1px;">${phone}</div>
+            <div class="imenik-name" style="font-weight:700;font-size:0.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+            <div class="imenik-phone" style="font-size:0.75rem;color:var(--muted);margin-top:1px;">${phone}</div>
           </div>
           ${phone ? `<a href="tel:${phone.replace(/[-\s]/g,'')}" onclick="event.stopPropagation()" style="width:36px;height:36px;border-radius:50%;background:#27ae60;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1rem;flex-shrink:0;">📞</a>` : ''}
         </div>`;
@@ -14902,7 +14949,7 @@ function openImenikModal(idx) {
   document.getElementById('im-modal-name').textContent = c.name;
   document.getElementById('im-modal-org').textContent = c.org || c.note || '';
   document.getElementById('im-modal-phones').innerHTML = c.phones.map(p => `
-    <a href="tel:${p.replace(/[-\s]/g,'')}" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--light);border-radius:10px;text-decoration:none;color:var(--navy);">
+    <a href="tel:${p.replace(/[-\s]/g,'')}" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--light);border-radius:10px;text-decoration:none;color:var(--text);">
       <span style="font-size:1.1rem;">📞</span>
       <span style="font-weight:600;font-size:0.95rem;">${p}</span>
     </a>
