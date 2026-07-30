@@ -1978,7 +1978,32 @@ function downloadDocx() {
     <body>
       <h1>${title}</h1>
       ${content}
-    </body>
+    
+<script>
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    const screen = document.getElementById('screen-pelceri');
+    if (screen) {
+      const cs = window.getComputedStyle(screen);
+      const rect = screen.getBoundingClientRect();
+      const child = screen.firstElementChild;
+      let childInfo = 'no child';
+      if (child) {
+        const ccs = window.getComputedStyle(child);
+        const crect = child.getBoundingClientRect();
+        childInfo = 'display:' + ccs.display + ' height:' + ccs.height + ' overflow:' + ccs.overflow + ' rect.h:' + crect.height + ' rect.top:' + crect.top;
+      }
+      const debug = document.createElement('div');
+      debug.id = 'debug-info';
+      debug.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:yellow;color:black;padding:8px;font-size:10px;z-index:9999;font-family:monospace;';
+      debug.textContent = 'SCREEN-PELCERI: display=' + cs.display + ' height=' + cs.height + ' overflow=' + cs.overflow + ' rect.h=' + rect.height + ' rect.top=' + rect.top + ' | CHILD: ' + childInfo;
+      document.body.appendChild(debug);
+    }
+  }, 2000);
+});
+</script>
+
+</body>
     </html>`;
 
   const blob = new Blob(['\ufeff', htmlContent], {
@@ -14741,5 +14766,30 @@ window.addEventListener('appinstalled', () => {
 });
 </script>
 
+
+
+<script>
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    const screen = document.getElementById('screen-pelceri');
+    if (screen) {
+      const cs = window.getComputedStyle(screen);
+      const rect = screen.getBoundingClientRect();
+      const child = screen.firstElementChild;
+      let childInfo = 'no child';
+      if (child) {
+        const ccs = window.getComputedStyle(child);
+        const crect = child.getBoundingClientRect();
+        childInfo = 'display:' + ccs.display + ' height:' + ccs.height + ' overflow:' + ccs.overflow + ' rect.h:' + crect.height + ' rect.top:' + crect.top;
+      }
+      const debug = document.createElement('div');
+      debug.id = 'debug-info';
+      debug.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:yellow;color:black;padding:8px;font-size:10px;z-index:9999;font-family:monospace;';
+      debug.textContent = 'SCREEN-PELCERI: display=' + cs.display + ' height=' + cs.height + ' overflow=' + cs.overflow + ' rect.h=' + rect.height + ' rect.top=' + rect.top + ' | CHILD: ' + childInfo;
+      document.body.appendChild(debug);
+    }
+  }, 2000);
+});
+</script>
 
 </body></html>
