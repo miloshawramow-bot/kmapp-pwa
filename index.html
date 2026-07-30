@@ -1929,29 +1929,83 @@ async function porukeRenderSent() {
   content.innerHTML = html;
 }
 
+let porukeSelectedRecipient = null;
+
 function porukeRenderCompose() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
-  let options = '<option value="">-- Izaberite primaoca --</option>';
+  porukeSelectedRecipient = null;
+  content.innerHTML = 
+    '<div style="padding:8px 0;">' +
+    '<div style="font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:8px;">Nova poruka</div>' +
+    '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Primaoc:</div>' +
+    '<input type="text" id="poruke-search" placeholder="Pretraga po imenu..." oninput="porukeFilterContacts()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;background:white;margin-bottom:8px;outline:none;">' +
+    '<div id="poruke-contact-list" style="max-height:240px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;margin-bottom:10px;background:white;"></div>' +
+    '<div id="poruke-selected-display" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--navy);color:white;border-radius:10px;margin-bottom:10px;font-size:0.85rem;">' +
+    '<span id="poruke-selected-text"></span>' +
+    '<button onclick="porukeClearRecipient()" style="margin-left:auto;background:rgba(255,255,255,0.2);border:none;color:white;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.7rem;">\u2715</button>' +
+    '</div>' +
+    '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
+    '<button onclick="porukeSend()" style="width:100%;padding:14px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;">Posalji poruku</button>' +
+    '<div id="poruke-send-status" style="text-align:center;margin-top:8px;font-size:0.82rem;"></div>' +
+    '</div>';
+  porukeFilterContacts();
+}
+
+function porukeFilterContacts() {
+  const search = (document.getElementById('poruke-search')?.value || '').toLowerCase();
+  const listEl = document.getElementById('poruke-contact-list');
+  if (!listEl) return;
+  let contacts = [];
   if (typeof imenikData !== 'undefined') {
     imenikData.forEach(p => {
       const username = imenikToUsername(p.ime || p.name || '');
       const name = p.ime || p.name || username;
-      if (username) options += '<option value="' + username + '">' + name + ' (' + username + ')</option>';
+      if (username) contacts.push({ username, name, photo: p.photo || null, org: p.org || '' });
     });
   }
-  content.innerHTML = 
-    '<div style="padding:8px 0;">' +
-    '<div style="font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:8px;">Nova poruka</div>' +
-    '<select id="poruke-recipient" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;">' + options + '</select>' +
-    '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:150px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
-    '<button onclick="porukeSend()" style="width:100%;padding:14px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;">Posalji poruku</button>' +
-    '<div id="poruke-send-status" style="text-align:center;margin-top:8px;font-size:0.82rem;"></div>' +
-    '</div>';
+  if (search) contacts = contacts.filter(c => c.name.toLowerCase().includes(search) || c.username.toLowerCase().includes(search));
+  if (contacts.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:0.82rem;">Nema rezultata</div>';
+    return;
+  }
+  let html = '';
+  contacts.forEach(c => {
+    const initial = c.name.charAt(0).toUpperCase();
+    const avatar = c.photo 
+      ? '<img src="' + c.photo + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">' + initial + '</div>';
+    html += '<div onclick="porukeSelectRecipient(\'' + c.username + '\', \'' + c.name.replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background=\'#f0f0f0\'" onmouseout="this.style.background=\'transparent\'">' +
+      avatar +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="font-size:0.85rem;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + c.name + '</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);">' + c.username + (c.org ? ' \u00b7 ' + c.org : '') + '</div>' +
+      '</div>' +
+      '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+function porukeSelectRecipient(username, name) {
+  porukeSelectedRecipient = username;
+  document.getElementById('poruke-contact-list').style.display = 'none';
+  document.getElementById('poruke-search').style.display = 'none';
+  const display = document.getElementById('poruke-selected-display');
+  display.style.display = 'flex';
+  document.getElementById('poruke-selected-text').textContent = name + ' (' + username + ')';
+}
+
+function porukeClearRecipient() {
+  porukeSelectedRecipient = null;
+  document.getElementById('poruke-contact-list').style.display = 'block';
+  document.getElementById('poruke-search').style.display = 'block';
+  document.getElementById('poruke-selected-display').style.display = 'none';
+  document.getElementById('poruke-search').value = '';
+  porukeFilterContacts();
 }
 
 async function porukeSend() {
-  const recipient = document.getElementById('poruke-recipient')?.value;
+  const recipient = porukeSelectedRecipient;
   const text = document.getElementById('poruke-text')?.value?.trim();
   const statusEl = document.getElementById('poruke-send-status');
   const sender = getCurrentUsername();
