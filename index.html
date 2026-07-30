@@ -14750,37 +14750,5 @@ window.addEventListener('appinstalled', () => {
 
 
 
-<script>
-const _origSwitchTab = window.switchTab;
-window.switchTab = function(name) {
-  _origSwitchTab(name);
-  setTimeout(function() {
-    var screen = document.getElementById('screen-' + name);
-    if (!screen) return;
-    var cs = window.getComputedStyle(screen);
-    var rect = screen.getBoundingClientRect();
-    var body = document.body;
-    var bcs = window.getComputedStyle(body);
-    var brect = body.getBoundingClientRect();
-    var header = document.querySelector('header');
-    var hcs = header ? window.getComputedStyle(header) : null;
-    var hrect = header ? header.getBoundingClientRect() : null;
-    var nav = document.querySelector('nav');
-    var ncs = nav ? window.getComputedStyle(nav) : null;
-    var nrect = nav ? nav.getBoundingClientRect() : null;
-    var info = 'SCREEN: disp=' + cs.display + ' h=' + cs.height + ' flex=' + cs.flexGrow + ' minH=' + cs.minHeight + ' rh=' + rect.height + ' rt=' + rect.top;
-    info += ' | BODY: disp=' + bcs.display + ' h=' + bcs.height + ' minH=' + bcs.minHeight + ' rh=' + brect.height + ' maxW=' + bcs.maxWidth;
-    if (hcs) info += ' | HEADER: pos=' + hcs.position + ' h=' + hcs.height + ' rh=' + hrect.height;
-    if (ncs) info += ' | NAV: pos=' + ncs.position + ' h=' + ncs.height + ' rh=' + nrect.height;
-    var debug = document.getElementById('debug-info');
-    if (!debug) {
-      debug = document.createElement('div');
-      debug.id = 'debug-info';
-      debug.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:yellow;color:black;padding:6px;font-size:8px;z-index:9999;font-family:monospace;max-height:80px;overflow:hidden;';
-      document.body.appendChild(debug);
-    }
-    debug.textContent = info;
-  }, 200);
-};
-</script>
+
 </body></html>
