@@ -3142,45 +3142,59 @@ function loadUgradeni(id) {
   showToast('📋 Obrazac otvoren – izmeni i sačuvaj kao novi dokument');
 }
 
-async function shareDoc(via) {
-  const title = document.getElementById('doc-title').value.trim() || 'Dokument';
-  const editorContent = document.getElementById('doc-editor').innerHTML;
+function shareDoc(via) {
+  var title = document.getElementById('doc-title').value.trim() || 'Dokument';
+  var editorContent = document.getElementById('doc-editor').innerHTML;
   
   // Unique filename with timestamp
-  const now = new Date();
-  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
-  const safeName = title.replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '').trim() || 'Dokument';
-  const fileName = safeName + '_' + ts + '.doc';
+  var now = new Date();
+  var ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  var safeName = title.replace(/[^a-zA-Z0-9_- ]/g, '').trim() || 'Dokument';
+  var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
-  const htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:\'Times New Roman\',serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
+  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
   
-  const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-  const file = new File([blob], fileName, { type: 'application/msword' });
+  var blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+  var url = URL.createObjectURL(blob);
   
-  // 1. Try Web Share API directly (skip canShare check - it can be unreliable)
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: title, text: title, files: [file] });
-      showToast('Dokument deljen kao Word fajl!');
-      return;
-    } catch (e) {
-      if (e.name === 'AbortError') return;
-      // Fall through to download
-    }
-  }
-  
-  // 2. Download the Word file to device
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  // Step 1: Download the Word file IMMEDIATELY (synchronous, within user gesture)
+  var a = document.createElement('a');
   a.href = url;
   a.download = fileName;
+  a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
   
-  showToast('Word fajl preuzet: ' + fileName + '. Otvori ' + (via === 'viber' ? 'Viber' : 'email') + ' i prilozi ga iz Downloads.');
+  // Clean up after delay
+  setTimeout(function() {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 3000);
+  
+  // Step 2: Try Web Share API with file (async, may fail on some devices)
+  if (navigator.share) {
+    var file = new File([blob], fileName, { type: 'application/msword' });
+    navigator.share({ title: title, text: title, files: [file] }).then(function() {
+      showToast('Dokument deljen!');
+    }).catch(function(e) {
+      if (e.name !== 'AbortError') {
+        // Share failed, file already downloaded
+        showToast('Word fajl preuzet: ' + fileName);
+      }
+    });
+  } else {
+    showToast('Word preuzet: ' + fileName + '. Prilozi ga u ' + (via === 'viber' ? 'Viberu' : 'mailu') + '.');
+  }
+  
+  // Step 3: Open email/viber after short delay
+  setTimeout(function() {
+    if (via === 'viber') {
+      window.open('viber://forward?text=' + encodeURIComponent(title), '_blank');
+    } else {
+      window.open('mailto:?subject=' + encodeURIComponent(title), '_blank');
+    }
+  }, 500);
 }
 
 function fmt(cmd) { document.getElementById('doc-editor').focus(); document.execCommand(cmd, false, null); }
