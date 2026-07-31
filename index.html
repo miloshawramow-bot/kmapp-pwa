@@ -3152,7 +3152,7 @@ function shareDoc(via) {
   // Unique filename with timestamp
   var now = new Date();
   var ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
-  var safeName = title.replace(/[^a-zA-Z0-9_- ]/g, '').trim() || 'Dokument';
+  var safeName = title.replace(/[^a-zA-Z0-9 \-]/g, '').trim() || 'Dokument';
   var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
