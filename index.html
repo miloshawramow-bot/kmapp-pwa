@@ -2753,6 +2753,11 @@ function getKMUsers() {
     users = [{ username: 'admin', password: 'admin', role: 'admin', created: Date.now() }];
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
+  // Ensure test01 user always exists
+  if (!users.find(x => x.username.toLowerCase() === "test01")) {
+    users.push({ username: "test01", password: "test01", role: "user", created: Date.now() });
+    localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  }
   const imenikUsers = getImenikUsers();
   return [...users, ...imenikUsers];
 }
