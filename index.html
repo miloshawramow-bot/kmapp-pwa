@@ -866,9 +866,12 @@
     <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div style="font-size:0.85rem;font-weight:700;color:var(--text);">📊 Prijavljeni korisnici</div>
-        <button onclick="adminLoadLoginLogs()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Osveži</button>
+        <div style="display:flex;gap:6px;">
+          <button onclick="adminLoadLoginLogs('yesterday')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📅 Juče</button>
+          <button onclick="adminLoadLoginLogs()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
+        </div>
       </div>
-      <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite "Osveži" da vidite ko se prijavio.</div>
+      <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
     </div>
   </div>
 
@@ -16271,9 +16274,10 @@ function adminRenderUsersList() {
     ).join('');
 }
 
-async function adminLoadLoginLogs() {
+async function adminLoadLoginLogs(filter) {
   const el = document.getElementById('admin-login-logs');
   if (!el) return;
+  const isYesterday = filter === 'yesterday';
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Učitavanje...</div>';
   try {
     const res = await fetch(KM_API_BASE + '/getInbox', {
@@ -16282,11 +16286,32 @@ async function adminLoadLoginLogs() {
       body: JSON.stringify({ username: 'milos.avramov' })
     });
     const data = await res.json();
-    const logs = (data.messages || []).filter(m => m.sender === 'system' && (m.text || '').startsWith('LOGIN_LOG:'));
+    let logs = (data.messages || []).filter(m => m.sender === 'system' && (m.text || '').startsWith('LOGIN_LOG:'));
+
+    // Filter by date
+    const now = new Date();
+    if (isYesterday) {
+      const yStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
+      const yEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      logs = logs.filter(m => {
+        const parts = m.text.split(':');
+        const ts = new Date(parts[2] || m.created_date);
+        return ts >= yStart && ts < yEnd;
+      });
+    } else {
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      logs = logs.filter(m => {
+        const parts = m.text.split(':');
+        const ts = new Date(parts[2] || m.created_date);
+        return ts >= todayStart;
+      });
+    }
+
     if (!logs.length) {
-      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Nema zabeleženih prijava.</div>';
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">' + (isYesterday ? 'Nema prijava juče.' : 'Nema prijava danas.') + '</div>';
       return;
     }
+
     // Group by username - show last login
     const byUser = {};
     logs.forEach(m => {
@@ -16301,7 +16326,9 @@ async function adminLoadLoginLogs() {
       }
     });
     const sorted = Object.entries(byUser).sort((a, b) => new Date(b[1].lastLogin) - new Date(a[1].lastLogin));
-    el.innerHTML = sorted.map(([username, info]) => {
+    const title = isYesterday ? '📅 Juče' : '📅 Danas';
+    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px;">' + title + ' — ' + sorted.length + ' korisnik(a)</div>' +
+      sorted.map(([username, info]) => {
       const d = new Date(info.lastLogin);
       const dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
       return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
