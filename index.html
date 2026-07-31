@@ -2149,7 +2149,7 @@ async function porukeRenderConversations() {
     return msg.sender;
   }
   
-  [...inbox, ...sent].forEach(msg => {
+  [...inbox, ...sent].filter(m => !isMsgDeleted(m.id)).forEach(msg => {
     const partner = getPartner(msg);
     if (!partner) return;
     if (!conversations[partner]) conversations[partner] = [];
@@ -2210,6 +2210,45 @@ async function porukeRenderConversations() {
   content.innerHTML = html;
 }
 
+// Local message deletion (hides from UI, stores deleted IDs)
+function getDeletedMsgIds() {
+  return JSON.parse(localStorage.getItem('km_deleted_msgs') || '[]');
+}
+function isMsgDeleted(id) {
+  return getDeletedMsgIds().includes(id);
+}
+function porukeDeleteMessage(msgId) {
+  if (!confirm('Obrisati ovu poruku?')) return;
+  const deleted = getDeletedMsgIds();
+  if (!deleted.includes(msgId)) {
+    deleted.push(msgId);
+    localStorage.setItem('km_deleted_msgs', JSON.stringify(deleted));
+  }
+  // Remove from local arrays
+  porukeInbox = porukeInbox.filter(m => m.id !== msgId);
+  porukeSent = porukeSent.filter(m => m.id !== msgId);
+  // Re-render current thread
+  if (porukeThreadPartner) {
+    porukeOpenThread(porukeThreadPartner, porukeThreadName);
+  }
+  showToast('🗑️ Poruka obrisana.');
+}
+function porukeDeleteConversation(partner) {
+  if (!confirm('Obrisati sve poruke iz ovog razgovora?')) return;
+  const username = getCurrentUsername();
+  const allMsgs = [...porukeInbox, ...porukeSent]
+    .filter(m => (m.sender === partner && m.recipient === username) || (m.recipient === partner && m.sender === username));
+  const deleted = getDeletedMsgIds();
+  allMsgs.forEach(m => {
+    if (!deleted.includes(m.id)) deleted.push(m.id);
+  });
+  localStorage.setItem('km_deleted_msgs', JSON.stringify(deleted));
+  porukeInbox = porukeInbox.filter(m => !allMsgs.find(x => x.id === m.id));
+  porukeSent = porukeSent.filter(m => !allMsgs.find(x => x.id === m.id));
+  porukeView('conversations');
+  showToast('🗑️ Razgovor obrisan.');
+}
+
 function porukeOpenThread(partner, displayName) {
   const content = document.getElementById('poruke-content');
   if (!content) return;
@@ -2217,7 +2256,7 @@ function porukeOpenThread(partner, displayName) {
   // Merge inbox and sent for this partner, sorted by date
   const username = getCurrentUsername();
   const allMsgs = [...porukeInbox, ...porukeSent]
-    .filter(m => (m.sender === partner && m.recipient === username) || (m.recipient === partner && m.sender === username))
+    .filter(m => !isMsgDeleted(m.id) && ((m.sender === partner && m.recipient === username) || (m.recipient === partner && m.sender === username)))
     .sort((a, b) => new Date(a.created_date || a.createdAt || 0) - new Date(b.created_date || b.createdAt || 0));
   
   let partnerPhoto = null;
@@ -2234,7 +2273,8 @@ function porukeOpenThread(partner, displayName) {
   let html = '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;margin-bottom:8px;border-bottom:2px solid var(--navy);">' +
     '<button onclick="porukeView(\'conversations\')" style="background:none;border:none;color:var(--navy);font-size:0.82rem;cursor:pointer;">\u2190</button>' +
     avatar +
-    '<div style="font-weight:700;font-size:0.92rem;color:var(--text);">' + displayName + '</div>' +
+    '<div style="flex:1;font-weight:700;font-size:0.92rem;color:var(--text);">' + displayName + '</div>' +
+    '<button onclick="porukeDeleteConversation(\'' + partner + '\')" style="background:none;border:none;color:var(--danger);font-size:1.1rem;cursor:pointer;padding:4px 8px;" title="Obri\u0161i razgovor">\ud83d\uddd1\ufe0f</button>' +
     '</div>';
   
   // Chat bubbles
@@ -2256,14 +2296,20 @@ function porukeOpenThread(partner, displayName) {
     
     // Bubble
     if (isMe) {
-      html += '<div style="align-self:flex-end;max-width:78%;background:var(--navy);color:white;border-radius:14px 14px 4px 14px;padding:8px 12px;margin-left:auto;">' +
+      html += '<div style="align-self:flex-end;max-width:78%;position:relative;">' +
+        '<div style="background:var(--navy);color:white;border-radius:14px 14px 4px 14px;padding:8px 12px;margin-left:auto;">' +
         '<div style="font-size:0.85rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>' +
         '<div style="text-align:right;font-size:0.65rem;margin-top:2px;opacity:0.8;">' + time + readMark + '</div>' +
+        '</div>' +
+        '<button onclick="porukeDeleteMessage(\'' + msg.id + '\')" style="position:absolute;top:-4px;left:-4px;background:var(--danger);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:0.6rem;cursor:pointer;display:none;" class="msg-delete-btn">' + '\u00d7' + '</button>' +
         '</div>';
     } else {
-      html += '<div style="align-self:flex-start;max-width:78%;background:white;color:var(--text);border:1.5px solid var(--border);border-radius:14px 14px 14px 4px;padding:8px 12px;">' +
+      html += '<div style="align-self:flex-start;max-width:78%;position:relative;">' +
+        '<div style="background:white;color:var(--text);border:1.5px solid var(--border);border-radius:14px 14px 14px 4px;padding:8px 12px;">' +
         '<div style="font-size:0.85rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>' +
         '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">' + time + '</div>' +
+        '</div>' +
+        '<button onclick="porukeDeleteMessage(\'' + msg.id + '\')" style="position:absolute;top:-4px;right:-4px;background:var(--danger);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:0.6rem;cursor:pointer;display:none;" class="msg-delete-btn">' + '\u00d7' + '</button>' +
         '</div>';
     }
   });
@@ -2278,6 +2324,28 @@ function porukeOpenThread(partner, displayName) {
   
   content.innerHTML = html;
   content.scrollTop = content.scrollHeight;
+  
+  // Long-press to show delete buttons on messages
+  (function() {
+    const bubbles = content.querySelectorAll('.msg-delete-btn');
+    let pressTimer = null;
+    let deleteMode = false;
+    function toggleDeleteMode() {
+      deleteMode = !deleteMode;
+      bubbles.forEach(b => { b.style.display = deleteMode ? 'flex' : 'none'; });
+      if (deleteMode) {
+        showToast('Dodirni \u00d7 da obri\u0161e\u0161 poruku');
+      }
+    }
+    content.querySelectorAll('[style*="position:relative"]').forEach(bubble => {
+      bubble.addEventListener('touchstart', function(e) {
+        pressTimer = setTimeout(() => { toggleDeleteMode(); }, 600);
+      });
+      bubble.addEventListener('touchend', function() { clearTimeout(pressTimer); });
+      bubble.addEventListener('touchmove', function() { clearTimeout(pressTimer); });
+      bubble.addEventListener('contextmenu', function(e) { e.preventDefault(); toggleDeleteMode(); });
+    });
+  })();
   
   // Mark received messages as read
   const unreadFromPartner = allMsgs.filter(m => m.sender === partner && !m.read);
@@ -2391,7 +2459,7 @@ async function porukeRenderInbox() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
   content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
-  porukeInbox = await porukeFetchInbox();
+  porukeInbox = (await porukeFetchInbox()).filter(m => !isMsgDeleted(m.id));
   if (porukeInbox.length === 0) {
     content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\u{1F4ED}</div>Nemate primljenih poruka</div>';
     return;
@@ -2431,7 +2499,7 @@ async function porukeRenderSent() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
   content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
-  porukeSent = await porukeFetchSent();
+  porukeSent = (await porukeFetchSent()).filter(m => !isMsgDeleted(m.id));
   if (porukeSent.length === 0) {
     content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\u{1F4E4}</div>Niste poslali nijednu poruku</div>';
     return;
