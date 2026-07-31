@@ -817,6 +817,29 @@
       <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:10px;">📋 Dodati akti</div>
       <div id="admin-akti-list" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
+
+    <!-- Admin: Pelceri -->
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:12px;">📋 Dodaj novi pelcer</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Kategorija</label>
+        <input id="admin-pelcer-kategorija" type="text" placeholder="npr. Oglašavanje, Bаšta, Muzika..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
+        <input id="admin-pelcer-naziv" type="text" placeholder="npr. Sredstvo za oglašavanje — Preduzetnik" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tekst pelcera</label>
+        <textarea id="admin-pelcer-tekst" placeholder="Unesite tekst pelcera..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;background:var(--white);color:var(--text);"></textarea>
+      </div>
+      <div id="admin-pelcer-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+      <button onclick="adminSavePelcer()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj pelcer</button>
+    </div>
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Dodati pelceri</div>
+      <div id="admin-pelceri-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
   </div>
 
 <div class="settings-section">
@@ -15914,7 +15937,7 @@ function checkAdminAccess() {
   const role = getCurrentUserRole();
   const el = document.getElementById('admin-panel-section');
   if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
-  if (role === 'admin') renderAdminAktiList();
+  if (role === 'admin') { renderAdminAktiList(); renderAdminPelceriList(); }
 }
 
 function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
@@ -15975,6 +15998,67 @@ function adminDeleteAkt(id) {
   showToast('🗑️ Akt obrisan.');
 }
 
+// ===== ADMIN PELCERI =====
+const KM_CUSTOM_PELCERI_KEY = 'km_custom_pelceri';
+
+function getCustomPelceri() { return JSON.parse(localStorage.getItem(KM_CUSTOM_PELCERI_KEY) || '[]'); }
+function saveCustomPelceri(p) { localStorage.setItem(KM_CUSTOM_PELCERI_KEY, JSON.stringify(p)); }
+
+function getNextPelcerId() {
+  let maxId = 0;
+  pelceriData.forEach(p => { if (p.id > maxId) maxId = p.id; });
+  getCustomPelceri().forEach(p => { if (p.id > maxId) maxId = p.id; });
+  return maxId + 1;
+}
+
+function loadCustomPelceri() {
+  getCustomPelceri().forEach(p => { if (!pelceriData.find(x => x.id === p.id)) pelceriData.push(p); });
+}
+
+function adminSavePelcer() {
+  const kategorija = document.getElementById('admin-pelcer-kategorija').value.trim();
+  const naziv = document.getElementById('admin-pelcer-naziv').value.trim();
+  const tekst = document.getElementById('admin-pelcer-tekst').value.trim();
+  const errEl = document.getElementById('admin-pelcer-error');
+  if (!kategorija) { errEl.textContent = 'Unesite kategoriju.'; errEl.style.display = 'block'; return; }
+  if (!naziv) { errEl.textContent = 'Unesite naziv pelcera.'; errEl.style.display = 'block'; return; }
+  if (!tekst) { errEl.textContent = 'Unesite tekst pelcera.'; errEl.style.display = 'block'; return; }
+  const custom = getCustomPelceri();
+  const id = getNextPelcerId();
+  custom.push({ id, kategorija, naziv, tekst });
+  saveCustomPelceri(custom);
+  pelceriData.push({ id, kategorija, naziv, tekst });
+  document.getElementById('admin-pelcer-kategorija').value = '';
+  document.getElementById('admin-pelcer-naziv').value = '';
+  document.getElementById('admin-pelcer-tekst').value = '';
+  errEl.style.display = 'none';
+  renderAdminPelceriList();
+  showToast('✅ Pelcer sačuvan: ' + naziv);
+}
+
+function renderAdminPelceriList() {
+  const el = document.getElementById('admin-pelceri-list');
+  if (!el) return;
+  const custom = getCustomPelceri();
+  if (!custom.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodanih pelcera.</div>'; return; }
+  el.innerHTML = custom.map(p => 
+    '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);">' +
+    '<span style="background:#1a4a8a;color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;">' + p.kategorija.substring(0,15) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.naziv + '</div></div>' +
+    '<button onclick="adminDeletePelcer(' + p.id + ')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;flex-shrink:0;">Obriši</button></div>'
+  ).join('');
+}
+
+function adminDeletePelcer(id) {
+  if (!confirm('Obrisati ovaj pelcer?')) return;
+  let custom = getCustomPelceri().filter(p => p.id !== id);
+  saveCustomPelceri(custom);
+  const idx = pelceriData.findIndex(p => p.id === id);
+  if (idx >= 0) pelceriData.splice(idx, 1);
+  renderAdminPelceriList();
+  showToast('🗑️ Pelcer obrisan.');
+}
+
 // ===== IN-APP MESSAGE NOTIFICATION TOAST =====
 function playMsgSound() {
   try {
@@ -16012,6 +16096,7 @@ function showMsgToast(count) {
 
 // Load custom akti on startup
 loadCustomAkti();
+loadCustomPelceri();
 checkAdminAccess();
 
 </script>
