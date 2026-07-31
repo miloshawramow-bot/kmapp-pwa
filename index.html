@@ -3145,64 +3145,32 @@ function loadUgradeni(id) {
 async function shareDoc(via) {
   const title = document.getElementById('doc-title').value.trim() || 'Dokument';
   const editorContent = document.getElementById('doc-editor').innerHTML;
-  const text = document.getElementById('doc-editor').innerText.trim();
   
-  // Build Word-compatible HTML document
+  // Unique filename with timestamp
+  const now = new Date();
+  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  const safeName = title.replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '').trim() || 'Dokument';
+  const fileName = safeName + '_' + ts + '.doc';
+  
+  // Build Word-compatible HTML
   const htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:\'Times New Roman\',serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
   
   const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-  const safeName = title.replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '');
-  const fileName = safeName + '.doc';
   const file = new File([blob], fileName, { type: 'application/msword' });
   
-  // 1. Try Web Share API with file (mobile - shows Gmail/Viber as share targets)
-  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+  // 1. Try Web Share API directly (skip canShare check - it can be unreliable)
+  if (navigator.share) {
     try {
       await navigator.share({ title: title, text: title, files: [file] });
       showToast('Dokument deljen kao Word fajl!');
       return;
     } catch (e) {
       if (e.name === 'AbortError') return;
-      console.error('Web Share error:', e);
+      // Fall through to download
     }
   }
   
-  // 2. Fallback: upload to backend, get download link, put in email body
-  showToast('Generi\u0161em Word fajl...');
-  try {
-    // Convert blob to base64
-    const reader = new FileReader();
-    const base64Promise = new Promise(resolve => {
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(blob);
-    });
-    const base64Content = await base64Promise;
-    
-    // Upload to backend
-    const res = await fetch(KM_API_BASE + '/createSharedDoc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title, fileContent: base64Content })
-    });
-    const data = await res.json();
-    
-    if (data.success && data.url) {
-      const downloadUrl = data.url;
-      const emailBody = 'Slu\u017ebena bele\u0161ka: ' + title + '\n\nWord dokument možete preuzeti na linku:\n' + downloadUrl;
-      
-      if (via === 'viber') {
-        window.open('viber://forward?text=' + encodeURIComponent('Slu\u017ebena bele\u0161ka: ' + title + '\n\nWord dokument: ' + downloadUrl));
-      } else {
-        window.open('mailto:?subject=' + encodeURIComponent('Slu\u017ebena bele\u0161ka - ' + title) + '&body=' + encodeURIComponent(emailBody));
-      }
-      showToast('Word fajl link poslat! Primalac klikne link i dobije .doc fajl.');
-      return;
-    }
-  } catch (e) {
-    console.error('Backend upload error:', e);
-  }
-  
-  // 3. Last resort: download file locally
+  // 2. Download the Word file to device
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -3210,14 +3178,9 @@ async function shareDoc(via) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   
-  if (via === 'viber') {
-    window.open('viber://forward?text=' + encodeURIComponent(title + '\n\n' + text.substring(0, 5000)));
-  } else {
-    window.open('mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(text.substring(0, 5000)));
-  }
-  showToast('Word fajl preuzet na ure\u0111aj. Prilo\u017eite ga ru\u010dno.');
+  showToast('Word fajl preuzet: ' + fileName + '. Otvori ' + (via === 'viber' ? 'Viber' : 'email') + ' i prilozi ga iz Downloads.');
 }
 
 function fmt(cmd) { document.getElementById('doc-editor').focus(); document.execCommand(cmd, false, null); }
@@ -3306,7 +3269,9 @@ function downloadDocx() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = title.replace(/[^a-zA-Z0-9_\-čćšđžČĆŠĐŽ ]/g, '') + '.doc';
+  const now = new Date();
+  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  a.download = title.replace(/[^a-zA-Z0-9_\-čćšđžČĆŠĐŽ ]/g, '') + '_' + ts + '.doc';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -16651,11 +16616,18 @@ async function handleSharedDocDownload() {
   const dlKey = params.get('dl');
   if (!dlKey) return;
   
+  // Force white background regardless of dark mode
+  document.documentElement.style.background = '#ffffff';
+  document.body.style.cssText = 'margin:0;padding:0;background:#ffffff;font-family:system-ui,sans-serif;color:#333;';
   document.title = 'Preuzimanje dokumenta...';
-  document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;padding:20px;text-align:center;"><div style="font-size:3rem;margin-bottom:20px;">📄</div><h2 style="margin:0 0 10px;">Preuzimanje Word dokumenta...</h2><p style="color:#666;margin:0 0 20px;">Molimo sačekajte.</p><div id="dl-status" style="padding:15px;border-radius:8px;background:#f0f0f0;color:#333;">U toku...</div></div>';
+  document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#ffffff;color:#333;padding:20px;text-align:center;"><div style="font-size:3rem;margin-bottom:20px;">\ud83d\udcc4</div><h2 style="margin:0 0 10px;color:#333;">Preuzimanje Word dokumenta...</h2><p style="color:#666;margin:0 0 20px;">Molimo sa\u010dekajte.</p><div id="dl-status" style="padding:15px 20px;border-radius:8px;background:#f0f0f0;color:#333;font-size:1rem;">U toku...</div></div>';
+  
+  // Remove dark mode class if present
+  document.documentElement.classList.remove('dark');
+  document.body.classList.remove('dark');
   
   try {
-    const res = await fetch(KM_API_BASE + '/getSharedDoc', {
+    const res = await fetch('https://solas-799a3993.base44.app/functions/getSharedDoc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ downloadKey: dlKey })
@@ -16663,7 +16635,7 @@ async function handleSharedDocDownload() {
     const data = await res.json();
     
     if (!data.success) {
-      document.getElementById('dl-status').innerHTML = '❌ Dokument nije pronađen ili je istekao.';
+      document.getElementById('dl-status').innerHTML = '\u274c Dokument nije prona\u0111en ili je istekao.';
       return;
     }
     
@@ -16676,21 +16648,25 @@ async function handleSharedDocDownload() {
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: 'application/msword' });
     
-    // Trigger download
-    const safeName = (data.title || 'dokument').replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '');
+    // Unique filename with timestamp
+    const now = new Date();
+    const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+    const safeName = (data.title || 'dokument').replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '').trim();
+    const fileName = safeName + '_' + ts + '.doc';
+    
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = safeName + '.doc';
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
     
-    document.getElementById('dl-status').innerHTML = '✅ Dokument <b>' + data.title + '</b> je preuzet! Proverite folder za preuzimanja.';
+    document.getElementById('dl-status').innerHTML = 'Dokument <b>' + data.title + '</b> je preuzet! Proverite Downloads folder.';
   } catch (e) {
     console.error('Download error:', e);
-    document.getElementById('dl-status').innerHTML = '❌ Greška pri preuzimanju. Pokušajte ponovo.';
+    document.getElementById('dl-status').innerHTML = 'Gre\u0161ka pri preuzimanju.';
   }
 }
 
