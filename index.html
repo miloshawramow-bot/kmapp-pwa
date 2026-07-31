@@ -2475,13 +2475,12 @@ function porukeFilterContacts() {
   const listEl = document.getElementById('poruke-contact-list');
   if (!listEl) return;
   let contacts = [];
-  if (typeof imenikData !== 'undefined') {
-    imenikData.forEach(p => {
-      const username = imenikToUsername(p.ime || p.name || '');
-      const name = p.ime || p.name || username;
-      if (username) contacts.push({ username, name, photo: p.photo || null, org: p.org || '' });
-    });
-  }
+  const visibleData = getVisibleImenikContacts();
+  visibleData.forEach(p => {
+    const username = imenikToUsername(p.ime || p.name || '');
+    const name = p.ime || p.name || username;
+    if (username) contacts.push({ username, name, photo: p.photo || null, org: p.org || '' });
+  });
   if (search) contacts = contacts.filter(c => c.name.toLowerCase().includes(search) || c.username.toLowerCase().includes(search));
   if (contacts.length === 0) {
     listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:0.82rem;">Nema rezultata</div>';
@@ -2605,6 +2604,12 @@ function porukeRemoveAttachment(idx) {
 
 async function porukeSend() {
   const recipient = porukeSelectedRecipient;
+  const currentUser = (localStorage.getItem(KM_CURRENT_USER) || '').toLowerCase();
+  if (currentUser === 'test01' && recipient && recipient.toLowerCase() !== 'milos.avramov') {
+    document.getElementById('poruke-send-status').textContent = 'Možete slati poruke samo Milošu Avramovu';
+    document.getElementById('poruke-send-status').style.color = 'var(--danger)';
+    return;
+  }
   const text = document.getElementById('poruke-text')?.value?.trim();
   const statusEl = document.getElementById('poruke-send-status');
   const sender = getCurrentUsername();
@@ -15007,15 +15012,28 @@ function scrollToLetter(letter) {
   if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// Filter contacts for restricted users (e.g., test01 can only see Milos.Avramov)
+function getVisibleImenikContacts() {
+  const currentUser = (localStorage.getItem(KM_CURRENT_USER) || '').toLowerCase();
+  if (currentUser === 'test01') {
+    return (typeof imenikData !== 'undefined' ? imenikData : []).filter(c => {
+      const username = imenikToUsername(c.ime || c.name || '');
+      return username.toLowerCase() === 'milos.avramov';
+    });
+  }
+  return typeof imenikData !== 'undefined' ? imenikData : [];
+}
+
 function filterImenik() {
   const q = document.getElementById('imenik-search').value.toLowerCase();
+  const visibleData = getVisibleImenikContacts();
   imenikFiltered = q
-    ? imenikData.filter(c =>
+    ? visibleData.filter(c =>
         c.name.toLowerCase().includes(q) ||
         c.phones.some(p => p.replace(/[-\s]/g,'').includes(q.replace(/[-\s]/g,''))) ||
         (c.org||'').toLowerCase().includes(q)
       )
-    : imenikData;
+    : visibleData;
   document.getElementById('imenik-count').textContent = imenikFiltered.length;
   renderImenik(imenikFiltered);
 }
@@ -15045,7 +15063,7 @@ function renderImenik(data) {
       ${letter}
     </div>
     ${groups[letter].map((c, idx) => {
-      const globalIdx = imenikData.indexOf(c);
+      const globalIdx = getVisibleImenikContacts().indexOf(c);
       const initials = c.name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
       const photoHtml = c.photo
         ? `<img src="${c.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
