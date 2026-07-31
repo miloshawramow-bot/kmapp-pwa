@@ -16648,7 +16648,7 @@ function aiSend() {
     naziv: a.naziv,
     broj: a.broj,
     tip: a.tip,
-    sadrzaj: a.sadrzaj.substring(0, 8000)
+    sadrzaj: a.sadrzaj
   }));
   
   fetch(KM_API_BASE + '/aiAssistant', {
