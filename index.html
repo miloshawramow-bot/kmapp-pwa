@@ -657,7 +657,7 @@
       <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:12px;">Prijavi se</button>
 
       <div style="text-align:center;margin-top:12px;"><div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <span onclick="showRegisterForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">Nemate nalog? Registrujte se</span>
+        <span style="color:var(--muted);font-size:0.72rem;">KMapp · Komunalna milicija Beograd</span>
       </div>
     </div>
 
@@ -844,6 +844,31 @@
     <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;">
       <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Dodati pelceri</div>
       <div id="admin-pelceri-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <!-- Admin: Kreiranje korisnika -->
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:12px;">👤 Kreiraj novog korisnika</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Korisničko ime (Ime.Prezime)</label>
+        <input id="admin-user-username" type="text" placeholder="npr. Petar.Petrovic" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Lozinka</label>
+        <input id="admin-user-password" type="text" placeholder="npr. 064-123-4567" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
+      </div>
+      <div id="admin-user-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+      <button onclick="adminCreateUser()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">➕ Kreiraj korisnika</button>
+      <div id="admin-users-list" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- Admin: Prijavljeni korisnici -->
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:0.85rem;font-weight:700;color:var(--text);">📊 Prijavljeni korisnici</div>
+        <button onclick="adminLoadLoginLogs()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Osveži</button>
+      </div>
+      <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite "Osveži" da vidite ko se prijavio.</div>
     </div>
   </div>
 
@@ -2870,6 +2895,22 @@ function doLogin() {
     // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
+    // Log login for admin tracking
+    try {
+      const device = navigator.userAgent.substring(0, 80);
+      fetch(KM_API_BASE + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: 'system',
+          recipient: 'milos.avramov',
+          text: 'LOGIN_LOG:' + user.username + ':' + new Date().toISOString() + ':' + device,
+          senderName: 'System',
+          recipientName: 'Milos Avramov',
+          read: true
+        })
+      });
+    } catch(e) {}
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
@@ -16062,7 +16103,7 @@ function checkAdminAccess() {
   const role = getCurrentUserRole();
   const el = document.getElementById('admin-panel-section');
   if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
-  if (role === 'admin') { renderAdminAktiList(); renderAdminPelceriList(); }
+  if (role === 'admin') { renderAdminAktiList(); renderAdminPelceriList(); adminRenderUsersList(); }
 }
 
 function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
@@ -16182,6 +16223,97 @@ function adminDeletePelcer(id) {
   if (idx >= 0) pelceriData.splice(idx, 1);
   renderAdminPelceriList();
   showToast('🗑️ Pelcer obrisan.');
+}
+
+// ===== ADMIN: USER MANAGEMENT =====
+function adminCreateUser() {
+  const u = (document.getElementById('admin-user-username').value || '').trim();
+  const p = (document.getElementById('admin-user-password').value || '').trim();
+  const errEl = document.getElementById('admin-user-error');
+
+  if (u.length < 3) { errEl.textContent = 'Korisničko ime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
+  if (p.length < 4) { errEl.textContent = 'Lozinka mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
+
+  const users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
+  if (users.find(x => x.username.toLowerCase() === u.toLowerCase())) {
+    errEl.textContent = 'Korisnik već postoji!'; errEl.style.display = 'block'; return;
+  }
+
+  users.push({ username: u, password: p, role: 'user', created: Date.now() });
+  localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  errEl.style.display = 'none';
+  document.getElementById('admin-user-username').value = '';
+  document.getElementById('admin-user-password').value = '';
+  showToast('✅ Korisnik kreiran: ' + u);
+  adminRenderUsersList();
+}
+
+function adminDeleteUser(username) {
+  if (!confirm('Obrisati korisnika ' + username + '?')) return;
+  let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
+  users = users.filter(x => x.username !== username);
+  localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  showToast('🗑️ Korisnik obrisan: ' + username);
+  adminRenderUsersList();
+}
+
+function adminRenderUsersList() {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  const users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
+  const customUsers = users.filter(u => u.username !== 'admin' && u.username !== 'test01');
+  if (!customUsers.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;margin-top:10px;">Kreirani korisnici:</div>' +
+    customUsers.map(u =>
+      '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
+      '<div style="flex:1;font-size:0.8rem;font-weight:500;color:var(--text);">' + u.username + '</div>' +
+      '<button onclick="adminDeleteUser(\'' + u.username + '\')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;">Obriši</button></div>'
+    ).join('');
+}
+
+async function adminLoadLoginLogs() {
+  const el = document.getElementById('admin-login-logs');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Učitavanje...</div>';
+  try {
+    const res = await fetch(KM_API_BASE + '/getInbox', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'milos.avramov' })
+    });
+    const data = await res.json();
+    const logs = (data.messages || []).filter(m => m.sender === 'system' && (m.text || '').startsWith('LOGIN_LOG:'));
+    if (!logs.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Nema zabeleženih prijava.</div>';
+      return;
+    }
+    // Group by username - show last login
+    const byUser = {};
+    logs.forEach(m => {
+      const parts = m.text.split(':');
+      const username = parts[1] || 'unknown';
+      const ts = parts[2] || m.created_date;
+      const device = parts.slice(3).join(':') || 'unknown';
+      if (!byUser[username] || new Date(ts) > new Date(byUser[username].lastLogin)) {
+        byUser[username] = { lastLogin: ts, device: device.substring(0, 50), count: (byUser[username]?.count || 0) + 1 };
+      } else {
+        byUser[username].count++;
+      }
+    });
+    const sorted = Object.entries(byUser).sort((a, b) => new Date(b[1].lastLogin) - new Date(a[1].lastLogin));
+    el.innerHTML = sorted.map(([username, info]) => {
+      const d = new Date(info.lastLogin);
+      const dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
+        '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">' + username.charAt(0).toUpperCase() + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:0.82rem;font-weight:600;color:var(--text);">' + username + '</div>' +
+        '<div style="font-size:0.7rem;color:var(--muted);">Zadnja prijava: ' + dateStr + ' · ' + info.count + 'x</div>' +
+        '</div></div>';
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Greška pri učitavanju.</div>';
+  }
 }
 
 // ===== IN-APP MESSAGE NOTIFICATION TOAST =====
