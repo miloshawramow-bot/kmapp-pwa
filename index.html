@@ -1999,29 +1999,47 @@ function porukeStartPolling() {
 
 // ===== PUSH NOTIFICATIONS =====
 async function subscribeToPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('Push not supported on this device');
+    return;
+  }
   try {
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
-      // Convert VAPID public key to Uint8Array
       const keyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: keyBytes
       });
+      console.log('New push subscription created');
     }
-    // Send subscription to backend
     const username = getCurrentUsername();
-    if (!username) return;
-    await fetch(KM_API_BASE + '/savePushSubscription', {
+    if (!username) {
+      console.log('No username - cannot save push subscription');
+      return;
+    }
+    // Serialize subscription safely (toJSON handles ArrayBuffer -> base64)
+    const subData = sub.toJSON ? sub.toJSON() : {
+      endpoint: sub.endpoint,
+      expirationTime: sub.expirationTime,
+      keys: { p256dh: '', auth: '' }
+    };
+    const res = await fetch(KM_API_BASE + '/savePushSubscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, subscription: sub })
+      body: JSON.stringify({ username, subscription: subData })
     });
-    console.log('Push subscribed:', sub.endpoint);
+    const data = await res.json();
+    if (data.success) {
+      console.log('Push subscription saved for', username);
+      showToast('🔔 Push notifikacije aktivne');
+    } else {
+      console.log('Push subscription save failed:', data);
+    }
   } catch(e) {
-    console.log('Push subscription error:', e);
+    console.log('Push subscription error:', e.message || e);
+    showToast('⚠️ Push greška: ' + (e.message || e));
   }
 }
 
@@ -2839,6 +2857,9 @@ function doLogin() {
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
     checkAdminAccess();
+    // Start message polling and push subscription after login
+    porukeStartPolling();
+    subscribeToPush();
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
@@ -2862,6 +2883,9 @@ function doLogout() {
         switchTab('login');
       } else {
         switchTab('docs');
+        // Start polling and push subscription for returning users
+        porukeStartPolling();
+        subscribeToPush();
       }
     } catch(e) {
       document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
