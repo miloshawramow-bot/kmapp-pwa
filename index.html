@@ -3142,14 +3142,58 @@ function loadUgradeni(id) {
   showToast('📋 Obrazac otvoren – izmeni i sačuvaj kao novi dokument');
 }
 
-function shareDoc(via) {
+async function shareDoc(via) {
   const title = document.getElementById('doc-title').value.trim() || 'Dokument';
+  const content = document.getElementById('doc-editor').innerHTML;
   const text = document.getElementById('doc-editor').innerText.trim();
-  const full = `${title}\n\n${text}`;
+  
+  // Build Word-compatible HTML document
+  const htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:'Times New Roman',serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>${title}</h1>${content}</body></html>`;
+  
+  const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+  const safeName = title.replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '');
+  const fileName = safeName + '.doc';
+  
+  // Try Web Share API with file (works on mobile)
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/msword' })] })) {
+    try {
+      const file = new File([blob], fileName, { type: 'application/msword' });
+      const shareData = {
+        title: title,
+        text: title,
+        files: [file]
+      };
+      if (via === 'viber') {
+        // Viber doesn't have a direct share target, but Web Share API will show Viber as an option
+        shareData.url = undefined;
+      }
+      await navigator.share(shareData);
+      showToast('\u2705 Dokument deljen kao Word fajl!');
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return; // User cancelled
+      console.error('Share error:', e);
+    }
+  }
+  
+  // Fallback: download the file, then open mailto/viber
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  // Open mail client with note about attachment
   if (via === 'viber') {
+    const full = title + '\n\n' + text;
     window.open('viber://forward?text=' + encodeURIComponent(full));
+    showToast('\ud83d\udcc4 Word fajl preuzet. Otvori Viber i prilo\u017ei ga.');
   } else {
-    window.open('mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(full));
+    window.open('mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent('Dokument je preuzet kao Word fajl. Molimo prilo\u017eite ga kao attachment.\n\nNaslov: ' + title));
+    showToast('\ud83d\udcc4 Word fajl preuzet. Prilo\u017eite ga u mailu.');
   }
 }
 
@@ -14938,13 +14982,47 @@ function closeModal(e) {
     document.getElementById('modal-bg').classList.remove('open');
 }
 
-function shareAkt(via) {
+async function shareAkt(via) {
   if (!currentAkt) return;
-  const text = `${currentAkt.naziv}\n${currentAkt.broj}\n\n${currentAkt.sadrzaj}`;
+  const title = currentAkt.naziv || 'Dokument';
+  const text = currentAkt.naziv + '\n' + (currentAkt.broj || '') + '\n\n' + currentAkt.sadrzaj;
+  
+  // Build Word-compatible HTML
+  const htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>body{font-family:'Times New Roman',serif;font-size:12pt;margin:2cm;}h1{font-size:14pt;font-weight:bold;}p{line-height:1.5;white-space:pre-wrap;}</style></head><body><h1>${title}</h1><p>${(currentAkt.broz || '')}</p><p>${currentAkt.sadrzaj}</p></body></html>`;
+  
+  const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+  const safeName = title.replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '');
+  const fileName = safeName + '.doc';
+  
+  // Try Web Share API with file
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/msword' })] })) {
+    try {
+      const file = new File([blob], fileName, { type: 'application/msword' });
+      await navigator.share({ title: title, text: title, files: [file] });
+      showToast('\u2705 Akt deljen kao Word fajl!');
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      console.error('Share error:', e);
+    }
+  }
+  
+  // Fallback: download + text share
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
   if (via === 'viber') {
-    window.open('viber://forward?text=' + encodeURIComponent(text));
+    window.open('viber://forward?text=' + encodeURIComponent(text.substring(0, 7000)));
+    showToast('\ud83d\udcc4 Word fajl preuzet. Prilo\u017ei ga u Viberu.');
   } else {
-    window.open('mailto:?subject=' + encodeURIComponent(currentAkt.naziv) + '&body=' + encodeURIComponent(text));
+    window.open('mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent('Dokument je preuzet kao Word fajl. Molimo prilo\u017eite ga.'));
+    showToast('\ud83d\udcc4 Word fajl preuzet. Prilo\u017ei ga u mailu.');
   }
 }
 
@@ -15693,13 +15771,46 @@ function openPelcer(id) {
 
 // Override shareAkt to work for pelceri too
 const _origShareAkt = shareAkt;
-function shareAkt(via) {
+async function shareAkt(via) {
   if (currentPelcer) {
-    const text = currentPelcer.naziv + '\n\n' + currentPelcer.tekst;
+    const title = currentPelcer.naziv || 'Pelcer';
+    const text = currentPelcer.tekst || '';
+    
+    // Build Word-compatible HTML
+    const htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>body{font-family:'Times New Roman',serif;font-size:12pt;margin:2cm;}h1{font-size:14pt;font-weight:bold;}p{line-height:1.5;white-space:pre-wrap;}</style></head><body><h1>${title}</h1><p>${text}</p></body></html>`;
+    
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+    const safeName = title.replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '');
+    const fileName = safeName + '.doc';
+    
+    // Try Web Share API
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/msword' })] })) {
+      try {
+        const file = new File([blob], fileName, { type: 'application/msword' });
+        await navigator.share({ title: title, text: title, files: [file] });
+        showToast('\u2705 Pelcer deljen kao Word fajl!');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    
+    // Fallback
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     if (via === 'viber') {
-      window.open('viber://forward?text=' + encodeURIComponent(text));
+      window.open('viber://forward?text=' + encodeURIComponent(text.substring(0, 7000)));
+      showToast('\ud83d\udcc4 Word preuzet. Prilo\u017ei u Viberu.');
     } else {
-      window.open('mailto:?subject=' + encodeURIComponent(currentPelcer.naziv) + '&body=' + encodeURIComponent(text));
+      window.open('mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent('Pelcer preuzet kao Word. Molimo prilo\u017eite ga.'));
+      showToast('\ud83d\udcc4 Word preuzet. Prilo\u017ei u mailu.');
     }
     return;
   }
@@ -15853,16 +15964,66 @@ function downloadPhoto() {
   showToast('⬇️ Fotografija sačuvana');
 }
 
-function sharePhotoViber() {
-  showToast('📲 Otvori Viber i nalepi sliku iz galerije (preuzmi prvo)');
-  downloadPhoto();
-}
-
-function sharePhotoGmail() {
+async function sharePhotoViber() {
   if (currentPhotoIndex === null) return;
   const p = photos[currentPhotoIndex];
-  window.open('mailto:?subject=' + encodeURIComponent('Fotografija - ' + p.folder) + '&body=' + encodeURIComponent('Fotografija je sačuvana na uređaju - molimo priložite je ručno iz galerije.'));
+  const fileName = 'foto_' + (p.id || 'kmapp') + '.jpg';
+  
+  // Convert data URL to blob
+  const response = await fetch(p.data);
+  const blob = await response.blob();
+  const file = new File([blob], fileName, { type: 'image/jpeg' });
+  
+  // Try Web Share API with file
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: 'Fotografija - ' + (p.folder || 'KMapp'),
+        files: [file]
+      });
+      showToast('\u2705 Fotografija deljena!');
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      console.error('Share error:', e);
+    }
+  }
+  
+  // Fallback: download photo
   downloadPhoto();
+  showToast('\ud83d\udcf8 Fotografija preuzeta. Otvori Viber i prilo\u017ei je.');
+}
+
+async function sharePhotoGmail() {
+  if (currentPhotoIndex === null) return;
+  const p = photos[currentPhotoIndex];
+  const fileName = 'foto_' + (p.id || 'kmapp') + '.jpg';
+  
+  // Convert data URL to blob
+  const response = await fetch(p.data);
+  const blob = await response.blob();
+  const file = new File([blob], fileName, { type: 'image/jpeg' });
+  
+  // Try Web Share API with file
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: 'Fotografija - ' + (p.folder || 'KMapp'),
+        text: 'Fotografija - ' + (p.folder || 'KMapp'),
+        files: [file]
+      });
+      showToast('\u2705 Fotografija deljena!');
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      console.error('Share error:', e);
+    }
+  }
+  
+  // Fallback: download + mailto
+  downloadPhoto();
+  window.open('mailto:?subject=' + encodeURIComponent('Fotografija - ' + p.folder) + '&body=' + encodeURIComponent('Fotografija je preuzeta. Molimo prilo\u017eite je kao attachment.'));
+  showToast('\ud83d\udcf8 Fotografija preuzeta. Prilo\u017eite je u mailu.');
 }
 
 // ===== MAPA =====
