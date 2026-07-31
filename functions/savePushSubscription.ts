@@ -1,35 +1,51 @@
-export default async function savePushSubscription(req, res) {
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.31";
+
+Deno.serve(async (req: Request) => {
   try {
-    const { username, subscription } = req.body || {};
+    const base44 = createClientFromRequest(req);
+    const body = await req.json();
+    const { username, subscription } = body;
+    
     if (!username || !subscription || !subscription.endpoint) {
-      return res.status(400).json({ error: 'Missing username or subscription' });
+      return new Response(JSON.stringify({ error: "Missing username or subscription" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
     }
-
-    const existing = await base44.entities.PushSubscription.list();
-    const found = existing.find(s => s.data.endpoint === subscription.endpoint);
-
+    
+    const existing = await base44.asServiceRole.entities.PushSubscription.list();
+    const found = existing.find(s => s.endpoint === subscription.endpoint);
+    
     if (found) {
-      await base44.entities.PushSubscription.update(found.id, {
+      await base44.asServiceRole.entities.PushSubscription.update(found.id, {
         username: username,
         endpoint: subscription.endpoint,
         keys_p256dh: subscription.keys?.p256dh || '',
         keys_auth: subscription.keys?.auth || '',
         subscription: JSON.stringify(subscription)
       });
-      return res.json({ success: true, action: 'updated' });
+      return new Response(JSON.stringify({ success: true, action: "updated" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
     }
-
-    await base44.entities.PushSubscription.create({
+    
+    await base44.asServiceRole.entities.PushSubscription.create({
       username: username,
       endpoint: subscription.endpoint,
       keys_p256dh: subscription.keys?.p256dh || '',
       keys_auth: subscription.keys?.auth || '',
       subscription: JSON.stringify(subscription)
     });
-
-    return res.json({ success: true, action: 'created' });
-  } catch (error) {
-    console.error('savePushSubscription error:', error);
-    return res.status(500).json({ error: error.message });
+    
+    return new Response(JSON.stringify({ success: true, action: "created" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
-}
+});

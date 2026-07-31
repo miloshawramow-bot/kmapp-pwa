@@ -1938,7 +1938,7 @@ async function porukeFetchInbox() {
       body: JSON.stringify({ username })
     });
     const data = await res.json();
-    return data.messages || [];
+    return (data.messages || []).filter(m => !m.deleted);
   } catch (e) {
     console.error('getInbox error:', e);
     return [];
@@ -1955,7 +1955,7 @@ async function porukeFetchSent() {
       body: JSON.stringify({ username })
     });
     const data = await res.json();
-    return data.messages || [];
+    return (data.messages || []).filter(m => !m.deleted);
   } catch (e) {
     console.error('getSent error:', e);
     return [];
@@ -2217,8 +2217,17 @@ function getDeletedMsgIds() {
 function isMsgDeleted(id) {
   return getDeletedMsgIds().includes(id);
 }
-function porukeDeleteMessage(msgId) {
+async function porukeDeleteMessage(msgId) {
   if (!confirm('Obrisati ovu poruku?')) return;
+  // Call backend to soft-delete
+  try {
+    await fetch(KM_API_BASE + '/deleteMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId: msgId })
+    });
+  } catch (e) { console.error('Delete error:', e); }
+  // Also store locally for immediate UI update
   const deleted = getDeletedMsgIds();
   if (!deleted.includes(msgId)) {
     deleted.push(msgId);
