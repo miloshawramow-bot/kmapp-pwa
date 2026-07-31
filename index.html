@@ -650,17 +650,12 @@
 
       <input id="login-username" type="text" placeholder="Ime.Prezime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
 
-      <input id="login-password" type="password" placeholder="Broj telefona" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="login-password" type="password" placeholder="Lozinka" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
 
-      <div id="login-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;">Pogrešno korisničko ime ili šifra! Koristite Ime.Prezime i broj telefona iz imenika.</div>
+      <div id="login-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;">Pogrešno korisničko ime ili lozinka!</div>
 
       <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:12px;">Prijavi se</button>
 
-      <div style="text-align:center;margin-top:14px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:0.72rem;color:#3b5998;line-height:1.5;">
-        <strong>Prijava za korisnike imenika:</strong><br>
-        Korisničko ime: <b>Ime.Prezime</b><br>
-        Šifra: <b>broj telefona</b> iz imenika
-      </div>
       <div style="text-align:center;margin-top:12px;"><div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <span onclick="showRegisterForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">Nemate nalog? Registrujte se</span>
       </div>
