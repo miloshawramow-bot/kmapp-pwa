@@ -124,7 +124,17 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
-  nav::-webkit-scrollbar { display: none; }
+  /* Show thin scrollbar on desktop (non-touch) */
+  @media (hover: hover) and (pointer: fine) {
+    nav::-webkit-scrollbar { display: block; height: 5px; }
+    nav::-webkit-scrollbar-thumb { background: rgba(200,168,75,0.4); border-radius: 3px; }
+    nav::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    nav { scrollbar-width: thin; scrollbar-color: rgba(200,168,75,0.4) transparent; }
+  }
+  /* Hide on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    nav::-webkit-scrollbar { display: none; }
+  }
 
   nav button {
     flex: 0 0 auto;
@@ -2875,6 +2885,19 @@ function doLogout() {
 }
 
 // Na učitavanju stranice: ako korisnik nije prijavljen, prikaži ekran za prijavu
+
+// Mouse wheel horizontal scroll for nav on desktop
+(function() {
+  var navEl = document.querySelector('nav');
+  if (!navEl) return;
+  navEl.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      navEl.scrollLeft += e.deltaY;
+    }
+  }, { passive: false });
+})();
+
 (function initAuthGate() {
   function gateCheck() {
     try {
