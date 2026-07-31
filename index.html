@@ -16648,7 +16648,7 @@ function aiSend() {
     naziv: a.naziv,
     broj: a.broj,
     tip: a.tip,
-    sadrzaj: a.sadrzaj.substring(0, 5000)
+    sadrzaj: a.sadrzaj.substring(0, 8000)
   }));
   
   fetch(KM_API_BASE + '/aiAssistant', {
@@ -16820,10 +16820,10 @@ if (new URLSearchParams(window.location.search).get('dl')) {
     </div>
     <div style="background:var(--card);border-radius:12px;padding:12px 14px;font-size:0.8rem;color:var(--muted);line-height:1.5;">
       <b style="color:var(--navy);">Predlozi pitanja:</b><br>
-      • Šta su poslovi komunalne milicije?<br>
-      • Koja ovlašćenja ima komunalni milicionar?<br>
       • Kada se izdaje upozorenje?<br>
-      • Kako se vrši asistencija u izvršenjima?
+      • Kako se vrši asistencija u izvršenjima?<br>
+      • Koja su ovlašćenja prilikom utvrđivanja identiteta?<br>
+      • Kakva je saradnja sa inspekcijskim službama?
     </div>
   </div>
   <div style="padding:10px 12px;border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;">
