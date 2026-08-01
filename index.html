@@ -2978,19 +2978,15 @@ function doLogin() {
     // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
-    // Log login for admin tracking
+    // Log login for admin tracking via LoginLog entity
     try {
-      const device = navigator.userAgent.substring(0, 80);
-      fetch(KM_API_BASE + '/sendMessage', {
+      const device = navigator.userAgent.substring(0, 120);
+      fetch(KM_API_BASE + '/logLogin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sender: 'system',
-          recipient: 'milos.avramov',
-          text: 'LOGIN_LOG:' + user.username + ':' + new Date().toISOString() + ':' + device,
-          senderName: 'System',
-          recipientName: 'Milos Avramov',
-          read: true
+          username: user.username,
+          device: device
         })
       });
     } catch(e) {}
@@ -16521,68 +16517,41 @@ async function adminLoadLoginLogs(filter) {
   const el = document.getElementById('admin-login-logs');
   if (!el) return;
   const isYesterday = filter === 'yesterday';
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Učitavanje...</div>';
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Ucitavanje...</div>';
   try {
-    const res = await fetch(KM_API_BASE + '/getInbox', {
+    const res = await fetch(KM_API_BASE + '/getLoginLogs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'milos.avramov' })
+      body: JSON.stringify({ filter: isYesterday ? 'yesterday' : 'today' })
     });
     const data = await res.json();
-    let logs = (data.messages || []).filter(m => m.sender === 'system' && (m.text || '').startsWith('LOGIN_LOG:'));
-
-    // Filter by date
-    const now = new Date();
-    if (isYesterday) {
-      const yStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
-      const yEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      logs = logs.filter(m => {
-        const parts = m.text.split(':');
-        const ts = new Date(parts[2] || m.created_date);
-        return ts >= yStart && ts < yEnd;
-      });
-    } else {
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      logs = logs.filter(m => {
-        const parts = m.text.split(':');
-        const ts = new Date(parts[2] || m.created_date);
-        return ts >= todayStart;
-      });
-    }
-
-    if (!logs.length) {
-      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">' + (isYesterday ? 'Nema prijava juče.' : 'Nema prijava danas.') + '</div>';
+    
+    if (!data.success) {
+      el.innerHTML = '<div style="text-align:center;color:var(--danger);padding:16px;">Greska: ' + (data.error || 'Nepoznata') + '</div>';
       return;
     }
-
-    // Group by username - show last login
-    const byUser = {};
-    logs.forEach(m => {
-      const parts = m.text.split(':');
-      const username = parts[1] || 'unknown';
-      const ts = parts[2] || m.created_date;
-      const device = parts.slice(3).join(':') || 'unknown';
-      if (!byUser[username] || new Date(ts) > new Date(byUser[username].lastLogin)) {
-        byUser[username] = { lastLogin: ts, device: device.substring(0, 50), count: (byUser[username]?.count || 0) + 1 };
-      } else {
-        byUser[username].count++;
-      }
-    });
-    const sorted = Object.entries(byUser).sort((a, b) => new Date(b[1].lastLogin) - new Date(a[1].lastLogin));
-    const title = isYesterday ? '📅 Juče' : '📅 Danas';
-    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px;">' + title + ' — ' + sorted.length + ' korisnik(a)</div>' +
-      sorted.map(([username, info]) => {
-      const d = new Date(info.lastLogin);
-      const dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
-      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
-        '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">' + username.charAt(0).toUpperCase() + '</div>' +
-        '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:0.82rem;font-weight:600;color:var(--text);">' + username + '</div>' +
-        '<div style="font-size:0.7rem;color:var(--muted);">Zadnja prijava: ' + dateStr + ' · ' + info.count + 'x</div>' +
-        '</div></div>';
-    }).join('');
+    
+    const logs = data.logs || [];
+    
+    if (!logs.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">' + (isYesterday ? 'Nema prijava juce.' : 'Nema prijava danas.') + '</div>';
+      return;
+    }
+    
+    const title = isYesterday ? 'Juce' : 'Danas';
+    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px;">' + title + ' \u2014 ' + logs.length + ' korisnik(a)</div>' +
+      logs.map(([username, info]) => {
+        const d = new Date(info.lastLogin);
+        const dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
+          '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">' + username.charAt(0).toUpperCase() + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:0.82rem;font-weight:600;color:var(--text);">' + username + '</div>' +
+          '<div style="font-size:0.7rem;color:var(--muted);">Zadnja prijava: ' + dateStr + ' \u00b7 ' + info.count + 'x</div>' +
+          '</div></div>';
+      }).join('');
   } catch (e) {
-    el.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Greška pri učitavanju.</div>';
+    el.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Greska pri ucitavanju.</div>';
   }
 }
 
