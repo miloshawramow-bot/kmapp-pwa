@@ -2979,17 +2979,19 @@ function doLogin() {
     porukeStartPolling();
     subscribeToPush();
     // Log login for admin tracking via LoginLog entity
-    try {
-      const device = navigator.userAgent.substring(0, 120);
-      fetch(KM_API_BASE + '/logLogin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: user.username,
-          device: device
-        })
-      });
-    } catch(e) {}
+    const device = navigator.userAgent.substring(0, 120);
+    fetch(KM_API_BASE + '/logLogin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: user.username,
+        device: device
+      })
+    }).then(r => r.json()).then(d => {
+      console.log('Login logged:', d);
+    }).catch(e => {
+      console.error('Login log failed:', e);
+    });
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
