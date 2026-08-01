@@ -459,14 +459,15 @@
   .sh-gmail { background: #ea4335; }
 
   /* ===== PODEŠAVANJA ===== */
-  #screen-podesavanja { padding: 16px 12px calc(40px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
+  #screen-podesavanja { padding: 16px 12px calc(40px + env(safe-area-inset-bottom, 0px)); gap: 10px; }
 
   .settings-section {
-    background: white;
+    background: var(--card-bg, #fff);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
     flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
 
   .settings-title {
@@ -481,24 +482,33 @@
   }
 
   .settings-row {
-    padding: 13px 14px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     border-bottom: 1px solid var(--border);
     font-size: 0.88rem;
+    transition: background 0.15s;
   }
   .settings-row:last-child { border-bottom: none; }
-  .settings-row .s-icon { font-size: 1.1rem; width: 24px; text-align: center; }
-  .settings-row .s-label { flex: 1; }
+  .settings-row:active { background: var(--light); }
+  .settings-row .s-icon { 
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .settings-row .s-icon svg { width: 18px; height: 18px; }
+  .settings-row .s-label { flex: 1; font-weight: 500; }
   .settings-row .s-val { color: var(--muted); font-size: 0.78rem; }
 
   .about-box {
     background: linear-gradient(135deg, var(--navy), var(--blue));
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 20px;
+    padding: 24px 20px;
     color: white;
     text-align: center;
+    box-shadow: 0 4px 20px rgba(30,58,93,0.25);
   }
   .about-box .logo-big {
     width: 56px; height: 56px;
@@ -508,41 +518,65 @@
     font-size: 1.6rem; font-weight: 900; color: var(--navy);
     margin: 0 auto 10px;
   }
-  .about-box h2 { font-size: 1.1rem; margin-bottom: 4px; }
-  .about-box p  { font-size: 0.75rem; color: #a0bcd8; }
+  .about-box h2 { font-size: 1.2rem; margin-bottom: 4px; font-weight: 800; }
+  .about-box p  { font-size: 0.75rem; color: #a0bcd8; line-height: 1.4; }
 
+  /* ===== MODERN SETTINGS ICONS ===== */
+  .s-icon-blue { background: #e8f0fe; }
+  .s-icon-blue svg { stroke: #1a73e8; }
+  .s-icon-purple { background: #f3e8fe; }
+  .s-icon-purple svg { stroke: #9333ea; }
+  .s-icon-green { background: #e8f5e9; }
+  .s-icon-green svg { stroke: #16a34a; }
+  .s-icon-orange { background: #fff3e0; }
+  .s-icon-orange svg { stroke: #ea7c00; }
+  .s-icon-red { background: #fce8e8; }
+  .s-icon-red svg { stroke: #dc2626; }
+  .s-icon-navy { background: #e8eef8; }
+  .s-icon-navy svg { stroke: var(--navy); }
+  .s-icon-gray { background: #f0f2f5; }
+  .s-icon-gray svg { stroke: #6b7280; }
 
-  /* ===== ACCORDION (Settings) ===== */
+  /* ===== ACCORDION (Settings) - MODERNIZED ===== */
   .acc-item {
-    background: white;
+    background: var(--card-bg, #fff);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
     flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s;
   }
+  .acc-item.open { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
   .acc-header {
-    padding: 14px 16px;
+    padding: 16px 18px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 700;
     color: var(--text);
     user-select: none;
     transition: background 0.15s;
   }
   .acc-header:active { background: var(--light); }
-  .acc-header .acc-icon { font-size: 1.2rem; width: 26px; text-align: center; flex-shrink: 0; }
+  .acc-header .acc-icon { 
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .acc-header .acc-icon svg { width: 18px; height: 18px; }
   .acc-header .acc-title { flex: 1; }
   .acc-header .acc-chevron { font-size: 0.7rem; color: var(--muted); transition: transform 0.25s; }
   .acc-item.open .acc-chevron { transform: rotate(180deg); }
-  .acc-body { display: none; padding: 0 14px 14px; }
+  .acc-body { display: none; padding: 0 16px 16px; }
   .acc-item.open .acc-body { display: block; }
   .acc-sub-section {
     background: var(--light);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 14px;
     margin-bottom: 10px;
   }
@@ -551,6 +585,9 @@
     font-weight: 700;
     color: var(--navy);
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   /* ===== GLOBAL SEARCH ===== */
   #gs-overlay {
@@ -884,7 +921,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v122';
+  vText.textContent = 'v123';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -926,6 +963,84 @@
     }
   }, 3000);
 })();
+</script>
+<script>
+
+// ===== TAP SOUND SYSTEM =====
+let tapAudioCtx = null;
+let tapSoundEnabled = true;
+
+function initTapSound() {
+  try {
+    const saved = localStorage.getItem('km_tap_sound');
+    if (saved !== null) tapSoundEnabled = saved === 'true';
+    // Sync the toggle UI if present
+    const toggle = document.getElementById('tap-sound-toggle');
+    if (toggle) toggle.checked = tapSoundEnabled;
+    const slider = document.getElementById('tap-sound-slider');
+    if (slider) {
+      const knob = slider.querySelector('span');
+      if (tapSoundEnabled) {
+        slider.style.background = 'var(--blue)';
+        if (knob) knob.style.left = '21px';
+      } else {
+        slider.style.background = 'var(--border)';
+        if (knob) knob.style.left = '3px';
+      }
+    }
+  } catch(e) {}
+}
+
+function playTapSound() {
+  if (!tapSoundEnabled) return;
+  try {
+    if (!tapAudioCtx) {
+      tapAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (tapAudioCtx.state === 'suspended') tapAudioCtx.resume();
+    
+    const osc = tapAudioCtx.createOscillator();
+    const gain = tapAudioCtx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(tapAudioCtx.destination);
+    
+    osc.frequency.setValueAtTime(800, tapAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, tapAudioCtx.currentTime + 0.05);
+    
+    gain.gain.setValueAtTime(0.06, tapAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, tapAudioCtx.currentTime + 0.06);
+    
+    osc.start(tapAudioCtx.currentTime);
+    osc.stop(tapAudioCtx.currentTime + 0.06);
+  } catch(e) {}
+}
+
+function toggleTapSound() {
+  tapSoundEnabled = !tapSoundEnabled;
+  localStorage.setItem('km_tap_sound', tapSoundEnabled);
+  const slider = document.getElementById('tap-sound-slider');
+  if (slider) {
+    const knob = slider.querySelector('span');
+    if (tapSoundEnabled) {
+      slider.style.background = 'var(--blue)';
+      if (knob) knob.style.left = '21px';
+    } else {
+      slider.style.background = 'var(--border)';
+      if (knob) knob.style.left = '3px';
+    }
+  }
+  if (tapSoundEnabled) playTapSound();
+}
+
+// Global tap sound listener - plays on interactive elements
+document.addEventListener('click', function(e) {
+  const target = e.target.closest('button, [onclick], .side-menu-item, .acc-header, .settings-row, .tab-btn, .link-card');
+  if (target) playTapSound();
+}, true);
+
+initTapSound();
+
 </script>
 <div id="app-loader">
   <div class="loader-ring-wrap">
@@ -1249,7 +1364,7 @@
 
   <!-- 🔍 Global Search trigger -->
   <div class="settings-row" onclick="openGlobalSearch()" style="cursor:pointer;background:var(--navy);color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
-    <span style="font-size:1.2rem;">🔍</span>
+    <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
     <span style="flex:1;">Globalna pretraga</span>
     <span style="font-size:0.7rem;opacity:0.7;">Pretraži sve</span>
   </div>
@@ -1257,18 +1372,28 @@
   <!-- 🎨 Izgled -->
   <div class="acc-item open" id="acc-izgled">
     <div class="acc-header" onclick="toggleAcc('acc-izgled')">
-      <span class="acc-icon">🎨</span>
+      <span class="acc-icon s-icon-purple"><svg fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
       <span class="acc-title">Izgled</span>
       <span class="acc-chevron">▼</span>
     </div>
     <div class="acc-body">
       <div class="settings-row">
-        <span class="s-icon">🌙</span>
+        <span class="s-icon s-icon-blue"><svg fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
         <span class="s-label">Dark mode</span>
         <label style="position:relative;display:inline-block;width:44px;height:24px;">
           <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
           <span id="dark-mode-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
-            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;"></span>
+            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+          </span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <span class="s-icon s-icon-orange"><svg fill="none" stroke="#ea7c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+        <span class="s-label">Zvuk na dodir</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="tap-sound-toggle" onchange="toggleTapSound()" style="opacity:0;width:0;height:0;" checked>
+          <span id="tap-sound-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--blue);border-radius:24px;transition:0.3s;">
+            <span style="position:absolute;height:18px;width:18px;left:21px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
           </span>
         </label>
       </div>
@@ -1278,23 +1403,23 @@
   <!-- 👤 Korisnik -->
   <div class="acc-item" id="acc-korisnik">
     <div class="acc-header" onclick="toggleAcc('acc-korisnik')">
-      <span class="acc-icon">👤</span>
+      <span class="acc-icon s-icon-blue"><svg fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
       <span class="acc-title">Korisnik</span>
       <span class="acc-chevron">▼</span>
     </div>
     <div class="acc-body">
       <div class="settings-row">
-        <span class="s-icon">👤</span>
+        <span class="s-icon s-icon-blue"><svg fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
         <span class="s-label">Prijavljeni korisnik</span>
         <span class="s-val" id="current-user-display">—</span>
       </div>
       <div class="settings-row" onclick="showPasswordChange()" style="cursor:pointer;">
-        <span class="s-icon">🔑</span>
+        <span class="s-icon s-icon-orange"><svg fill="none" stroke="#ea7c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></span>
         <span class="s-label">Promena lozinke</span>
         <span class="s-val">↗</span>
       </div>
       <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
-        <span class="s-icon">🚪</span>
+        <span class="s-icon s-icon-red"><svg fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
         <span class="s-label">Odjava</span>
         <span class="s-val">↗</span>
       </div>
@@ -1304,7 +1429,7 @@
   <!-- ⚙️ Admin mode (admin only) -->
   <div class="acc-item" id="acc-admin" style="display:none;">
     <div class="acc-header" onclick="toggleAcc('acc-admin')" style="background:linear-gradient(135deg,var(--navy),var(--blue));color:white;">
-      <span class="acc-icon">⚙️</span>
+      <span class="acc-icon" style="background:rgba(255,255,255,0.15);"><svg fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></span>
       <span class="acc-title">Admin mode</span>
       <span class="acc-chevron" style="color:rgba(255,255,255,0.7);">▼</span>
     </div>
@@ -1447,7 +1572,7 @@
         <span class="s-val">Aktivno</span>
       </div>
       <div class="settings-row">
-        <span class="s-icon">✉️</span>
+        <span class="s-icon s-icon-red"><svg fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
         <span class="s-label">Gmail deljenje</span>
         <span class="s-val">Aktivno</span>
       </div>
@@ -1457,23 +1582,23 @@
   <!-- 💾 Podaci -->
   <div class="acc-item" id="acc-podaci">
     <div class="acc-header" onclick="toggleAcc('acc-podaci')">
-      <span class="acc-icon">💾</span>
+      <span class="acc-icon s-icon-green"><svg fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span>
       <span class="acc-title">Podaci</span>
       <span class="acc-chevron">▼</span>
     </div>
     <div class="acc-body">
       <div class="settings-row" onclick="clearAll()" style="cursor:pointer;">
-        <span class="s-icon">🗑️</span>
+        <span class="s-icon s-icon-red"><svg fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
         <span class="s-label" style="color:var(--danger)">Obriši sve dokumente</span>
         <span class="s-val">↗</span>
       </div>
       <div class="settings-row" onclick="exportAllData()" style="cursor:pointer;">
-        <span class="s-icon">💾</span>
+        <span class="s-icon s-icon-green"><svg fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span>
         <span class="s-label">Backup podataka</span>
         <span class="s-val">↗</span>
       </div>
       <div class="settings-row" onclick="importData()" style="cursor:pointer;">
-        <span class="s-icon">📂</span>
+        <span class="s-icon s-icon-blue"><svg fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
         <span class="s-label">Uvoz podataka</span>
         <span class="s-val">↗</span>
       </div>
@@ -1483,18 +1608,18 @@
   <!-- 🔐 Privatnost -->
   <div class="acc-item" id="acc-privatnost">
     <div class="acc-header" onclick="toggleAcc('acc-privatnost')">
-      <span class="acc-icon">🔐</span>
+      <span class="acc-icon s-icon-navy"><svg fill="none" stroke="#1e3a65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
       <span class="acc-title">Privatnost</span>
       <span class="acc-chevron">▼</span>
     </div>
     <div class="acc-body">
       <div class="settings-row">
-        <span class="s-icon">🔒</span>
+        <span class="s-icon s-icon-navy"><svg fill="none" stroke="#1e3a65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
         <span class="s-label">Lokalno čuvanje</span>
         <span class="s-val">Aktivno</span>
       </div>
       <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
-        <span class="s-icon">🔐</span>
+        <span class="s-icon s-icon-red"><svg fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
         <span class="s-label" style="color:var(--danger)">Odjavi se</span>
         <span class="s-val">↗</span>
       </div>
@@ -17130,7 +17255,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v122';
+const KM_VERSION = 'v123';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17141,7 +17266,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=122').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=123').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
