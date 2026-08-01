@@ -18010,6 +18010,129 @@ function gsSearch(query) {
 // ===== AI ASISTENT =====
 let aiMessages = [];
 
+function aiPreselect(q) {
+  // Pametna preselecija akata na klijentskoj strani pre slanja na server
+  // Cilj: smanjiti payload sa 1.5MB na <100KB
+  var qLow = q.toLowerCase();
+  var qWords = qLow.split(/\s+/).filter(function(w){ return w.length > 2; });
+
+  // Stemming srpskih reci
+  var stems = [];
+  qWords.forEach(function(w){
+    stems.push(w);
+    if (w.endsWith('nja')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nje')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nog')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nom')) stems.push(w.slice(0,-3));
+    if (w.endsWith('ima')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
+    if (w.endsWith('anju')) stems.push(w.slice(0,-4));
+    if (w.endsWith('anje')) stems.push(w.slice(0,-4));
+    if (w.endsWith('anja')) stems.push(w.slice(0,-4));
+    if (w.endsWith('nom')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nog')) stems.push(w.slice(0,-3));
+    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
+  });
+
+  // Provera da li se konkretni akt pominje u pitanju
+  var wantsPenalty = qLow.indexOf('prekršaj')!==-1||qLow.indexOf('kazna')!==-1||qLow.indexOf('kazn')!==-1||qLow.indexOf('materijal')!==-1;
+  var clanMatch = q.match(/(?:član|clan|Član|čl\.|cl\.)\s*(\d+[a-z]?)/i);
+  var trazeniClan = clanMatch ? clanMatch[1] : null;
+
+  // Scoring svakog akta
+  var scored = aktiData.map(function(a){
+    var fullText = (a.naziv + ' ' + (a.sadrzaj||'')).toLowerCase();
+    var score = 0;
+
+    // Tip bonus: odluke prioritet
+    if (a.tip === 'odluka' || a.naziv.toLowerCase().indexOf('odluka') !== -1) score += 10;
+
+    // Ako se naziv akta pominje u pitanju - huge bonus
+    var aktNazLow = a.naziv.toLowerCase();
+    var nazWords = aktNazLow.replace(/^(odluka o |zakon o |pravilnik o )/,'').split(/\s+/).filter(function(w){ return w.length > 3; });
+    var nazHits = 0;
+    nazWords.forEach(function(nw){ if (qLow.indexOf(nw) !== -1) nazHits++; });
+    if (nazHits > 0 && nazHits >= Math.ceil(nazWords.length / 2)) score += 500;
+
+    // Keyword matching sa stemming
+    stems.forEach(function(s){
+      if (s.length > 2 && fullText.indexOf(s) !== -1) score += 2;
+    });
+
+    // Kaznene/materijalne odredbe bonus
+    if (wantsPenalty) {
+      if (fullText.indexOf('kaznena')!==-1) score += 8;
+      if (fullText.indexOf('materijalna')!==-1) score += 8;
+      if (fullText.indexOf('kazniće')!==-1) score += 5;
+      if (fullText.indexOf('novčana kazna')!==-1) score += 5;
+    }
+
+    return { a: a, score: score };
+  });
+
+  scored.sort(function(x,y){ return y.score - x.score; });
+
+  // Uzmi top akti (odluke prioritet, max 8 total)
+  var selected = [];
+  var odlukeCount = 0;
+  var zakonCount = 0;
+
+  for (var i = 0; i < scored.length && selected.length < 8; i++) {
+    var entry = scored[i];
+    if (entry.score <= 0) continue;
+    var isOdluka = (entry.a.tip === 'odluka' || entry.a.naziv.toLowerCase().indexOf('odluka') !== -1);
+    if (isOdluka && odlukeCount < 6) { selected.push(entry.a); odlukeCount++; }
+    else if (!isOdluka && zakonCount < 3) { selected.push(entry.a); zakonCount++; }
+  }
+
+  // Ako je score specificiran akt ima 500+, stavi ga prvi
+  if (scored.length > 0 && scored[0].score >= 500) {
+    var topAkt = scored[0].a;
+    selected = selected.filter(function(a){ return a.naziv !== topAkt.naziv; });
+    selected.unshift(topAkt);
+  }
+
+  // Trim sadrzaj po aktu: ako je specificiran clan, uzmi relevantne clanove, inace prvih 12000 znakova
+  return selected.map(function(a){
+    var sadrzaj = a.sadrzaj || '';
+
+    if (trazeniClan && scored[0].score >= 500 && scored[0].a.naziv === a.naziv) {
+      // Specificiran clan u specificiranom aktu — uzmi taj clan + kaznene + materijalne odredbe
+      var parts = sadrzaj.split(/(?=Član \d)/);
+      var relevant = [];
+      var clanPat = 'Član ' + trazeniClan;
+      parts.forEach(function(p){
+        if (p.toLowerCase().indexOf(clanPat.toLowerCase()) === 0) relevant.push(p);
+      });
+      // Dodaj kaznene i materijalne
+      parts.forEach(function(p){
+        var pl = p.toLowerCase();
+        if ((pl.indexOf('kaznena')!==-1||pl.indexOf('kazniće')!==-1||pl.indexOf('novčana kazna')!==-1||pl.indexOf('materijalna')!==-1) && relevant.indexOf(p)===-1) {
+          relevant.push(p);
+        }
+      });
+      sadrzaj = relevant.length > 0 ? relevant.slice(0,12).join('\n\n') : sadrzaj.slice(0,15000);
+    } else {
+      // Uzmimo relevantne clanove za opstu pretragu — split po clanu
+      var parts = sadrzaj.split(/(?=Član \d)/);
+      var relevant = [];
+      parts.forEach(function(p){
+        var pl = p.toLowerCase();
+        var hit = false;
+        stems.forEach(function(s){ if (s.length > 2 && pl.indexOf(s)!==-1) hit = true; });
+        if (wantsPenalty && (pl.indexOf('kaznena')!==-1||pl.indexOf('materijalna')!==-1||pl.indexOf('kazniće')!==-1||pl.indexOf('novčana kazna')!==-1)) hit = true;
+        if (hit) relevant.push(p);
+      });
+      // Max 10 clanova, max 10000 znakova po aktu
+      sadrzaj = relevant.length > 0 ? relevant.slice(0,10).join('\n\n').slice(0,10000) : sadrzaj.slice(0,8000);
+    }
+
+    return { naziv: a.naziv, broj: a.broj, tip: a.tip, sadrzaj: sadrzaj };
+  });
+}
+
 function aiSend() {
   const input = document.getElementById('ai-input');
   const q = input.value.trim();
@@ -18022,13 +18145,8 @@ function aiSend() {
   // Add loading indicator
   const loadingId = aiAddMessage('Pretražujem propise...', 'ai-loading');
   
-  // Prepare akti data (compact version - just naziv, broj, tip, sadrzaj)
-  const aktiForSearch = aktiData.map(a => ({
-    naziv: a.naziv,
-    broj: a.broj,
-    tip: a.tip,
-    sadrzaj: a.sadrzaj
-  }));
+  // Pametna preselecija na klijentskoj strani — smanjuje payload sa 1.5MB na <100KB
+  const aktiForSearch = aiPreselect(q);
   
   fetch(KM_API_BASE + '/aiAssistant', {
     method: 'POST',
