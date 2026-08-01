@@ -988,7 +988,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v116</div>
+    <div class="side-menu-footer">KMapp · Beograd · v117</div>
   </div>
 </div>
 
@@ -3586,7 +3586,7 @@ function doLogin() {
     localStorage.setItem('km_pendingLoginLog', navigator.userAgent.substring(0, 120));
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
-    document.getElementById('tab-login').style.display = 'none';
+    var tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.style.display = 'none';
     switchTab('docs');
     const displayName = user.displayName || user.username;
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
