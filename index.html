@@ -16061,6 +16061,7 @@ var trackPoints = [];
 var trackStartTime = null;
 var trackMarker = null;
 
+var wakeLock = null;
 function initLeafletMap() {
   if (leafletMap) return;
   leafletMap = L.map('leaflet-map').setView([44.8125, 20.4573], 13);
@@ -16164,6 +16165,32 @@ function toggleTracking() {
   }
 }
 
+// ===== WAKE LOCK: drzi ekran budnim dok traje pracenje =====
+async function acquireWakeLock() {
+  try {
+    if ("wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      console.log("Wake Lock acquired");
+      wakeLock.addEventListener("release", function() { console.log("Wake Lock released"); });
+    }
+  } catch(e) { console.log("Wake Lock error:", e.message); }
+}
+
+async function releaseWakeLock() {
+  if (wakeLock) {
+    try { await wakeLock.release(); wakeLock = null; } catch(e) {}
+  }
+}
+
+// Auto-resume kad se vrati u app
+document.addEventListener("visibilitychange", function() {
+  if (!trackingActive) return;
+  if (document.visibilityState === "visible") {
+    if (!leafletMap) initLeafletMap();
+    console.log("App ponovo vidljiva - nastavljam pracenje");
+  }
+});
+
 function startTracking() {
   if (!navigator.geolocation) {
     showToast('❌ Geolokacija nije dostupna');
@@ -16171,6 +16198,7 @@ function startTracking() {
   }
   if (!leafletMap) initLeafletMap();
   trackingActive = true;
+  acquireWakeLock();
   trackStartTime = Date.now();
   trackPoints = [];
   
@@ -16236,6 +16264,7 @@ function startTracking() {
 
 function stopTracking() {
   trackingActive = false;
+  releaseWakeLock();
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
@@ -16324,7 +16353,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v3.6';
+const KM_VERSION = 'v3.7';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16353,7 +16382,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=35');
+      return navigator.serviceWorker.register('sw.js?v=36');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
