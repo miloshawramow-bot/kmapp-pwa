@@ -2980,17 +2980,30 @@ function doLogin() {
     subscribeToPush();
     // Log login for admin tracking via LoginLog entity
     const device = navigator.userAgent.substring(0, 120);
-    console.log('logLogin: sending fetch...', { username: user.username, device: device.substring(0, 30) });
+    const logData = JSON.stringify({ username: user.username, device: device });
+    console.log('logLogin: sending...', logData.substring(0, 80));
+    // Try fetch with await to ensure it completes
     fetch(KM_API_BASE + '/logLogin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: user.username,
-        device: device
-      })
-    }).then(r => { console.log('logLogin response status:', r.status); return r.json(); })
-      .then(d => { console.log('logLogin result:', d); if (typeof showToast === 'function') showToast('Login zabeležen: ' + JSON.stringify(d)); })
-      .catch(e => { console.error('logLogin error:', e); if (typeof showToast === 'function') showToast('Login log greška: ' + e.message); });
+      body: logData
+    }).then(r => { 
+      console.log('logLogin response status:', r.status); 
+      return r.json(); 
+    }).then(d => { 
+      console.log('logLogin result:', d); 
+      if (typeof showToast === 'function') showToast('Login zabeležen: ' + JSON.stringify(d)); 
+    }).catch(e => { 
+      console.error('logLogin error:', e); 
+      if (typeof showToast === 'function') showToast('Login log greška: ' + e.message); 
+    });
+    // Also try sendBeacon as backup
+    try {
+      const blob = new Blob([logData], { type: 'application/json' });
+      navigator.sendBeacon(KM_API_BASE + '/logLogin', blob);
+    } catch(beaconErr) {
+      console.warn('sendBeacon failed:', beaconErr);
+    }
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
