@@ -870,8 +870,8 @@
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div style="font-size:0.85rem;font-weight:700;color:var(--text);">📊 Prijavljeni korisnici</div>
         <div style="display:flex;gap:6px;">
-          <button onclick="adminLoadLoginLogs('yesterday')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📅 Juče</button>
-          <button onclick="adminLoadLoginLogs()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
+          <button onclick="adminLoadLoginLogs('today')" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
+          <button onclick="adminLoadLoginLogs('all')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📊 Istorija</button>
         </div>
       </div>
       <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
@@ -16516,13 +16516,13 @@ function adminRenderUsersList() {
 async function adminLoadLoginLogs(filter) {
   const el = document.getElementById('admin-login-logs');
   if (!el) return;
-  const isYesterday = filter === 'yesterday';
+  const f = filter || 'today';
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Ucitavanje...</div>';
   try {
     const res = await fetch(KM_API_BASE + '/getLoginLogs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filter: isYesterday ? 'yesterday' : 'today' })
+      body: JSON.stringify({ filter: f })
     });
     const data = await res.json();
     
@@ -16534,15 +16534,21 @@ async function adminLoadLoginLogs(filter) {
     const logs = data.logs || [];
     
     if (!logs.length) {
-      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">' + (isYesterday ? 'Nema prijava juce.' : 'Nema prijava danas.') + '</div>';
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Nema prijava.</div>';
       return;
     }
     
-    const title = isYesterday ? 'Juce' : 'Danas';
-    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px;">' + title + ' \u2014 ' + logs.length + ' korisnik(a)</div>' +
-      logs.map(([username, info]) => {
-        const d = new Date(info.lastLogin);
-        const dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+    let titleText;
+    if (f === 'today') titleText = 'Danas';
+    else if (f === 'all') titleText = 'Istorija (svi korisnici)';
+    else titleText = f;
+    
+    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px;">' + titleText + ' \u2014 ' + logs.length + ' korisnik(a)</div>' +
+      logs.map(function(entry) {
+        var username = entry[0];
+        var info = entry[1];
+        var d = new Date(info.lastLogin);
+        var dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
         return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
           '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">' + username.charAt(0).toUpperCase() + '</div>' +
           '<div style="flex:1;min-width:0;">' +
