@@ -16766,7 +16766,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v91';
+const KM_VERSION = 'v92';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
