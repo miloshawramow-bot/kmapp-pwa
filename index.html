@@ -1903,6 +1903,43 @@
 </div>
 
 <!-- old weather modal removed -->
+
+<!-- ===== WEATHER MODAL ===== -->
+<div id="weather-modal" onclick="closeWeatherModal()">
+  <div class="weather-panel" onclick="event.stopPropagation()">
+    <div class="weather-panel-header">
+      <span class="weather-panel-title" id="wm-city">Beograd</span>
+      <button class="weather-panel-close" onclick="closeWeatherModal()">✕</button>
+    </div>
+    <div class="weather-current">
+      <span class="weather-current-icon" id="wm-icon">☀️</span>
+      <div class="weather-current-info">
+        <div class="weather-current-temp" id="wm-temp">--°C</div>
+        <div class="weather-current-desc" id="wm-desc">Učitavam...</div>
+        <div class="weather-current-meta" id="wm-meta">Vlažnost: --% · Vetar: -- km/h</div>
+      </div>
+    </div>
+    <div class="weather-details">
+      <div class="weather-detail-card">
+        <div class="weather-detail-label">Vlažnost</div>
+        <div class="weather-detail-val" id="wm-humidity">--%</div>
+      </div>
+      <div class="weather-detail-card">
+        <div class="weather-detail-label">Vetar</div>
+        <div class="weather-detail-val" id="wm-wind">-- km/h</div>
+      </div>
+      <div class="weather-detail-card">
+        <div class="weather-detail-label">Pritisak</div>
+        <div class="weather-detail-val" id="wm-pressure">-- hPa</div>
+      </div>
+    </div>
+    <div class="weather-forecast-title">5-dnevna prognoza</div>
+    <div id="wm-forecast">
+      <div style="color:rgba(160,188,216,0.5);text-align:center;padding:16px;font-size:0.8rem;">Učitavam prognozu...</div>
+    </div>
+  </div>
+</div>
+
 <div id="watermark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(0,0,0,0.15);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;">@milosavramov</div>
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
@@ -3464,43 +3501,8 @@ function shareDoc(via) {
   var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
-  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '
-<!-- ===== WEATHER MODAL ===== -->
-<div id="weather-modal" onclick="closeWeatherModal()">
-  <div class="weather-panel" onclick="event.stopPropagation()">
-    <div class="weather-panel-header">
-      <span class="weather-panel-title" id="wm-city">Beograd</span>
-      <button class="weather-panel-close" onclick="closeWeatherModal()">✕</button>
-    </div>
-    <div class="weather-current">
-      <span class="weather-current-icon" id="wm-icon">☀️</span>
-      <div class="weather-current-info">
-        <div class="weather-current-temp" id="wm-temp">--°C</div>
-        <div class="weather-current-desc" id="wm-desc">Učitavam...</div>
-        <div class="weather-current-meta" id="wm-meta">Vlažnost: --% · Vetar: -- km/h</div>
-      </div>
-    </div>
-    <div class="weather-details">
-      <div class="weather-detail-card">
-        <div class="weather-detail-label">Vlažnost</div>
-        <div class="weather-detail-val" id="wm-humidity">--%</div>
-      </div>
-      <div class="weather-detail-card">
-        <div class="weather-detail-label">Vetar</div>
-        <div class="weather-detail-val" id="wm-wind">-- km/h</div>
-      </div>
-      <div class="weather-detail-card">
-        <div class="weather-detail-label">Pritisak</div>
-        <div class="weather-detail-val" id="wm-pressure">-- hPa</div>
-      </div>
-    </div>
-    <div class="weather-forecast-title">5-dnevna prognoza</div>
-    <div id="wm-forecast">
-      <div style="color:rgba(160,188,216,0.5);text-align:center;padding:16px;font-size:0.8rem;">Učitavam prognozu...</div>
-    </div>
-  </div>
-</div>
-</body></html>';
+  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
+
   
   var blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
   var url = URL.createObjectURL(blob);
