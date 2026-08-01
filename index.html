@@ -16077,6 +16077,8 @@ function initLeafletMap() {
   });
   // Load saved track for current user
   loadSavedTrack();
+  // Auto-resume tracking if it was active before app was closed
+  checkResumeTracking();
   // Fix size after container becomes visible
   setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
 }
@@ -16193,7 +16195,7 @@ document.addEventListener("visibilitychange", function() {
   }
 });
 
-function startTracking() {
+function startTracking(resume) {
   if (!navigator.geolocation) {
     showToast('❌ Geolokacija nije dostupna');
     return;
@@ -16201,10 +16203,13 @@ function startTracking() {
   if (!leafletMap) initLeafletMap();
   trackingActive = true;
   acquireWakeLock();
-  trackStartTime = Date.now();
-  trackPoints = [];
-  trackId = "track_" + Date.now() + "_" + Math.random().toString(36).substr(2,6);
-  syncTrackToBackend("start");
+  if (!resume) {
+    trackStartTime = Date.now();
+    trackPoints = [];
+    trackId = "track_" + Date.now() + "_" + Math.random().toString(36).substr(2,6);
+  }
+  saveTrackingState();
+  syncTrackToBackend(resume ? "sync" : "start");
   syncInterval = setInterval(function() { syncTrackToBackend("sync"); }, 10000);
   
   // Show tracking UI
@@ -16283,6 +16288,7 @@ function stopTracking() {
   
   // Save final track
   saveTrack();
+  clearTrackingState();
   showToast('⏹ Praćenje zaustavljeno. Putanja sačuvana.');
 }
 
@@ -16328,6 +16334,43 @@ function syncTrackToBackend(action) {
       })
     }).catch(function(e) { console.error('Track sync error:', e); });
   } catch(e) { console.error('Track sync error:', e); }
+}
+
+function saveTrackingState() {
+  var username = getCurrentUsername();
+  if (!username || !trackId) return;
+  try {
+    localStorage.setItem('km_tracking_state_' + username, JSON.stringify({
+      trackId: trackId,
+      startTime: trackStartTime,
+      active: true
+    }));
+  } catch(e) {}
+}
+
+function clearTrackingState() {
+  var username = getCurrentUsername();
+  if (!username) return;
+  try {
+    localStorage.removeItem('km_tracking_state_' + username);
+  } catch(e) {}
+}
+
+function checkResumeTracking() {
+  var username = getCurrentUsername();
+  if (!username) return;
+  try {
+    var raw = localStorage.getItem('km_tracking_state_' + username);
+    if (!raw) return;
+    var state = JSON.parse(raw);
+    if (state.active && state.trackId) {
+      trackId = state.trackId;
+      trackStartTime = state.startTime;
+      console.log("Auto-resume tracking:", trackId);
+      startTracking(true);
+      showToast('▶️ Praćenje automatski nastavljeno');
+    }
+  } catch(e) { console.error("Resume tracking error:", e); }
 }
 
 function saveTrack() {
