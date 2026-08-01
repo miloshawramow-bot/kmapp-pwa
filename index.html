@@ -2975,13 +2975,22 @@ function doLogin() {
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
     checkAdminAccess();
-    // Log login via Image beacon (bypasses service worker)
+    // Log login via sendBeacon + fetch fallback
     try {
-      const _device = encodeURIComponent(navigator.userAgent.substring(0, 120));
-      const _uname = encodeURIComponent(user.username);
-      const _img = new Image();
-      _img.src = KM_API_BASE + '/logLogin?username=' + _uname + '&device=' + _device;
-    } catch(e) {}
+      const _device = navigator.userAgent.substring(0, 120);
+      const _payload = JSON.stringify({ username: user.username, device: _device });
+      // Try sendBeacon first (works even during page unload)
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(KM_API_BASE + '/logLogin', _payload);
+      }
+      // Also try fetch with keepalive as backup
+      fetch(KM_API_BASE + '/logLogin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: _payload,
+        keepalive: true
+      }).catch(() => {});
+    } catch(e) { console.log('logLogin error:', e); }
     // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
