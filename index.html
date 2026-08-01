@@ -2982,11 +2982,11 @@ function doLogin() {
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
     checkAdminAccess();
+    // Log login for admin tracking — piggybacked on checkNew poll
+    _kmLogLoginDevice = navigator.userAgent.substring(0, 120);
     // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
-    // Log login for admin tracking — piggybacked on checkNew poll
-    _kmLogLoginDevice = navigator.userAgent.substring(0, 120);
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
