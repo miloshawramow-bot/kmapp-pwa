@@ -206,7 +206,7 @@
   }
 
   /* SCREENS */
-  .screen { display: none; flex-direction: column; flex: 1 1 0; min-height: 0; overflow-y: auto; animation: fadeIn 0.2s ease; }
+  .screen { display: none; flex-direction: column; flex: 1 1 0; min-height: 0; overflow-y: auto; animation: fadeIn 0.2s ease; -webkit-overflow-scrolling: touch; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .screen.active { display: flex; }
 
@@ -429,7 +429,7 @@
   .sh-gmail { background: #ea4335; }
 
   /* ===== PODEŠAVANJA ===== */
-  #screen-podesavanja { padding: 16px 12px; gap: 12px; }
+  #screen-podesavanja { padding: 16px 12px calc(16px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
 
   .settings-section {
     background: white;
@@ -899,7 +899,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v97</div>
+    <div class="side-menu-footer">KMapp · Beograd · v98</div>
   </div>
 </div>
 
@@ -928,7 +928,7 @@
 <!-- ===== DOKUMENTI ===== -->
 <!-- ===== LOGIN / PRIJAVA ===== -->
 <div class="screen" id="screen-login" style="display: none;">
-  <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:
+  <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 60px;background:
     linear-gradient(135deg, rgba(13, 34, 64, 0.55) 0%, rgba(26, 74, 138, 0.40) 100%),
     url('https://media.base44.com/images/public/6a69d1df8104de5b799a3993/adcde85f3_generated_image.png') center/cover;
     background-attachment: fixed;">
@@ -1232,8 +1232,9 @@
     <div class="settings-row" onclick="clearAll()" style="cursor:pointer;">
       <span class="s-icon">🗑️</span>
       <span class="s-label" style="color:var(--danger)">Obriši sve dokumente</span>
-    
-  <div class="settings-row" onclick="exportAllData()" style="cursor:pointer;">
+      <span class="s-val">↗</span>
+    </div>
+    <div class="settings-row" onclick="exportAllData()" style="cursor:pointer;">
       <span class="s-icon">💾</span>
       <span class="s-label">Backup podataka</span>
       <span class="s-val">Preuzmi →</span>
@@ -1243,7 +1244,6 @@
       <span class="s-label">Uvoz podataka</span>
       <span class="s-val">← Učitaj</span>
     </div>
-</div>
   </div>
 
   <div class="settings-section">
@@ -1251,6 +1251,7 @@
     <div class="settings-row" onclick="doLogout()" style="cursor:pointer;">
       <span class="s-icon">🔐</span>
       <span class="s-label" style="color:var(--danger)">Odjavi se</span>
+      <span class="s-val">↗</span>
     </div>
   </div>
 </div>
@@ -16851,7 +16852,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v97';
+const KM_VERSION = 'v98';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16866,7 +16867,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v97') caches.delete(n);
+          if (n !== 'kmapp-v98') caches.delete(n);
         });
       });
     }
@@ -16880,7 +16881,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=97');
+      return navigator.serviceWorker.register('sw.js?v=98');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
