@@ -878,6 +878,55 @@
 </head>
 <body>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
+<script>
+// ===== INDEPENDENT LOADER SAFETY (immune to main script crashes) =====
+(function() {
+  // Show version on loader
+  var vText = document.createElement('div');
+  vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
+  vText.textContent = 'v119';
+  document.addEventListener('DOMContentLoaded', function() {
+    document.body.appendChild(vText);
+  });
+  
+  // Safety: hide loader after 5s no matter what
+  setTimeout(function() {
+    var l = document.getElementById('app-loader');
+    if (l && !l.classList.contains('hidden')) {
+      // Check if gateCheck ran by looking for active screen
+      var hasActive = document.querySelector('.screen.active');
+      if (!hasActive) {
+        // Main script probably crashed - show login screen manually
+        var ls = document.getElementById('screen-login');
+        if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
+        var nav = document.querySelector('nav');
+        if (nav) { nav.style.display = 'flex'; }
+      }
+      l.classList.add('hidden');
+      setTimeout(function() { if (l) l.remove(); }, 500);
+    }
+  }, 5000);
+  
+  // Also make loader dismissible by tapping (emergency)
+  setTimeout(function() {
+    var l = document.getElementById('app-loader');
+    if (l && !l.classList.contains('hidden')) {
+      l.style.cursor = 'pointer';
+      l.addEventListener('click', function() {
+        var hasActive = document.querySelector('.screen.active');
+        if (!hasActive) {
+          var ls = document.getElementById('screen-login');
+          if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
+          var nav = document.querySelector('nav');
+          if (nav) { nav.style.display = 'flex'; }
+        }
+        l.classList.add('hidden');
+        setTimeout(function() { l.remove(); }, 500);
+      });
+    }
+  }, 3000);
+})();
+</script>
 <div id="app-loader">
   <div class="loader-ring-wrap">
     <img src="icons/icon-192.png" alt="KMapp" class="loader-icon">
@@ -2363,7 +2412,8 @@ if (document.readyState === 'loading') {
 </script>
 <script>
 // ===== STATE =====
-let docs = JSON.parse(localStorage.getItem('bk_docs') || '[]');
+let docs = [];
+try { docs = JSON.parse(localStorage.getItem('bk_docs') || '[]'); } catch(e) { docs = []; }
 let currentDocId = null;
 let currentAkt = null;
 
@@ -17072,7 +17122,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v119';
+const KM_VERSION = 'v120';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17083,7 +17133,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=119').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=120').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
