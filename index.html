@@ -459,15 +459,15 @@
   .sh-gmail { background: #ea4335; }
 
   /* ===== PODEŠAVANJA ===== */
-  #screen-podesavanja { padding: 16px 12px calc(40px + env(safe-area-inset-bottom, 0px)); gap: 10px; }
+  #screen-podesavanja { padding: 10px 10px calc(40px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
 
   .settings-section {
     background: var(--card-bg, #fff);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
     flex-shrink: 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   }
 
   .settings-title {
@@ -482,10 +482,10 @@
   }
 
   .settings-row {
-    padding: 14px 16px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     border-bottom: 1px solid var(--border);
     font-size: 0.88rem;
     transition: background 0.15s;
@@ -493,19 +493,19 @@
   .settings-row:last-child { border-bottom: none; }
   .settings-row:active { background: var(--light); }
   .settings-row .s-icon { 
-    width: 36px; height: 36px;
+    width: 30px; height: 30px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 10px;
+    border-radius: 8px;
     flex-shrink: 0;
   }
-  .settings-row .s-icon svg { width: 18px; height: 18px; }
+  .settings-row .s-icon svg { width: 16px; height: 16px; }
   .settings-row .s-label { flex: 1; font-weight: 500; }
   .settings-row .s-val { color: var(--muted); font-size: 0.78rem; }
 
   .about-box {
     background: linear-gradient(135deg, var(--navy), var(--blue));
-    border-radius: 20px;
-    padding: 24px 20px;
+    border-radius: 16px;
+    padding: 16px 16px;
     color: white;
     text-align: center;
     box-shadow: 0 4px 20px rgba(30,58,93,0.25);
@@ -541,20 +541,20 @@
   .acc-item {
     background: var(--card-bg, #fff);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
     flex-shrink: 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     transition: box-shadow 0.2s;
   }
   .acc-item.open { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
   .acc-header {
-    padding: 16px 18px;
+    padding: 11px 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 700;
     color: var(--text);
     user-select: none;
@@ -562,16 +562,16 @@
   }
   .acc-header:active { background: var(--light); }
   .acc-header .acc-icon { 
-    width: 36px; height: 36px;
+    width: 30px; height: 30px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 10px;
+    border-radius: 8px;
     flex-shrink: 0;
   }
-  .acc-header .acc-icon svg { width: 18px; height: 18px; }
+  .acc-header .acc-icon svg { width: 16px; height: 16px; }
   .acc-header .acc-title { flex: 1; }
   .acc-header .acc-chevron { font-size: 0.7rem; color: var(--muted); transition: transform 0.25s; }
   .acc-item.open .acc-chevron { transform: rotate(180deg); }
-  .acc-body { display: none; padding: 0 16px 16px; }
+  .acc-body { display: none; padding: 0 14px 12px; }
   .acc-item.open .acc-body { display: block; }
   .acc-sub-section {
     background: var(--light);
@@ -921,7 +921,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v124';
+  vText.textContent = 'v125';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -17250,7 +17250,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v124';
+const KM_VERSION = 'v125';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17261,7 +17261,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=124').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=125').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
