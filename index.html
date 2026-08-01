@@ -16771,13 +16771,13 @@ function clearTrack() {
 
 // Version check - forces reload if version mismatch
 const KM_VERSION = 'v93';
-if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
-  sessionStorage.setItem('km_version', KM_VERSION);
+if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
+  localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
   location.reload(true);
 } else {
-  sessionStorage.setItem('km_version', KM_VERSION);
+  localStorage.setItem('km_version', KM_VERSION);
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -16785,7 +16785,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v33') caches.delete(n);
+          if (n !== 'kmapp-v93') caches.delete(n);
         });
       });
     }
@@ -16799,7 +16799,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=37');
+      return navigator.serviceWorker.register('sw.js?v=93');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
