@@ -1913,7 +1913,7 @@ function switchTab(name) {
   if (name === 'imenik') initImenik();
   if (name === 'kalendar') renderCalendar();
   if (name === 'poruke') porukeView('conversations');
-  if (name === 'mapa') { setTimeout(function() { initLeafletMap(); }, 100); }
+  if (name === 'mapa') { checkMapAdminAccess(); setTimeout(function() { initLeafletMap(); }, 100); }
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
   }
@@ -15371,7 +15371,7 @@ function closeImenikModal() {
       <button onclick="goTo(44.7866,20.4489,&#39;Novi Beograd&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">🏢 N. Beograd</button>
       <button onclick="goTo(44.8019,20.5218,&#39;Zvezdara&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">⭐ Zvezdara</button>
     </div>
-    <div style="margin-top:8px;display:flex;gap:6px;">
+    <div id="admin-clear-track" style="margin-top:8px;display:flex;gap:6px;">
       <button onclick="clearTrack()" style="flex:1;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid #e74c3c;background:white;color:#e74c3c;cursor:pointer;">🗑️ Obriši putanju</button>
     </div>
   </div>
@@ -16324,7 +16324,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v3.5';
+const KM_VERSION = 'v3.6';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16353,7 +16353,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=34');
+      return navigator.serviceWorker.register('sw.js?v=35');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
@@ -16560,6 +16560,15 @@ function checkAdminAccess() {
   const el = document.getElementById('admin-panel-section');
   if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
   if (role === 'admin') { renderAdminAktiList(); renderAdminPelceriList(); adminRenderUsersList(); }
+}
+
+function checkMapAdminAccess() {
+  const role = getCurrentUserRole();
+  const isAdmin = (role === 'admin');
+  const btnTrack = document.getElementById('btn-track');
+  const btnClear = document.getElementById('admin-clear-track');
+  if (btnTrack) btnTrack.style.display = isAdmin ? '' : 'none';
+  if (btnClear) btnClear.style.display = isAdmin ? 'flex' : 'none';
 }
 
 function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
