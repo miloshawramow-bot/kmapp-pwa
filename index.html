@@ -3765,20 +3765,7 @@ function shareDoc(via) {
   var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
-  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '
-<!-- ===== GLOBAL SEARCH OVERLAY ===== -->
-<div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
-  <div id="gs-box">
-    <div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);">
-      <input id="gs-input" type="text" placeholder="Pretraži dokumente, kontakte, akte..." oninput="gsSearch(this.value)" style="flex:1;border:none;outline:none;font-size:1rem;padding:8px 0;background:transparent;">
-      <button onclick="closeGlobalSearch()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:4px 8px;">✕</button>
-    </div>
-    <div id="gs-results">
-      <div class="gs-empty">Unesite najmanje 2 karaktera...</div>
-    </div>
-  </div>
-</div>
-</body></html>';
+  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
 
   
   var blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
@@ -15940,6 +15927,20 @@ function closeImenikModal() {
 }
 
 </script>
+
+<!-- ===== GLOBAL SEARCH OVERLAY ===== -->
+<div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+  <div id="gs-box">
+    <div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);">
+      <input id="gs-input" type="text" placeholder="Pretraži dokumente, kontakte, akte..." oninput="gsSearch(this.value)" style="flex:1;border:none;outline:none;font-size:1rem;padding:8px 0;background:transparent;">
+      <button onclick="closeGlobalSearch()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:4px 8px;">✕</button>
+    </div>
+    <div id="gs-results">
+      <div class="gs-empty">Unesite najmanje 2 karaktera...</div>
+    </div>
+  </div>
+</div>
+
 <script src="js/mammoth.browser.min.js"></script>
 
 <!-- ===== MAPA ===== -->
