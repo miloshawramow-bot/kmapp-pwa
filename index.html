@@ -899,7 +899,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v96</div>
+    <div class="side-menu-footer">KMapp · Beograd · v97</div>
   </div>
 </div>
 
@@ -3382,11 +3382,29 @@ function doLogin() {
   const u = (document.getElementById('login-username').value || '').trim();
   const p = (document.getElementById('login-password').value || '').trim();
   const errEl = document.getElementById('login-error');
-  const users = getKMUsers();
   const normPhone = ph => (ph || '').replace(/[^0-9+]/g, '');
+  
+  // 1. Probaj iz svih korisnika (localStorage + imenik)
+  const users = getKMUsers();
   let user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
   if (!user) {
     user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password && normPhone(x.password) === normPhone(p));
+  }
+  
+  // 2. Fallback: direktno iz imenika (uvek radi, bez obzira na localStorage)
+  if (!user) {
+    const imenikUsers = getImenikUsers();
+    const imUser = imenikUsers.find(x => x.username.toLowerCase() === u.toLowerCase());
+    if (imUser && imUser.password) {
+      if (imUser.password === p || normPhone(imUser.password) === normPhone(p)) {
+        user = imUser;
+      }
+    }
+  }
+  
+  // 3. Fallback: admin sa default lozinkom
+  if (!user && u.toLowerCase() === 'admin' && p === 'admin') {
+    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
   }
 
   if (user) {
@@ -16833,7 +16851,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v96';
+const KM_VERSION = 'v97';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16848,7 +16866,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v96') caches.delete(n);
+          if (n !== 'kmapp-v97') caches.delete(n);
         });
       });
     }
@@ -16862,7 +16880,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=96');
+      return navigator.serviceWorker.register('sw.js?v=97');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
