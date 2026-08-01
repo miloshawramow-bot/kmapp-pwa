@@ -2980,6 +2980,7 @@ function doLogin() {
     subscribeToPush();
     // Log login for admin tracking via LoginLog entity
     const device = navigator.userAgent.substring(0, 120);
+    console.log('logLogin: sending fetch...', { username: user.username, device: device.substring(0, 30) });
     fetch(KM_API_BASE + '/logLogin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2987,11 +2988,9 @@ function doLogin() {
         username: user.username,
         device: device
       })
-    }).then(r => r.json()).then(d => {
-      console.log('Login logged:', d);
-    }).catch(e => {
-      console.error('Login log failed:', e);
-    });
+    }).then(r => { console.log('logLogin response status:', r.status); return r.json(); })
+      .then(d => { console.log('logLogin result:', d); if (typeof showToast === 'function') showToast('Login zabeležen: ' + JSON.stringify(d)); })
+      .catch(e => { console.error('logLogin error:', e); if (typeof showToast === 'function') showToast('Login log greška: ' + e.message); });
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
