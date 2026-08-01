@@ -1982,6 +1982,10 @@ async function porukeCheckNew() {
       body: JSON.stringify(reqBody)
     });
     const data = await res.json();
+    // Debug: store result for inspection
+    if (reqBody.logLogin) {
+      localStorage.setItem('km_loginLogDebug', JSON.stringify({ status: res.status, sentDevice: reqBody.device, response: data }));
+    }
     const count = data.count || 0;
     // Clear pending login log flag
     if (localStorage.getItem('km_pendingLoginLog')) {
@@ -2978,6 +2982,8 @@ function doLogin() {
     localStorage.setItem(KM_AUTH_KEY, '1');
     localStorage.setItem(KM_CURRENT_USER, user.username);
     localStorage.setItem(KM_DISPLAY_NAME, user.displayName || user.username);
+    // Set login flag IMMEDIATELY — porukeCheckNew will pick it up
+    localStorage.setItem('km_pendingLoginLog', navigator.userAgent.substring(0, 120));
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
     document.getElementById('tab-login').style.display = 'none';
@@ -2986,8 +2992,6 @@ function doLogin() {
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
     checkAdminAccess();
-    // Set login flag in localStorage — porukeCheckNew will pick it up
-    localStorage.setItem('km_pendingLoginLog', navigator.userAgent.substring(0, 120));
     // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
