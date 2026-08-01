@@ -3534,7 +3534,9 @@ function getCurrentUser() {
 }
 
 function updateCurrentUserDisplay() {
-  if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
+  var display = getCurrentUser();
+  var el = document.querySelector('.header-text p');
+  if (el && display) el.textContent = '@' + display;
 }
 
 function isLoggedIn() {
@@ -3670,7 +3672,7 @@ function doLogin() {
     switchTab('docs');
     const displayName = user.displayName || user.username;
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
-    if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
+    updateCurrentUserDisplay();
     checkAdminAccess();
     // Start message polling and push subscription after login
     porukeStartPolling();
@@ -17122,7 +17124,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v120';
+const KM_VERSION = 'v121';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17133,7 +17135,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=120').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=121').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
