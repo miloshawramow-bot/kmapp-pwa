@@ -899,7 +899,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v95</div>
+    <div class="side-menu-footer">KMapp · Beograd · v96</div>
   </div>
 </div>
 
@@ -2242,7 +2242,7 @@ function switchTab(name) {
   const screen = document.getElementById('screen-' + name);
   if (screen) {
     screen.classList.add('active');
-    screen.style.display = (name === 'mapa' || name === 'kamera') ? 'flex' : 'block';
+    screen.style.display = 'flex';
   }
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
@@ -16833,7 +16833,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v95';
+const KM_VERSION = 'v96';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16848,7 +16848,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v95') caches.delete(n);
+          if (n !== 'kmapp-v96') caches.delete(n);
         });
       });
     }
@@ -16862,7 +16862,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=95');
+      return navigator.serviceWorker.register('sw.js?v=96');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
