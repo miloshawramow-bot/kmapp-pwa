@@ -638,49 +638,6 @@
 
   /* ===== Loading screen with rotating logo ===== */
 
-  /* 3D flip logo - shared styles */
-  .logo-flip {
-    perspective: 200px;
-  }
-  .logo-flip .flip-inner {
-    position: relative;
-    width: 100%; height: 100%;
-    transform-style: preserve-3d;
-  }
-  .logo-flip .flip-side {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    border: 2px solid var(--gold);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    overflow: hidden;
-  }
-  .logo-flip .flip-side img {
-    width: 100%; height: 100%; object-fit: cover;
-  }
-  .logo-flip .flip-back {
-    transform: rotateY(180deg);
-  }
-
-  /* Loader flip - fast rotation */
-  #app-loader .logo-flip { width: 80px; height: 80px; }
-  #app-loader .flip-side { border: 3px solid var(--gold); }
-  #app-loader .flip-inner { animation: logo-3d-flip 2s ease-in-out infinite; }
-
-  /* Header flip - slow rotation */
-  .header-logo { width: 40px; height: 40px; flex-shrink: 0; }
-  .header-logo .flip-inner { animation: header-flip 6s ease-in-out infinite; }
-
-  @keyframes logo-3d-flip {
-    0%, 20% { transform: rotateY(0deg); }
-    50%, 70% { transform: rotateY(180deg); }
-    100% { transform: rotateY(360deg); }
-  }
-  @keyframes header-flip {
-    0%, 35% { transform: rotateY(0deg); }
-    50%, 85% { transform: rotateY(180deg); }
-    100% { transform: rotateY(360deg); }
-  }
 
   #app-loader {
     position: fixed; inset: 0; z-index: 99999;
@@ -892,22 +849,12 @@
 </head>
 <body>
 <div id="app-loader">
-  <div class="logo-flip">
-    <div class="flip-inner">
-      <div class="flip-side flip-front"><img src="icons/icon-192.png" alt="KM"></div>
-      <div class="flip-side flip-back"><img src="icons/beograd-grb.png" alt="Beograd"></div>
-    </div>
-  </div>
+  <img src="icons/icon-192.png" alt="KMapp">
   <p>Učitavanje...</p>
 </div>
 
 <header>
-    <div class="logo-flip header-logo">
-    <div class="flip-inner">
-      <div class="flip-side flip-front"><img src="icons/icon-192.png" alt="KM"></div>
-      <div class="flip-side flip-back"><img src="icons/beograd-grb.png" alt="Beograd"></div>
-    </div>
-  </div>
+    <img src="icons/icon-192.png" alt="KMapp" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;">
   <div class="header-text">
     <h1>KMapp</h1>
     <p>@milos.avramov</p>
