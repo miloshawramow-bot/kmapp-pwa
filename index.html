@@ -793,10 +793,10 @@
 <div id="side-menu-overlay" onclick="closeSideMenu()">
   <div id="side-menu" onclick="event.stopPropagation()">
     <div class="side-menu-header">
-      <img class="side-menu-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAejAAAHowEwO8IJAAAA/1BMVEUAAAAiKl4mMGAAGHoAA3MABXIhKV4hKl0hKl4iKl4hKl4hKl4hKl0hKl4hKl4hKl4hKl4hKV4hKV4hKl4hKl4hKl0hKV8hKl4hKl4hKl0hKl0hKl4hKl0hKV0hKl4hKl3////h4+z9/f7n6e/4+fv7+/z09fnx8vbz9Pjt7vPs7fPp6vDm5+3j5Ov09fnp6fDMz9z5+vvj5ev+/v7v8PTe4Onn6PDm5+3a3OT19vnn6e/u7/Tf4urq7PH+/v/o6u/v8PXd3+ne4On4+fve4Ojh4+v4+Pvr7fL9/v79/f7w8fXy8/fj5Ozl5+339/r5+fvu7/Tv8PXh4er2+Pn3+Prt7vP09/k0OWkcAAAAM3RSTlMAERERERERERERZiIiImZmzMzMzMzu7u7u7u7u7u7u7u4iZiIiZiIiImYiIiJmImYiK3zLWQAAA0tJREFUSMftlulS2kAUhQMECAECBMKasCirIKCyb4IIsrhrtb7/m3RuciEJSQj95pzpTIc/3/lm7rkThMFgsD8rleoEkMlkUicI+mYSUo1XKJQLeqkLlEq5StFXWyJQqeRr5UohKJbzlQJJ5UqhXAR3WSWA93VQVF4c4D2cVF5egIe3FpYrp15yIByQkAGxPxiSgKRkIKFknBCkhAQjgELCFAINkBCDiB5BAIAHEC/DJQDfIBPBBRQA2AAAYP8HAAA=' alt="KMapp">
+      <img class="side-menu-logo" src="icons/icon-192.png" alt="KMapp">
       <div class="side-menu-brand">
         <h2>KMapp</h2>
-        <p>Komunalne Usluge Beograd</p>
+        
       </div>
       <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
     </div>
@@ -899,7 +899,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v93</div>
+    <div class="side-menu-footer">KMapp · Beograd · v94</div>
   </div>
 </div>
 
@@ -16770,7 +16770,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v93';
+const KM_VERSION = 'v94';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16785,7 +16785,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v93') caches.delete(n);
+          if (n !== 'kmapp-v94') caches.delete(n);
         });
       });
     }
@@ -16799,7 +16799,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=93');
+      return navigator.serviceWorker.register('sw.js?v=94');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
