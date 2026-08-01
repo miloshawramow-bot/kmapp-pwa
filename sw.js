@@ -1,5 +1,5 @@
-// KMapp Service Worker v54 - network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v88';
+// KMapp Service Worker v55 - network-first for HTML, cache-first for assets, push notifications
+const CACHE = 'kmapp-v89';
 const STATIC_ASSETS = [
   './',
   './index.html',
