@@ -482,6 +482,93 @@
   .about-box h2 { font-size: 1.1rem; margin-bottom: 4px; }
   .about-box p  { font-size: 0.75rem; color: #a0bcd8; }
 
+
+  /* ===== ACCORDION (Settings) ===== */
+  .acc-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .acc-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .acc-header:active { background: var(--light); }
+  .acc-header .acc-icon { font-size: 1.2rem; width: 26px; text-align: center; flex-shrink: 0; }
+  .acc-header .acc-title { flex: 1; }
+  .acc-header .acc-chevron { font-size: 0.7rem; color: var(--muted); transition: transform 0.25s; }
+  .acc-item.open .acc-chevron { transform: rotate(180deg); }
+  .acc-body { display: none; padding: 0 14px 14px; }
+  .acc-item.open .acc-body { display: block; }
+  .acc-sub-section {
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .acc-sub-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px;
+  }
+  /* ===== GLOBAL SEARCH ===== */
+  #gs-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+  }
+  #gs-overlay.open { display: flex; }
+  #gs-box {
+    width: 100%;
+    max-width: 480px;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #gs-input {
+    width: 100%; box-sizing: border-box;
+    padding: 16px 18px; border: none;
+    border-bottom: 2px solid var(--border);
+    font-size: 1rem; outline: none; background: white;
+  }
+  #gs-results {
+    flex: 1; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 12px calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+  .gs-result {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 8px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .gs-result:active { background: var(--light); }
+  .gs-result .gs-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
+  .gs-result .gs-info { flex: 1; min-width: 0; }
+  .gs-result .gs-title { font-size: 0.88rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gs-result .gs-desc { font-size: 0.75rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gs-result .gs-badge { font-size: 0.62rem; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--light); color: var(--muted); flex-shrink: 0; }
+  .gs-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.85rem; }
+
   /* TOAST */
   #toast {
     position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
@@ -787,7 +874,8 @@
     </div>
     <div id="weather-loc" style="font-size:0.5rem;color:rgba(255,255,255,0.7);line-height:1;margin-top:1px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</div>
   </div>
-  <button id="mail-icon-btn" onclick="window.open('https://mail.beograd.gov.rs/owa/auth/logon.aspx?url=https%3a%2f%2fmail.beograd.gov.rs%2fowa%2f&reason=0', '_blank')" style="display: flex; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="Mail - beograd.gov.rs">✉️</button>
+  <button onclick="openGlobalSearch()" style="display:flex;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;flex-shrink:0;" title="Pretraga">🔍</button>
+            <button id="mail-icon-btn" onclick="window.open('https://mail.beograd.gov.rs/owa/auth/logon.aspx?url=https%3a%2f%2fmail.beograd.gov.rs%2fowa%2f&reason=0', '_blank')" style="display: flex; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="Mail - beograd.gov.rs">✉️</button>
   <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
 </header>
 
@@ -1074,202 +1162,269 @@
 
 <!-- ===== PODEŠAVANJA ===== -->
 <div class="screen" id="screen-podesavanja" style="display: none;">
+  <!-- About box (always visible) -->
   <div class="about-box">
-    <img src="data:image/png;base64,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" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block;border:2px solid var(--gold);" alt="KMapp">
+    <img src="icons/icon-192.png" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block;border:2px solid var(--gold);" alt="KMapp">
     <h2>KMapp</h2>
     <p>Poslovna aplikacija za upravljanje dokumentima i pravnim aktima Grada Beograda</p>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-title">Izgled</div>
-    <div class="settings-row">
-      <span class="s-icon">🌙</span>
-      <span class="s-label">Dark mode</span>
-      <label style="position:relative;display:inline-block;width:44px;height:24px;">
-        <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
-        <span id="dark-mode-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
-          <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;"></span>
-        </span>
-      </label>
+  <!-- 🔍 Global Search trigger -->
+  <div class="settings-row" onclick="openGlobalSearch()" style="cursor:pointer;background:var(--navy);color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
+    <span style="font-size:1.2rem;">🔍</span>
+    <span style="flex:1;">Globalna pretraga</span>
+    <span style="font-size:0.7rem;opacity:0.7;">Pretraži sve</span>
+  </div>
+
+  <!-- 🎨 Izgled -->
+  <div class="acc-item open" id="acc-izgled">
+    <div class="acc-header" onclick="toggleAcc('acc-izgled')">
+      <span class="acc-icon">🎨</span>
+      <span class="acc-title">Izgled</span>
+      <span class="acc-chevron">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="settings-row">
+        <span class="s-icon">🌙</span>
+        <span class="s-label">Dark mode</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
+          <span id="dark-mode-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
+            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;"></span>
+          </span>
+        </label>
+      </div>
     </div>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-title">Korisnik</div>
-    <div class="settings-row">
-      <span class="s-icon">👤</span>
-      <span class="s-label">Prijavljeni korisnik</span>
-      <span class="s-val" id="current-user-display">—</span>
+  <!-- 👤 Korisnik -->
+  <div class="acc-item" id="acc-korisnik">
+    <div class="acc-header" onclick="toggleAcc('acc-korisnik')">
+      <span class="acc-icon">👤</span>
+      <span class="acc-title">Korisnik</span>
+      <span class="acc-chevron">▼</span>
     </div>
-    <div class="settings-row" onclick="showPasswordChange()" style="cursor:pointer;">
-      <span class="s-icon">🔑</span>
-      <span class="s-label">Promena lozinke</span>
-      <span class="s-val">↗</span>
-    </div>
-    <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
-      <span class="s-icon">🚪</span>
-      <span class="s-label">Odjava</span>
-      <span class="s-val">↗</span>
+    <div class="acc-body">
+      <div class="settings-row">
+        <span class="s-icon">👤</span>
+        <span class="s-label">Prijavljeni korisnik</span>
+        <span class="s-val" id="current-user-display">—</span>
+      </div>
+      <div class="settings-row" onclick="showPasswordChange()" style="cursor:pointer;">
+        <span class="s-icon">🔑</span>
+        <span class="s-label">Promena lozinke</span>
+        <span class="s-val">↗</span>
+      </div>
+      <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
+        <span class="s-icon">🚪</span>
+        <span class="s-label">Odjava</span>
+        <span class="s-val">↗</span>
+      </div>
     </div>
   </div>
 
-  <div class="settings-section" id="admin-panel-section" style="display:none;">
-    <div class="settings-title">⚙️ Admin panel</div>
-    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:12px;">📝 Dodaj novi akt</div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tip akta</label>
-        <select id="admin-akt-tip" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
-          <option value="zakon">Zakon</option>
-          <option value="odluka">Odluka</option>
-        </select>
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
-        <input id="admin-akt-naziv" type="text" placeholder="npr. Zakon o komunalnoj miliciji" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Broj / Glasnik</label>
-        <input id="admin-akt-broj" type="text" placeholder="npr. Sl. glasnik RS, br. 49/2019" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Sadržaj (tekst akta)</label>
-        <textarea id="admin-akt-sadrzaj" placeholder="Unesite tekst akta..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;"></textarea>
-      </div>
-      <div id="admin-akt-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
-      <button onclick="adminSaveAkt()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj akt</button>
+  <!-- ⚙️ Admin mode (admin only) -->
+  <div class="acc-item" id="acc-admin" style="display:none;">
+    <div class="acc-header" onclick="toggleAcc('acc-admin')" style="background:linear-gradient(135deg,var(--navy),var(--blue));color:white;">
+      <span class="acc-icon">⚙️</span>
+      <span class="acc-title">Admin mode</span>
+      <span class="acc-chevron" style="color:rgba(255,255,255,0.7);">▼</span>
     </div>
-    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:10px;">📋 Dodati akti</div>
-      <div id="admin-akti-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-    </div>
+    <div class="acc-body" style="padding-top:14px;">
 
-    <!-- Admin: Pelceri -->
-    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:12px;">📋 Dodaj novi pelcer</div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Kategorija</label>
-        <input id="admin-pelcer-kategorija" type="text" placeholder="npr. Oglašavanje, Bаšta, Muzika..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
-        <input id="admin-pelcer-naziv" type="text" placeholder="npr. Sredstvo za oglašavanje — Preduzetnik" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tekst pelcera</label>
-        <textarea id="admin-pelcer-tekst" placeholder="Unesite tekst pelcera..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;background:var(--white);color:var(--text);"></textarea>
-      </div>
-      <div id="admin-pelcer-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
-      <button onclick="adminSavePelcer()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj pelcer</button>
-    </div>
-    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Dodati pelceri</div>
-      <div id="admin-pelceri-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-    </div>
-
-    <!-- Admin: Kreiranje korisnika -->
-    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:12px;">👤 Kreiraj novog korisnika</div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Korisničko ime (Ime.Prezime)</label>
-        <input id="admin-user-username" type="text" placeholder="npr. Petar.Petrovic" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Lozinka</label>
-        <input id="admin-user-password" type="text" placeholder="npr. 064-123-4567" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--white);color:var(--text);">
-      </div>
-      <div id="admin-user-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
-      <button onclick="adminCreateUser()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">➕ Kreiraj korisnika</button>
-      <div id="admin-users-list" style="margin-top:14px;"></div>
-    </div>
-
-    <!-- Admin: Prijavljeni korisnici -->
-    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="font-size:0.85rem;font-weight:700;color:var(--text);">📊 Prijavljeni korisnici</div>
-        <div style="display:flex;gap:6px;">
-          <button onclick="adminLoadLoginLogs('today')" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
-          <button onclick="adminLoadLoginLogs('all')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📊 Istorija</button>
+      <!-- 📝 Akti -->
+      <div class="acc-sub-section">
+        <div class="acc-sub-title">📝 Dodaj novi akt</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tip akta</label>
+          <select id="admin-akt-tip" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+            <option value="zakon">Zakon</option>
+            <option value="odluka">Odluka</option>
+          </select>
         </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
+          <input id="admin-akt-naziv" type="text" placeholder="npr. Zakon o komunalnoj miliciji" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Broj / Glasnik</label>
+          <input id="admin-akt-broj" type="text" placeholder="npr. Sl. glasnik RS, br. 49/2019" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Sadržaj (tekst akta)</label>
+          <textarea id="admin-akt-sadrzaj" placeholder="Unesite tekst akta..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;"></textarea>
+        </div>
+        <div id="admin-akt-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+        <button onclick="adminSaveAkt()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj akt</button>
       </div>
-      <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
-    </div>
 
-    <!-- Admin: Praćenje korisnika -->
-    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
-      <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:12px;">📍 Praćenje korisnika</div>
-      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Dodaj korisnika da dobiješ notifikaciju kad se prijavi i da ga vidiš na mapi.</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input id="track-user-input" type="text" placeholder="korisničko ime (npr. s.a)" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;">
-        <button onclick="addTrackedUser()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;cursor:pointer;font-weight:600;">➕ Dodaj</button>
+      <div class="acc-sub-section">
+        <div class="acc-sub-title">📋 Dodati akti</div>
+        <div id="admin-akti-list" style="display:flex;flex-direction:column;gap:6px;"></div>
       </div>
-      <div id="tracked-users-list" style="font-size:0.8rem;color:var(--muted);">Učitavanje...</div>
+
+      <!-- 📋 Pelceri -->
+      <div class="acc-sub-section">
+        <div class="acc-sub-title">📋 Dodaj novi pelcer</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Kategorija</label>
+          <input id="admin-pelcer-kategorija" type="text" placeholder="npr. Oglašavanje, Bašta, Muzika..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
+          <input id="admin-pelcer-naziv" type="text" placeholder="npr. Sredstvo za oglašavanje" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tekst pelcera</label>
+          <textarea id="admin-pelcer-tekst" placeholder="Unesite tekst pelcera..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;background:white;color:var(--text);"></textarea>
+        </div>
+        <div id="admin-pelcer-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+        <button onclick="adminSavePelcer()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj pelcer</button>
+      </div>
+
+      <div class="acc-sub-section">
+        <div class="acc-sub-title">📋 Dodati pelceri</div>
+        <div id="admin-pelceri-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <!-- 👤 Kreiranje korisnika -->
+      <div class="acc-sub-section">
+        <div class="acc-sub-title">👤 Kreiraj novog korisnika</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Korisničko ime (Ime.Prezime)</label>
+          <input id="admin-user-username" type="text" placeholder="npr. Petar.Petrovic" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Lozinka</label>
+          <input id="admin-user-password" type="text" placeholder="npr. 064-123-4567" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+        </div>
+        <div id="admin-user-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
+        <button onclick="adminCreateUser()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">➕ Kreiraj korisnika</button>
+        <div id="admin-users-list" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- 📊 Prijavljeni korisnici -->
+      <div class="acc-sub-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="acc-sub-title" style="margin-bottom:0;">📊 Prijavljeni korisnici</div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="adminLoadLoginLogs('today')" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
+            <button onclick="adminLoadLoginLogs('all')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📊 Istorija</button>
+          </div>
+        </div>
+        <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
+      </div>
+
+      <!-- 📍 Praćenje korisnika -->
+      <div class="acc-sub-section">
+        <div class="acc-sub-title">📍 Praćenje korisnika</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Dodaj korisnika da dobiješ notifikaciju kad se prijavi i da ga vidiš na mapi.</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input id="track-user-input" type="text" placeholder="korisničko ime (npr. s.a)" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;">
+          <button onclick="addTrackedUser()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;cursor:pointer;font-weight:600;">➕ Dodaj</button>
+        </div>
+        <div id="tracked-users-list" style="font-size:0.8rem;color:var(--muted);">Učitavanje...</div>
+      </div>
+
     </div>
   </div>
 
-<div class="settings-section">
-    <div class="settings-title">Aplikacija</div>
-    <div class="settings-row">
-      <span class="s-icon">📱</span>
-      <span class="s-label">Verzija</span>
-      <span class="s-val">1.0.0</span>
+  <!-- 📊 Aplikacija -->
+  <div class="acc-item" id="acc-aplikacija">
+    <div class="acc-header" onclick="toggleAcc('acc-aplikacija')">
+      <span class="acc-icon">📊</span>
+      <span class="acc-title">Aplikacija</span>
+      <span class="acc-chevron">▼</span>
     </div>
-    <div class="settings-row">
-      <span class="s-icon">📂</span>
-      <span class="s-label">Sačuvani dokumenti</span>
-      <span class="s-val" id="doc-count">0</span>
-    </div>
-    <div class="settings-row">
-      <span class="s-icon">🏙️</span>
-      <span class="s-label">Grad</span>
-      <span class="s-val">Beograd</span>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <div class="settings-title">Deljenje</div>
-    <div class="settings-row">
-      <span class="s-icon">📲</span>
-      <span class="s-label">Viber deljenje</span>
-      <span class="s-val">Aktivno</span>
-    </div>
-    <div class="settings-row">
-      <span class="s-icon">✉️</span>
-      <span class="s-label">Gmail deljenje</span>
-      <span class="s-val">Aktivno</span>
+    <div class="acc-body">
+      <div class="settings-row">
+        <span class="s-icon">📱</span>
+        <span class="s-label">Verzija</span>
+        <span class="s-val">1.0.0</span>
+      </div>
+      <div class="settings-row">
+        <span class="s-icon">📂</span>
+        <span class="s-label">Sačuvani dokumenti</span>
+        <span class="s-val" id="doc-count">0</span>
+      </div>
+      <div class="settings-row">
+        <span class="s-icon">🏙️</span>
+        <span class="s-label">Grad</span>
+        <span class="s-val">Beograd</span>
+      </div>
     </div>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-title">Podaci</div>
-    <div class="settings-row" onclick="clearAll()" style="cursor:pointer;">
-      <span class="s-icon">🗑️</span>
-      <span class="s-label" style="color:var(--danger)">Obriši sve dokumente</span>
-      <span class="s-val">↗</span>
+  <!-- 🔗 Deljenje -->
+  <div class="acc-item" id="acc-deljenje">
+    <div class="acc-header" onclick="toggleAcc('acc-deljenje')">
+      <span class="acc-icon">🔗</span>
+      <span class="acc-title">Deljenje</span>
+      <span class="acc-chevron">▼</span>
     </div>
-    <div class="settings-row" onclick="exportAllData()" style="cursor:pointer;">
-      <span class="s-icon">💾</span>
-      <span class="s-label">Backup podataka</span>
-      <span class="s-val">Preuzmi →</span>
-    </div>
-    <div class="settings-row" onclick="importData()" style="cursor:pointer;">
-      <span class="s-icon">📂</span>
-      <span class="s-label">Uvoz podataka</span>
-      <span class="s-val">← Učitaj</span>
+    <div class="acc-body">
+      <div class="settings-row">
+        <span class="s-icon">📲</span>
+        <span class="s-label">Viber deljenje</span>
+        <span class="s-val">Aktivno</span>
+      </div>
+      <div class="settings-row">
+        <span class="s-icon">✉️</span>
+        <span class="s-label">Gmail deljenje</span>
+        <span class="s-val">Aktivno</span>
+      </div>
     </div>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-title">Nalog</div>
-    <div class="settings-row" onclick="doLogout()" style="cursor:pointer;">
-      <span class="s-icon">🔐</span>
-      <span class="s-label" style="color:var(--danger)">Odjavi se</span>
-      <span class="s-val">↗</span>
+  <!-- 💾 Podaci -->
+  <div class="acc-item" id="acc-podaci">
+    <div class="acc-header" onclick="toggleAcc('acc-podaci')">
+      <span class="acc-icon">💾</span>
+      <span class="acc-title">Podaci</span>
+      <span class="acc-chevron">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="settings-row" onclick="clearAll()" style="cursor:pointer;">
+        <span class="s-icon">🗑️</span>
+        <span class="s-label" style="color:var(--danger)">Obriši sve dokumente</span>
+        <span class="s-val">↗</span>
+      </div>
+      <div class="settings-row" onclick="exportAllData()" style="cursor:pointer;">
+        <span class="s-icon">💾</span>
+        <span class="s-label">Backup podataka</span>
+        <span class="s-val">↗</span>
+      </div>
+      <div class="settings-row" onclick="importData()" style="cursor:pointer;">
+        <span class="s-icon">📂</span>
+        <span class="s-label">Uvoz podataka</span>
+        <span class="s-val">↗</span>
+      </div>
     </div>
   </div>
+
+  <!-- 🔐 Privatnost -->
+  <div class="acc-item" id="acc-privatnost">
+    <div class="acc-header" onclick="toggleAcc('acc-privatnost')">
+      <span class="acc-icon">🔐</span>
+      <span class="acc-title">Privatnost</span>
+      <span class="acc-chevron">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="settings-row">
+        <span class="s-icon">🔒</span>
+        <span class="s-label">Lokalno čuvanje</span>
+        <span class="s-val">Aktivno</span>
+      </div>
+      <div class="settings-row" onclick="doLogout()" style="cursor:pointer;color:var(--danger);">
+        <span class="s-icon">🔐</span>
+        <span class="s-label" style="color:var(--danger)">Odjavi se</span>
+        <span class="s-val">↗</span>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- ===== PORUKE ===== -->
 <div class="screen" id="screen-poruke" style="display: none;flex-direction:column;flex:1;">
   <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:6px;">
     <button id="poruke-tab-conversations" onclick="porukeView('conversations')" style="flex:1;padding:10px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">💬 Razgovori</button>
@@ -3603,7 +3758,20 @@ function shareDoc(via) {
   var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
-  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
+  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '
+<!-- ===== GLOBAL SEARCH OVERLAY ===== -->
+<div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+  <div id="gs-box">
+    <div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);">
+      <input id="gs-input" type="text" placeholder="Pretraži dokumente, kontakte, akte..." oninput="gsSearch(this.value)" style="flex:1;border:none;outline:none;font-size:1rem;padding:8px 0;background:transparent;">
+      <button onclick="closeGlobalSearch()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:4px 8px;">✕</button>
+    </div>
+    <div id="gs-results">
+      <div class="gs-empty">Unesite najmanje 2 karaktera...</div>
+    </div>
+  </div>
+</div>
+</body></html>';
 
   
   var blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
@@ -17102,7 +17270,7 @@ function getCurrentUserRole() {
 
 function checkAdminAccess() {
   const role = getCurrentUserRole();
-  const el = document.getElementById('admin-panel-section');
+  const el = document.getElementById('acc-admin');
   if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
   if (role === 'admin') { renderAdminAktiList(); renderAdminPelceriList(); adminRenderUsersList(); loadTrackedUsers(); }
 }
@@ -17520,6 +17688,135 @@ loadCustomPelceri();
 checkAdminAccess();
 
 
+
+// ===== ACCORDION TOGGLE =====
+function toggleAcc(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+}
+
+// ===== GLOBAL SEARCH =====
+function openGlobalSearch() {
+  var overlay = document.getElementById('gs-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  setTimeout(function() {
+    var input = document.getElementById('gs-input');
+    if (input) { input.focus(); input.value = ''; gsSearch(''); }
+  }, 100);
+}
+
+function closeGlobalSearch() {
+  var overlay = document.getElementById('gs-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function gsSearch(query) {
+  var resultsEl = document.getElementById('gs-results');
+  if (!resultsEl) return;
+  query = (query || '').trim().toLowerCase();
+  if (!query || query.length < 2) {
+    resultsEl.innerHTML = '<div class="gs-empty">Unesite najmanje 2 karaktera...</div>';
+    return;
+  }
+  var results = [];
+
+  // 1. Search documents (localStorage)
+  try {
+    var docs = JSON.parse(localStorage.getItem('bk_docs') || '[]');
+    docs.forEach(function(d) {
+      var text = (d.title || '') + ' ' + (d.type || '') + ' ' + (d.content || '');
+      if (text.toLowerCase().indexOf(query) !== -1) {
+        results.push({
+          icon: '📄',
+          title: d.title || d.type || 'Dokument',
+          desc: d.type || 'Lokalni dokument',
+          badge: 'Dokument',
+          action: "switchTab('docs')"
+        });
+      }
+    });
+  } catch(e) {}
+
+  // 2. Search imenik contacts
+  try {
+    imenikData.forEach(function(c) {
+      var name = (c.name || '').toLowerCase();
+      var phones = (c.phones || []).join(' ');
+      var email = (c.email || '').toLowerCase();
+      if (name.indexOf(query) !== -1 || phones.toLowerCase().indexOf(query) !== -1 || email.indexOf(query) !== -1) {
+        results.push({
+          icon: c.photo ? '👤' : '👤',
+          title: c.name || 'Kontakt',
+          desc: (c.phones || [])[0] || c.email || '',
+          badge: 'Kontakt',
+          action: "switchTab('imenik')"
+        });
+      }
+    });
+  } catch(e) {}
+
+  // 3. Search legal acts (aktiData)
+  try {
+    aktiData.forEach(function(a) {
+      var naziv = (a.naziv || '').toLowerCase();
+      var sadrzaj = (a.sadrzaj || '').toLowerCase();
+      var broj = (a.broj || '').toLowerCase();
+      if (naziv.indexOf(query) !== -1 || broj.indexOf(query) !== -1 || sadrzaj.indexOf(query) !== -1) {
+        // Find a relevant snippet
+        var snippet = '';
+        if (sadrzaj.indexOf(query) !== -1) {
+          var idx = sadrzaj.indexOf(query);
+          snippet = '...' + (a.sadrzaj || '').substr(Math.max(0, idx - 30), 60) + '...';
+        } else {
+          snippet = (a.broj || a.tip || '');
+        }
+        results.push({
+          icon: '⚖️',
+          title: a.naziv || 'Akt',
+          desc: snippet,
+          badge: a.tip || 'Akt',
+          action: "switchTab('akti')"
+        });
+      }
+    });
+  } catch(e) {}
+
+  // 4. Search pelceri
+  try {
+    var savedPelceri = JSON.parse(localStorage.getItem('km_pelceri') || '[]');
+    var allPelceri = (pelceriData || []).concat(savedPelceri);
+    allPelceri.forEach(function(p) {
+      var text = ((p.kategorija || '') + ' ' + (p.naziv || '') + ' ' + (p.tekst || '')).toLowerCase();
+      if (text.indexOf(query) !== -1) {
+        results.push({
+          icon: '📋',
+          title: p.naziv || p.kategorija || 'Pelcer',
+          desc: p.kategoria || 'Pelcer',
+          badge: 'Pelcer',
+          action: "switchTab('pelceri')"
+        });
+      }
+    });
+  } catch(e) {}
+
+  // Limit to 30 results
+  results = results.slice(0, 30);
+
+  if (results.length === 0) {
+    resultsEl.innerHTML = '<div class="gs-empty">Nema rezultata za "' + query + '"</div>';
+    return;
+  }
+
+  resultsEl.innerHTML = results.map(function(r) {
+    return '<div class="gs-result" onclick="' + r.action + '; closeGlobalSearch();">' +
+      '<span class="gs-icon">' + r.icon + '</span>' +
+      '<div class="gs-info"><div class="gs-title">' + r.title + '</div>' +
+      '<div class="gs-desc">' + (r.desc || '') + '</div></div>' +
+      '<span class="gs-badge">' + r.badge + '</span></div>';
+  }).join('');
+}
 
 // ===== AI ASISTENT =====
 let aiMessages = [];
