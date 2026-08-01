@@ -1969,13 +1969,24 @@ async function porukeCheckNew() {
   const username = getCurrentUsername();
   if (!username) return;
   try {
+    const reqBody = { username };
+    // Check for pending login log (set by doLogin)
+    const _pendingLog = localStorage.getItem('km_pendingLoginLog');
+    if (_pendingLog) {
+      reqBody.logLogin = true;
+      reqBody.device = _pendingLog;
+    }
     const res = await fetch(KM_API_BASE + '/checkNew', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify(reqBody)
     });
     const data = await res.json();
     const count = data.count || 0;
+    // Clear pending login log flag
+    if (localStorage.getItem('km_pendingLoginLog')) {
+      localStorage.removeItem('km_pendingLoginLog');
+    }
     const badge = document.getElementById('poruke-badge');
     if (badge) {
       if (count > 0) {
@@ -2975,22 +2986,8 @@ function doLogin() {
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
     checkAdminAccess();
-    // Log login via sendBeacon + fetch fallback
-    try {
-      const _device = navigator.userAgent.substring(0, 120);
-      const _payload = JSON.stringify({ username: user.username, device: _device });
-      // Try sendBeacon first (works even during page unload)
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(KM_API_BASE + '/logLogin', _payload);
-      }
-      // Also try fetch with keepalive as backup
-      fetch(KM_API_BASE + '/logLogin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: _payload,
-        keepalive: true
-      }).catch(() => {});
-    } catch(e) { console.log('logLogin error:', e); }
+    // Set login flag in localStorage — porukeCheckNew will pick it up
+    localStorage.setItem('km_pendingLoginLog', navigator.userAgent.substring(0, 120));
     // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
