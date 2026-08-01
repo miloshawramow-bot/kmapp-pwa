@@ -1,5 +1,5 @@
 // KMapp Service Worker v56 - network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v106';
+const CACHE = 'kmapp-v107';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,8 @@ const STATIC_ASSETS = [
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
-  './icons/favicon-16.png'
+  './icons/favicon-16.png',
+    './icons/beograd-grb.png'
 ];
 
 // ===== INSTALL: pre-cache static assets, force immediate activation =====
