@@ -16060,6 +16060,8 @@ var trackPolyline = null;
 var trackPoints = [];
 var trackStartTime = null;
 var trackMarker = null;
+var trackId = null;
+var syncInterval = null;
 
 var wakeLock = null;
 function initLeafletMap() {
@@ -16201,6 +16203,9 @@ function startTracking() {
   acquireWakeLock();
   trackStartTime = Date.now();
   trackPoints = [];
+  trackId = "track_" + Date.now() + "_" + Math.random().toString(36).substr(2,6);
+  syncTrackToBackend("start");
+  syncInterval = setInterval(function() { syncTrackToBackend("sync"); }, 10000);
   
   // Show tracking UI
   document.getElementById('track-info').style.display = 'block';
@@ -16265,6 +16270,8 @@ function startTracking() {
 function stopTracking() {
   trackingActive = false;
   releaseWakeLock();
+  if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
+  syncTrackToBackend("stop");
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
@@ -16303,6 +16310,24 @@ function haversine(lat1, lon1, lat2, lon2) {
           Math.sin(dLon/2) * Math.sin(dLon/2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
+}
+function syncTrackToBackend(action) {
+  var username = getCurrentUsername();
+  if (!username || !trackId || trackPoints.length === 0) return;
+  try {
+    fetch(KM_API_BASE + '/syncGpsTrack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: action || 'sync',
+        trackId: trackId,
+        username: username,
+        points: trackPoints,
+        startTime: trackStartTime,
+        endTime: action === 'stop' ? Date.now() : null
+      })
+    }).catch(function(e) { console.error('Track sync error:', e); });
+  } catch(e) { console.error('Track sync error:', e); }
 }
 
 function saveTrack() {
@@ -16353,7 +16378,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v3.7';
+const KM_VERSION = 'v3.8';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16382,7 +16407,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=36');
+      return navigator.serviceWorker.register('sw.js?v=37');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
