@@ -139,24 +139,29 @@
   nav button {
     flex: 1;
     min-width: 0;
-    padding: 8px 2px;
+    padding: 9px 2px 7px;
     background: none;
     border: none;
-    color: #7a9cc0;
-    font-size: 0.58rem;
+    color: rgba(160,188,216,0.7);
+    font-size: 0.6rem;
     font-weight: 600;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
     cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
-    transition: color 0.2s, background 0.2s;
-    border-top: 3px solid transparent;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    transition: color 0.2s, transform 0.15s;
+    border-top: 2px solid transparent;
     white-space: nowrap;
+    position: relative;
   }
+
+  nav button:active { transform: scale(0.93); }
 
   nav button.active {
     color: var(--gold);
     border-top-color: var(--gold);
-    background: rgba(200,168,75,0.08);
+  }
+  nav button.active .nav-icon-svg svg {
+    filter: drop-shadow(0 0 4px rgba(200,168,75,0.5));
   }
 
   /* More grid overlay */
@@ -207,6 +212,20 @@
 
   /* ===== DOKUMENTI ===== */
   #screen-docs { padding: 0; }
+  #screen-docs #view-list { background: transparent; }
+  #screen-docs .saved-list { background: transparent; }
+  #screen-docs .doc-card {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  #screen-docs .new-doc-btn {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  #screen-docs [style*="background:#e8f0fb"] {
+    background: rgba(232,240,251,0.9) !important;
+  }
+  #screen-docs .doc-card-date { color: var(--muted); }
 
   .doc-toolbar {
     background: white;
@@ -603,6 +622,141 @@
     color: var(--muted) !important;
   }
 
+
+  /* ===== SIDE MENU ===== */
+  #side-menu-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0); pointer-events: none;
+    transition: background 0.3s;
+  }
+  #side-menu-overlay.open {
+    background: rgba(0,0,0,0.5); pointer-events: all;
+  }
+  #side-menu {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: min(320px, 85vw);
+    background: linear-gradient(180deg, #0d2240 0%, #0a1a30 100%);
+    border-right: 1px solid rgba(200,168,75,0.3);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 201;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #side-menu.open { transform: translateX(0); }
+
+  .side-menu-header {
+    padding: 48px 20px 18px;
+    background: linear-gradient(135deg, rgba(200,168,75,0.12) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(200,168,75,0.2);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .side-menu-logo {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2px solid var(--gold); flex-shrink: 0;
+    object-fit: cover;
+  }
+  .side-menu-brand h2 {
+    color: #fff; font-size: 1.1rem; font-weight: 800; margin: 0;
+  }
+  .side-menu-brand p {
+    color: rgba(200,168,75,0.8); font-size: 0.7rem; margin: 2px 0 0; font-weight: 600;
+  }
+  .side-menu-close {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+    width: 32px; height: 32px; color: #fff; font-size: 1.1rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .side-menu-close:hover { background: rgba(255,255,255,0.18); }
+
+  .side-menu-scroll {
+    flex: 1; overflow-y: auto; padding: 8px 0;
+    scrollbar-width: none;
+  }
+  .side-menu-section-title {
+    padding: 12px 20px 4px;
+    color: rgba(200,168,75,0.6);
+    font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+  }
+  .side-menu-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .side-menu-item:hover, .side-menu-item:active {
+    background: rgba(200,168,75,0.08);
+  }
+  .side-menu-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,0.07);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .side-menu-icon svg { width: 18px; height: 18px; stroke: var(--gold); }
+  .side-menu-label { flex: 1; min-width: 0; }
+  .side-menu-title { display: block; color: #e0ecf8; font-size: 0.88rem; font-weight: 700; }
+  .side-menu-desc { display: block; color: rgba(160,188,216,0.6); font-size: 0.68rem; margin-top: 1px; }
+  .side-menu-arrow { width: 16px; height: 16px; stroke: rgba(255,255,255,0.3); flex-shrink: 0; }
+
+  .side-menu-footer {
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: rgba(160,188,216,0.4); font-size: 0.64rem; text-align: center;
+  }
+
+  /* ===== WEATHER FORECAST MODAL ===== */
+  #weather-modal {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  #weather-modal.open { display: flex; }
+  .weather-panel {
+    width: 100%; max-width: 480px;
+    background: linear-gradient(180deg, #0d2240 0%, #0a1a30 100%);
+    border-radius: 20px 20px 0 0;
+    border-top: 2px solid rgba(200,168,75,0.3);
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    animation: slideUp 0.3s ease;
+  }
+  .weather-panel-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .weather-panel-title { color: #fff; font-size: 1rem; font-weight: 800; }
+  .weather-panel-close {
+    background: rgba(255,255,255,0.1); border: none; border-radius: 50%;
+    width: 30px; height: 30px; color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  }
+  .weather-current {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px; background: rgba(255,255,255,0.07); border-radius: 14px;
+    margin-bottom: 14px;
+  }
+  .weather-current-icon { font-size: 3rem; line-height: 1; }
+  .weather-current-info { flex: 1; }
+  .weather-current-temp { color: #fff; font-size: 2.4rem; font-weight: 800; line-height: 1; }
+  .weather-current-desc { color: rgba(160,188,216,0.8); font-size: 0.8rem; margin-top: 4px; }
+  .weather-current-meta { color: rgba(160,188,216,0.6); font-size: 0.7rem; margin-top: 4px; }
+  .weather-details {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px;
+  }
+  .weather-detail-card {
+    background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; text-align: center;
+  }
+  .weather-detail-label { color: rgba(160,188,216,0.6); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; }
+  .weather-detail-val { color: #e0ecf8; font-size: 0.9rem; font-weight: 700; margin-top: 4px; }
+  .weather-forecast-title { color: rgba(200,168,75,0.8); font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .weather-forecast-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .weather-forecast-row:last-child { border-bottom: none; }
+  .weather-forecast-day { color: #e0ecf8; font-size: 0.78rem; font-weight: 700; width: 60px; }
+  .weather-forecast-icon { font-size: 1.4rem; width: 28px; text-align: center; }
+  .weather-forecast-desc { color: rgba(160,188,216,0.7); font-size: 0.7rem; flex: 1; }
+  .weather-forecast-temps { color: #fff; font-size: 0.8rem; font-weight: 700; text-align: right; }
+  .weather-forecast-temps span { color: rgba(160,188,216,0.6); font-weight: 400; font-size: 0.72rem; }
 </style>
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -635,60 +789,142 @@
   <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
 </header>
 
-<nav>
-  <button class="active" onclick="switchTab('docs')" id="tab-docs">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Dokumenti
-  </button>
-  <button onclick="switchTab('poruke')" id="tab-poruke" style="position:relative;">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>Poruke
-    <span id="poruke-badge" style="position:absolute;top:-2px;right:-2px;background:#e53935;color:white;font-size:0.6rem;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 3px;z-index:1;"></span>
-  </button>
-  <button onclick="switchTab('mapa')" id="tab-mapa">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>Mapa
-  </button>
-  <button onclick="switchTab('ai')" id="tab-ai">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="14" x2="22" y2="14"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="14" x2="4" y2="14"/></svg></span>Asistent
-  </button>
-  <button onclick="switchTab('podesavanja')" id="tab-podesavanja">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>Info
-  </button>
-  <button onclick="toggleMoreGrid()" id="tab-more">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></span>Više
-  </button>
-</nav>
-
-<!-- More grid overlay -->
-<div id="more-overlay" class="more-overlay" style="display:none;">
-  <button class="more-overlay-close" onclick="closeMoreGrid()">✕</button>
-  <div class="more-overlay-title">Sve funkcije</div>
-  <div class="more-grid">
-    <div class="more-grid-item" onclick="switchTab('pelceri'); closeMoreGrid();" id="tab-pelceri">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg><span>Pelceri</span>
+<!-- ===== SIDE MENU ===== -->
+<div id="side-menu-overlay" onclick="closeSideMenu()">
+  <div id="side-menu" onclick="event.stopPropagation()">
+    <div class="side-menu-header">
+      <img class="side-menu-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAejAAAHowEwO8IJAAAA/1BMVEUAAAAiKl4mMGAAGHoAA3MABXIhKV4hKl0hKl4iKl4hKl4hKl4hKl0hKl4hKl4hKl4hKl4hKV4hKV4hKl4hKl4hKl0hKV8hKl4hKl4hKl0hKl0hKl4hKl0hKV0hKl4hKl3////h4+z9/f7n6e/4+fv7+/z09fnx8vbz9Pjt7vPs7fPp6vDm5+3j5Ov09fnp6fDMz9z5+vvj5ev+/v7v8PTe4Onn6PDm5+3a3OT19vnn6e/u7/Tf4urq7PH+/v/o6u/v8PXd3+ne4On4+fve4Ojh4+v4+Pvr7fL9/v79/f7w8fXy8/fj5Ozl5+339/r5+fvu7/Tv8PXh4er2+Pn3+Prt7vP09/k0OWkcAAAAM3RSTlMAERERERERERERZiIiImZmzMzMzMzu7u7u7u7u7u7u7u4iZiIiZiIiImYiIiJmImYiK3zLWQAAA0tJREFUSMftlulS2kAUhQMECAECBMKasCirIKCyb4IIsrhrtb7/m3RuciEJSQj95pzpTIc/3/lm7rkThMFgsD8rleoEkMlkUicI+mYSUo1XKJQLeqkLlEq5StFXWyJQqeRr5UohKJbzlQJJ5UqhXAR3WSWA93VQVF4c4D2cVF5egIe3FpYrp15yIByQkAGxPxiSgKRkIKFknBCkhAQjgELCFAINkBCDiB5BAIAHEC/DJQDfIBPBBRQA2AAAYP8HAAA=' alt="KMapp">
+      <div class="side-menu-brand">
+        <h2>KMapp</h2>
+        <p>Komunalne Usluge Beograd</p>
+      </div>
+      <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
     </div>
-    <div class="more-grid-item" onclick="switchTab('akti'); closeMoreGrid();" id="tab-akti">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 9l9-6 9 6"/><path d="M3 9h6v6a3 3 0 0 1-6 0z"/><path d="M15 9h6v6a3 3 0 0 1-6 0z"/></svg><span>Pravni akti</span>
+    <div class="side-menu-scroll">
+      <div class="side-menu-section-title">Navigacija</div>
+    <div class="side-menu-item" onclick="switchTab('docs'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Dokumenti</span>
+        <span class="side-menu-desc">Obrasci i dokumenti</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="more-grid-item" onclick="switchTab('linkovi'); closeMoreGrid();" id="tab-linkovi">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>Linkovi</span>
+    <div class="side-menu-item" onclick="switchTab('poruke'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Poruke</span>
+        <span class="side-menu-desc">Komunikacija</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="more-grid-item" onclick="switchTab('informator'); closeMoreGrid();" id="tab-informator">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Informator</span>
+    <div class="side-menu-item" onclick="switchTab('mapa'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Mapa</span>
+        <span class="side-menu-desc">GPS i lokacija</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="more-grid-item" onclick="switchTab('kamera'); closeMoreGrid();" id="tab-kamera">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Kamera</span>
+    <div class="side-menu-item" onclick="switchTab('ai'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 8H4m16 0h-4M12 4V2m0 12v-2"/><rect x="8" y="14" width="8" height="6" rx="2"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Asistent</span>
+        <span class="side-menu-desc">AI pravna pomoć</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="more-grid-item" onclick="switchTab('imenik'); closeMoreGrid();" id="tab-imenik">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Imenik</span>
+    <div class="side-menu-item" onclick="switchTab('pelceri'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Pelceri</span>
+        <span class="side-menu-desc">Šabloni za zapisnike</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="more-grid-item" onclick="switchTab('kalendar'); closeMoreGrid();" id="tab-kalendar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Kalendar</span>
+    <div class="side-menu-item" onclick="switchTab('akti'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 9l9-6 9 6"/><path d="M5 9v10a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1V9"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Pravni akti</span>
+        <span class="side-menu-desc">Odluke i propisi</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="more-grid-item" onclick="switchTab('login'); closeMoreGrid();" id="tab-login" style="display:none;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>Prijava</span>
+    <div class="side-menu-item" onclick="switchTab('linkovi'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Linkovi</span>
+        <span class="side-menu-desc">Korisni sajtovi</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
+    <div class="side-menu-item" onclick="switchTab('informator'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Informator</span>
+        <span class="side-menu-desc">Informacije za javnost</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="side-menu-item" onclick="switchTab('kamera'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Kamera</span>
+        <span class="side-menu-desc">Fotodokumentacija</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="side-menu-item" onclick="switchTab('imenik'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Imenik</span>
+        <span class="side-menu-desc">Kontakti</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="side-menu-item" onclick="switchTab('kalendar'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Kalendar</span>
+        <span class="side-menu-desc">Zakazivanje</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="side-menu-item" onclick="switchTab('podesavanja'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Podešavanja</span>
+        <span class="side-menu-desc">Profil i nalog</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    </div>
+    <div class="side-menu-footer">KMapp · Beograd · v90</div>
   </div>
 </div>
 
+
+<nav>
+  <button class="active" onclick="switchTab('docs')" id="tab-docs">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>Dokumenti
+  </button>
+  <button onclick="switchTab('poruke')" id="tab-poruke" style="position:relative;">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Poruke
+    <span id="poruke-badge" style="position:absolute;top:-2px;right:-2px;background:#e53935;color:white;font-size:0.6rem;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 3px;z-index:1;"></span>
+  </button>
+  <button onclick="switchTab('mapa')" id="tab-mapa">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Mapa
+  </button>
+  <button onclick="switchTab('ai')" id="tab-ai">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 8H4m16 0h-4M12 4V2m0 12v-2"/><rect x="8" y="14" width="8" height="6" rx="2"/><line x1="10" y1="20" x2="10" y2="22"/><line x1="14" y1="20" x2="14" y2="22"/></svg></span>Asistent
+  </button>
+  <button onclick="switchTab('podesavanja')" id="tab-podesavanja">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>Info
+  </button>
+
+</nav>
+
+<!-- More grid overlay -->
 <!-- ===== DOKUMENTI ===== -->
 <!-- ===== LOGIN / PRIJAVA ===== -->
 <div class="screen" id="screen-login" style="display: none;">
@@ -749,7 +985,7 @@
   </div>
   </div>
   </div>
-<div class="screen" id="screen-docs" style="display: none;">
+<div class="screen" id="screen-docs" style="display: none; background: linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.75) 30%, rgba(13,34,64,0.85) 100%), url(&quot;https://media.base44.com/images/public/6a69d1df8104de5b799a3993/adcde85f3_generated_image.png&quot;) top center/cover fixed;">
   <div id="view-list">
     <div style="display:flex; gap:8px; margin:12px 12px 0;">
       <button class="new-doc-btn" onclick="newDoc()" style="margin:0; flex:1;">
@@ -1666,23 +1902,7 @@
   </div>
 </div>
 
-<div id="weather-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9995;justify-content:center;align-items:flex-start;padding-top:60px;overflow-y:auto;" onclick="if(event.target===this)closeWeatherForecast()">
-  <div style="background:#fff;border-radius:16px;width:92%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.3);overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#1a365d,#2a5491);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:1.1rem;font-weight:700;color:#fff;">🌤️ Vremenska prognoza</div>
-        <div id="wf-loc" style="font-size:0.75rem;color:rgba(255,255,255,0.7);margin-top:2px;">—</div>
-      </div>
-      <button onclick="closeWeatherForecast()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
-    </div>
-    <div id="wf-current" style="padding:16px 20px;text-align:center;"></div>
-    <div id="wf-hourly-title" style="padding:0 20px;font-size:0.7rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:1px;">Naredna 24 sata</div>
-    <div id="wf-hourly" style="padding:8px 20px 16px;display:flex;overflow-x:auto;gap:8px;"></div>
-    <div id="wf-daily-title" style="padding:0 20px;font-size:0.7rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:1px;">7-dnevna prognoza</div>
-    <div id="wf-daily" style="padding:8px 20px 20px;"></div>
-    <div style="padding:8px 20px 16px;font-size:0.6rem;color:#999;text-align:center;">Podaci: Open-Meteo · Ažurirano: <span id="wf-updated">—</span></div>
-  </div>
-</div>
+<!-- old weather modal removed -->
 <div id="watermark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(0,0,0,0.15);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;">@milosavramov</div>
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
@@ -1801,77 +2021,83 @@ function fetchLocationName(lat, lon) {
 }
 
 function openWeatherForecast() {
-  if (!weatherData) { showToast('⏳ Učitavanje vremena...'); return; }
   var modal = document.getElementById('weather-modal');
-  modal.style.display = 'flex';
-
-  var cur = weatherData.current;
-  var temp = Math.round(cur.temperature_2m);
-  var feel = Math.round(cur.apparent_temperature);
-  var code = cur.weather_code;
-  var humidity = cur.relative_humidity_2m;
-  var wind = Math.round(cur.wind_speed_10m);
-
-  var curHtml = '<div style="font-size:3.5rem;line-height:1;">' + wmoCodeToEmoji(code) + '</div>' +
-    '<div style="font-size:2.5rem;font-weight:700;color:#1a365d;margin:4px 0;">' + temp + '°C</div>' +
-    '<div style="font-size:0.9rem;color:#666;margin-bottom:8px;">' + wmoCodeToDesc(code) + '</div>' +
-    '<div style="display:flex;justify-content:center;gap:16px;font-size:0.75rem;color:#888;">' +
-      '<span>🤔 Oseća se ' + feel + '°</span>' +
-      '<span>💧 ' + humidity + '%</span>' +
-      '<span>💨 ' + wind + ' km/h</span>' +
-    '</div>';
-  document.getElementById('wf-current').innerHTML = curHtml;
-  document.getElementById('wf-loc').textContent = weatherLoc || 'Lokacija';
-
-  // Hourly forecast - next 24 hours
-  var now = new Date();
-  var hourlyHtml = '';
-  var count = 0;
-  for (var i = 0; i < weatherData.hourly.time.length && count < 24; i++) {
-    var hTime = new Date(weatherData.hourly.time[i]);
-    if (hTime < now) continue;
-    var hTemp = Math.round(weatherData.hourly.temperature_2m[i]);
-    var hCode = weatherData.hourly.weather_code[i];
-    var hPrec = weatherData.hourly.precipitation_probability[i] || 0;
-    var hLabel = hTime.getHours().toString().padStart(2,'0') + 'h';
-    hourlyHtml += '<div style="min-width:52px;text-align:center;padding:6px 2px;border-radius:8px;background:#f0f4f8;">' +
-      '<div style="font-size:0.65rem;color:#888;">' + hLabel + '</div>' +
-      '<div style="font-size:1.3rem;">' + wmoCodeToEmoji(hCode) + '</div>' +
-      '<div style="font-size:0.75rem;font-weight:600;color:#1a365d;">' + hTemp + '°</div>' +
-      '<div style="font-size:0.55rem;color:#3b82f6;">💧' + hPrec + '%</div>' +
-    '</div>';
-    count++;
-  }
-  document.getElementById('wf-hourly').innerHTML = hourlyHtml;
-
-  // 7-day forecast
-  var days = ['Ned','Pon','Uto','Sre','Čet','Pet','Sub'];
-  var dailyHtml = '';
-  for (var d = 0; d < weatherData.daily.time.length; d++) {
-    var dTime = new Date(weatherData.daily.time[d]);
-    var dName = d === 0 ? 'Danas' : days[dTime.getDay()];
-    var dMax = Math.round(weatherData.daily.temperature_2m_max[d]);
-    var dMin = Math.round(weatherData.daily.temperature_2m_min[d]);
-    var dCode = weatherData.daily.weather_code[d];
-    var dPrec = weatherData.daily.precipitation_probability_max[d] || 0;
-    var dWind = Math.round(weatherData.daily.wind_speed_10m_max[d]);
-    dailyHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">' +
-      '<div style="width:42px;font-size:0.78rem;font-weight:600;color:#1a365d;">' + dName + '</div>' +
-      '<div style="font-size:1.5rem;flex-shrink:0;">' + wmoCodeToEmoji(dCode) + '</div>' +
-      '<div style="font-size:0.7rem;color:#3b82f6;width:38px;text-align:center;">💧' + dPrec + '%</div>' +
-      '<div style="font-size:0.7rem;color:#888;width:50px;text-align:center;">💨' + dWind + '</div>' +
-      '<div style="font-size:0.8rem;color:#666;width:32px;text-align:right;">' + dMin + '°</div>' +
-      '<div style="width:60px;height:4px;background:linear-gradient(90deg,#3b82f6,#f6e05e,#e53e3e);border-radius:2px;margin:0 8px;"></div>' +
-      '<div style="font-size:0.8rem;font-weight:700;color:#1a365d;width:32px;">' + dMax + '°</div>' +
-    '</div>';
-  }
-  document.getElementById('wf-daily').innerHTML = dailyHtml;
-  document.getElementById('wf-updated').textContent = new Date().toLocaleTimeString('sr-RS');
+  if (!modal) return;
+  modal.classList.add('open');
+  loadWeatherModal();
+}
+function closeWeatherModal() {
+  var modal = document.getElementById('weather-modal');
+  if (modal) modal.classList.remove('open');
 }
 
-function closeWeatherForecast() {
-  document.getElementById('weather-modal').style.display = 'none';
+function loadWeatherModal() {
+  var WC_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
+  var WC_DESC = {0:'Vedro',1:'Pretežno vedro',2:'Delimično oblačno',3:'Oblačno',45:'Magla',48:'Magla sa injem',51:'Slaba rosulja',53:'Rosulja',55:'Jaka rosulja',61:'Slab dažd',63:'Kisa',65:'Jak dažd',71:'Slab sneg',73:'Sneg',75:'Jak sneg',80:'Pljuskovi',81:'Jaki pljuskovi',82:'Olujni pljuskovi',85:'Snežni pljuskovi',86:'Jaki snežni pljuskovi',95:'Grmljavinska oluja',96:'Oluja sa gradom',99:'Jaka oluja sa gradom'};
+  var DAYS = ['Ned','Pon','Uto','Sre','Čet','Pet','Sub'];
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude.toFixed(4);
+      var lon = pos.coords.longitude.toFixed(4);
+      // Fetch current + forecast
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
+      fetch(url).then(r=>r.json()).then(function(d) {
+        var cur = d.current;
+        var code = cur.weather_code;
+        document.getElementById('wm-icon').textContent = WC_ICONS[code] || '🌡️';
+        document.getElementById('wm-temp').textContent = Math.round(cur.temperature_2m) + '°C';
+        document.getElementById('wm-desc').textContent = WC_DESC[code] || 'Nepoznato';
+        document.getElementById('wm-meta').textContent = 'Vlažnost: '+cur.relative_humidity_2m+'% · Vetar: '+Math.round(cur.wind_speed_10m)+' km/h';
+        document.getElementById('wm-humidity').textContent = cur.relative_humidity_2m + '%';
+        document.getElementById('wm-wind').textContent = Math.round(cur.wind_speed_10m) + ' km/h';
+        document.getElementById('wm-pressure').textContent = Math.round(cur.surface_pressure) + ' hPa';
+        // Forecast
+        var fc = d.daily;
+        var html = '';
+        for (var i = 0; i < fc.time.length; i++) {
+          var dt = new Date(fc.time[i]);
+          var dayName = i === 0 ? 'Danas' : (i === 1 ? 'Sutra' : DAYS[dt.getDay()]);
+          var fc_icon = WC_ICONS[fc.weather_code[i]] || '🌡️';
+          var fc_desc = WC_DESC[fc.weather_code[i]] || '';
+          html += '<div class="weather-forecast-row"><span class="weather-forecast-day">'+dayName+'</span><span class="weather-forecast-icon">'+fc_icon+'</span><span class="weather-forecast-desc">'+fc_desc+'</span><span class="weather-forecast-temps">'+Math.round(fc.temperature_2m_max[i])+'° <span>'+Math.round(fc.temperature_2m_min[i])+'°</span></span></div>';
+        }
+        document.getElementById('wm-forecast').innerHTML = html;
+        // City name from reverse geocode
+        fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json').then(r=>r.json()).then(function(g) {
+          var city = g.address.city || g.address.town || g.address.village || 'Beograd';
+          document.getElementById('wm-city').textContent = '🌍 ' + city;
+        }).catch(function(){});
+      }).catch(function(e) {
+        document.getElementById('wm-desc').textContent = 'Greška pri učitavanju';
+      });
+    }, function() {
+      // Fallback: Beograd koordinate
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=44.8167&longitude=20.4667&current=temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
+      fetch(url).then(r=>r.json()).then(function(d) {
+        var cur = d.current;
+        var code = cur.weather_code;
+        document.getElementById('wm-icon').textContent = WC_ICONS[code] || '🌡️';
+        document.getElementById('wm-temp').textContent = Math.round(cur.temperature_2m) + '°C';
+        document.getElementById('wm-desc').textContent = WC_DESC[code] || '';
+        document.getElementById('wm-humidity').textContent = cur.relative_humidity_2m + '%';
+        document.getElementById('wm-wind').textContent = Math.round(cur.wind_speed_10m) + ' km/h';
+        document.getElementById('wm-pressure').textContent = Math.round(cur.surface_pressure) + ' hPa';
+        document.getElementById('wm-city').textContent = '🌍 Beograd';
+        var fc = d.daily;
+        var DAYS_ = ['Ned','Pon','Uto','Sre','Čet','Pet','Sub'];
+        var html = '';
+        for (var i = 0; i < fc.time.length; i++) {
+          var dt = new Date(fc.time[i]);
+          var dayName = i === 0 ? 'Danas' : (i === 1 ? 'Sutra' : DAYS_[dt.getDay()]);
+          html += '<div class="weather-forecast-row"><span class="weather-forecast-day">'+dayName+'</span><span class="weather-forecast-icon">'+(WC_ICONS[fc.weather_code[i]]||'🌡️')+'</span><span class="weather-forecast-desc">'+(WC_DESC[fc.weather_code[i]]||'')+'</span><span class="weather-forecast-temps">'+Math.round(fc.temperature_2m_max[i])+'° <span>'+Math.round(fc.temperature_2m_min[i])+'°</span></span></div>';
+        }
+        document.getElementById('wm-forecast').innerHTML = html;
+      });
+    });
+  }
 }
+function closeWeatherForecast() { closeWeatherModal(); }
 
 // Init weather after page load
 if (document.readyState === 'loading') {
@@ -1977,13 +2203,27 @@ function switchTab(name) {
   closeMoreGrid();
 }
 
-function toggleMoreGrid() {
-  var ov = document.getElementById('more-overlay');
-  if (ov) ov.style.display = ov.style.display === 'none' ? 'block' : 'none';
+function toggleMoreGrid() { toggleSideMenu(); }
+function closeMoreGrid() { closeSideMenu(); }
+
+function toggleSideMenu() {
+  var overlay = document.getElementById('side-menu-overlay');
+  var menu = document.getElementById('side-menu');
+  if (!overlay || !menu) return;
+  var isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    menu.classList.remove('open');
+    overlay.classList.remove('open');
+  } else {
+    menu.classList.add('open');
+    overlay.classList.add('open');
+  }
 }
-function closeMoreGrid() {
-  var ov = document.getElementById('more-overlay');
-  if (ov) ov.style.display = 'none';
+function closeSideMenu() {
+  var overlay = document.getElementById('side-menu-overlay');
+  var menu = document.getElementById('side-menu');
+  if (overlay) overlay.classList.remove('open');
+  if (menu) menu.classList.remove('open');
 }
 
 // ===== PORUKE / CHAT =====
@@ -3224,7 +3464,43 @@ function shareDoc(via) {
   var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
-  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
+  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '
+<!-- ===== WEATHER MODAL ===== -->
+<div id="weather-modal" onclick="closeWeatherModal()">
+  <div class="weather-panel" onclick="event.stopPropagation()">
+    <div class="weather-panel-header">
+      <span class="weather-panel-title" id="wm-city">Beograd</span>
+      <button class="weather-panel-close" onclick="closeWeatherModal()">✕</button>
+    </div>
+    <div class="weather-current">
+      <span class="weather-current-icon" id="wm-icon">☀️</span>
+      <div class="weather-current-info">
+        <div class="weather-current-temp" id="wm-temp">--°C</div>
+        <div class="weather-current-desc" id="wm-desc">Učitavam...</div>
+        <div class="weather-current-meta" id="wm-meta">Vlažnost: --% · Vetar: -- km/h</div>
+      </div>
+    </div>
+    <div class="weather-details">
+      <div class="weather-detail-card">
+        <div class="weather-detail-label">Vlažnost</div>
+        <div class="weather-detail-val" id="wm-humidity">--%</div>
+      </div>
+      <div class="weather-detail-card">
+        <div class="weather-detail-label">Vetar</div>
+        <div class="weather-detail-val" id="wm-wind">-- km/h</div>
+      </div>
+      <div class="weather-detail-card">
+        <div class="weather-detail-label">Pritisak</div>
+        <div class="weather-detail-val" id="wm-pressure">-- hPa</div>
+      </div>
+    </div>
+    <div class="weather-forecast-title">5-dnevna prognoza</div>
+    <div id="wm-forecast">
+      <div style="color:rgba(160,188,216,0.5);text-align:center;padding:16px;font-size:0.8rem;">Učitavam prognozu...</div>
+    </div>
+  </div>
+</div>
+</body></html>';
   
   var blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
   var url = URL.createObjectURL(blob);
@@ -16488,7 +16764,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v3.8';
+const KM_VERSION = 'v91';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
