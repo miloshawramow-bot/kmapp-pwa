@@ -16046,18 +16046,7 @@ async function sharePhotoGmail() {
 }
 
 // ===== MAPA =====
-let currentLayer = 'standard';
-
-function buildMapUrl(lat, lon, zoom, layer, marker) {
-  const bbox = calcBbox(lat, lon, zoom);
-  const layerParam = layer === 'satellite' ? 'hot' : 'mapnik';
-  let url = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=${layerParam}`;
-  if (marker) url += `&marker=${lat}%2C${lon}`;
-  return url;
-}
-
 // ===== LEAFLET MAP + GPS TRACKING =====
-var currentLayer = 'standard';
 var leafletMap = null;
 var tileStandard = null;
 var tileSatellite = null;
