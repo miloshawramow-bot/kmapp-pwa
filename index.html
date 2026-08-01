@@ -564,6 +564,9 @@
   }
 
 </style>
+  <!-- Leaflet for maps + GPS tracking -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <div id="app-loader">
@@ -1910,6 +1913,7 @@ function switchTab(name) {
   if (name === 'imenik') initImenik();
   if (name === 'kalendar') renderCalendar();
   if (name === 'poruke') porukeView('conversations');
+  if (name === 'mapa') { setTimeout(function() { initLeafletMap(); }, 100); }
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
   }
@@ -1982,10 +1986,6 @@ async function porukeCheckNew() {
       body: JSON.stringify(reqBody)
     });
     const data = await res.json();
-    // Debug: store result for inspection
-    if (reqBody.logLogin) {
-      localStorage.setItem('km_loginLogDebug', JSON.stringify({ status: res.status, sentDevice: reqBody.device, response: data }));
-    }
     const count = data.count || 0;
     // Clear pending login log flag
     if (localStorage.getItem('km_pendingLoginLog')) {
@@ -15328,6 +15328,7 @@ function closeImenikModal() {
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
+    <button onclick="toggleTracking()" id="btn-track" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🟢 Prati</button>
   </div>
 
   <!-- Pretraga -->
@@ -15339,10 +15340,19 @@ function closeImenikModal() {
     </div>
   </div>
 
-  <!-- Mapa -->
+  <!-- Mapa - Leaflet -->
   <div id="map-container" style="min-height:400px;position:relative;">
-    <iframe id="map-frame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14117.2!2d20.4573!3d44.8125!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475a7a8f7e8e8e8f%3A0x0!2sBelgrade!5e0!3m2!1sen!2srs!4v1700000000000" style="width:100%;height:100%;border:none;min-height:420px;" allowfullscreen="">
-    </iframe>
+    <div id="leaflet-map" style="width:100%;height:450px;border:none;z-index:1;"></div>
+    <!-- Tracking info overlay -->
+    <div id="track-info" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:rgba(255,255,255,0.95);border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.78rem;z-index:1000;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <span id="track-status" style="color:#27ae60;font-weight:700;">🟢 Praćenje aktivno</span>
+          <span id="track-stats" style="color:var(--muted);margin-left:8px;"></span>
+        </div>
+        <button onclick="toggleTracking()" style="background:#e74c3c;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;font-weight:700;cursor:pointer;">⏹ STOP</button>
+      </div>
+    </div>
     <!-- Marker info -->
     <div id="map-info" style="display:none;position:absolute;bottom:12px;left:12px;right:12px;background:white;border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.82rem;z-index:20;">
       <div id="map-info-text" style="color:var(--navy);font-weight:600;"></div>
@@ -15360,6 +15370,9 @@ function closeImenikModal() {
       <button onclick="goTo(44.8091,20.4620,&#39;Terazije&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">🏛️ Terazije</button>
       <button onclick="goTo(44.7866,20.4489,&#39;Novi Beograd&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">🏢 N. Beograd</button>
       <button onclick="goTo(44.8019,20.5218,&#39;Zvezdara&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">⭐ Zvezdara</button>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:6px;">
+      <button onclick="clearTrack()" style="flex:1;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid #e74c3c;background:white;color:#e74c3c;cursor:pointer;">🗑️ Obriši putanju</button>
     </div>
   </div>
 </div>
@@ -16043,9 +16056,37 @@ function buildMapUrl(lat, lon, zoom, layer, marker) {
   return url;
 }
 
-function calcBbox(lat, lon, zoom) {
-  const delta = 0.08 / zoom;
-  return `${(lon-delta).toFixed(4)}%2C${(lat-delta*0.6).toFixed(4)}%2C${(lon+delta).toFixed(4)}%2C${(lat+delta*0.6).toFixed(4)}`;
+// ===== LEAFLET MAP + GPS TRACKING =====
+var currentLayer = 'standard';
+var leafletMap = null;
+var tileStandard = null;
+var tileSatellite = null;
+var mapMarker = null;
+var mapCircle = null;
+
+// GPS Tracking state
+var trackingActive = false;
+var watchId = null;
+var trackPolyline = null;
+var trackPoints = [];
+var trackStartTime = null;
+var trackMarker = null;
+
+function initLeafletMap() {
+  if (leafletMap) return;
+  leafletMap = L.map('leaflet-map').setView([44.8125, 20.4573], 13);
+  tileStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19
+  }).addTo(leafletMap);
+  tileSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri',
+    maxZoom: 19
+  });
+  // Load saved track for current user
+  loadSavedTrack();
+  // Fix size after container becomes visible
+  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
 }
 
 function setMapLayer(layer) {
@@ -16054,37 +16095,41 @@ function setMapLayer(layer) {
   document.getElementById('btn-standard').style.color = layer === 'standard' ? 'white' : 'var(--text)';
   document.getElementById('btn-satellite').style.background = layer === 'satellite' ? 'var(--accent)' : 'white';
   document.getElementById('btn-satellite').style.color = layer === 'satellite' ? 'white' : 'var(--text)';
-  const frame = document.getElementById('map-frame');
-  // Re-load with same location but different layer
-  const src = frame.src;
-  const newSrc = layer === 'satellite'
-    ? src.replace('layer=mapnik','layer=hot').replace('layer=hot&layer=hot','layer=hot')
-    : src.replace('layer=hot','layer=mapnik').replace('layer=mapnik&layer=mapnik','layer=mapnik');
-  frame.src = newSrc;
+  if (!leafletMap) initLeafletMap();
+  if (layer === 'satellite') {
+    if (tileStandard && leafletMap.hasLayer(tileStandard)) leafletMap.removeLayer(tileStandard);
+    if (tileSatellite && !leafletMap.hasLayer(tileSatellite)) tileSatellite.addTo(leafletMap);
+  } else {
+    if (tileSatellite && leafletMap.hasLayer(tileSatellite)) leafletMap.removeLayer(tileSatellite);
+    if (tileStandard && !leafletMap.hasLayer(tileStandard)) tileStandard.addTo(leafletMap);
+  }
 }
 
 function goTo(lat, lon, name) {
-  const layerParam = currentLayer === 'satellite' ? 'hot' : 'mapnik';
-  const bbox = calcBbox(lat, lon, 1);
-  document.getElementById('map-frame').src =
-    `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=${layerParam}&marker=${lat}%2C${lon}`;
-  const info = document.getElementById('map-info');
-  document.getElementById('map-info-text').textContent = '📍 ' + name;
-  info.style.display = 'block';
+  if (!leafletMap) initLeafletMap();
+  leafletMap.setView([lat, lon], 15);
+  if (mapMarker) leafletMap.removeLayer(mapMarker);
+  mapMarker = L.marker([lat, lon]).addTo(leafletMap);
+  if (name) {
+    mapMarker.bindPopup(name).openPopup();
+    var info = document.getElementById('map-info');
+    document.getElementById('map-info-text').textContent = '📍 ' + name;
+    info.style.display = 'block';
+  }
 }
 
 async function searchAddress() {
-  const q = document.getElementById('map-search').value.trim();
+  var q = document.getElementById('map-search').value.trim();
   if (!q) return;
   showToast('🔍 Tražim adresu...');
   try {
-    const query = encodeURIComponent(q + ', Beograd, Srbija');
-    const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`);
-    const results = await resp.json();
+    var query = encodeURIComponent(q + ', Beograd, Srbija');
+    var resp = await fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1');
+    var results = await resp.json();
     if (results.length > 0) {
-      const r = results[0];
-      const lat = parseFloat(r.lat);
-      const lon = parseFloat(r.lon);
+      var r = results[0];
+      var lat = parseFloat(r.lat);
+      var lon = parseFloat(r.lon);
       goTo(lat, lon, r.display_name.split(',')[0]);
       showToast('✅ Adresa pronađena!');
     } else {
@@ -16102,20 +16147,195 @@ function locateMe() {
   }
   showToast('📍 Tražim lokaciju...');
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      goTo(lat, lon, `Moja lokacija (${lat.toFixed(4)}, ${lon.toFixed(4)})`);
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      if (!leafletMap) initLeafletMap();
+      goTo(lat, lon, 'Moja lokacija (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')');
+      if (mapCircle) leafletMap.removeLayer(mapCircle);
+      mapCircle = L.circle([lat, lon], {
+        radius: pos.coords.accuracy,
+        color: '#27ae60',
+        fillColor: '#27ae60',
+        fillOpacity: 0.1
+      }).addTo(leafletMap);
       showToast('✅ Lokacija pronađena!');
     },
-    () => showToast('❌ Nije moguće dobiti lokaciju')
+    function() { showToast('❌ Nije moguće dobiti lokaciju'); },
+    { enableHighAccuracy: true, timeout: 10000 }
   );
+}
+
+// ===== GPS TRACKING =====
+function toggleTracking() {
+  if (trackingActive) {
+    stopTracking();
+  } else {
+    startTracking();
+  }
+}
+
+function startTracking() {
+  if (!navigator.geolocation) {
+    showToast('❌ Geolokacija nije dostupna');
+    return;
+  }
+  if (!leafletMap) initLeafletMap();
+  trackingActive = true;
+  trackStartTime = Date.now();
+  trackPoints = [];
+  
+  // Show tracking UI
+  document.getElementById('track-info').style.display = 'block';
+  document.getElementById('btn-track').style.background = '#27ae60';
+  document.getElementById('btn-track').style.color = 'white';
+  document.getElementById('btn-track').style.borderColor = '#27ae60';
+  
+  // Clear old polyline
+  if (trackPolyline) {
+    leafletMap.removeLayer(trackPolyline);
+    trackPolyline = null;
+  }
+  if (trackMarker) {
+    leafletMap.removeLayer(trackMarker);
+    trackMarker = null;
+  }
+  
+  // Start watching position
+  watchId = navigator.geolocation.watchPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      var point = { lat: lat, lon: lon, t: Date.now() };
+      trackPoints.push(point);
+      
+      // Draw/update polyline
+      var latlngs = trackPoints.map(function(p) { return [p.lat, p.lon]; });
+      if (trackPolyline) {
+        trackPolyline.setLatLngs(latlngs);
+      } else {
+        trackPolyline = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(leafletMap);
+      }
+      
+      // Update marker
+      if (trackMarker) leafletMap.removeLayer(trackMarker);
+      trackMarker = L.circleMarker([lat, lon], {
+        radius: 8,
+        color: '#e74c3c',
+        fillColor: '#e74c3c',
+        fillOpacity: 1
+      }).addTo(leafletMap);
+      
+      // Follow the user
+      leafletMap.panTo([lat, lon]);
+      
+      // Update stats
+      updateTrackStats();
+      
+      // Save to localStorage
+      saveTrack();
+    },
+    function(err) {
+      showToast('❌ Greška u praćenju: ' + err.message);
+      stopTracking();
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+  );
+  
+  showToast('🟢 Praćenje kretanja aktivno');
+}
+
+function stopTracking() {
+  trackingActive = false;
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  document.getElementById('track-info').style.display = 'none';
+  document.getElementById('btn-track').style.background = 'white';
+  document.getElementById('btn-track').style.color = 'var(--text)';
+  document.getElementById('btn-track').style.borderColor = 'var(--border)';
+  
+  // Save final track
+  saveTrack();
+  showToast('⏹ Praćenje zaustavljeno. Putanja sačuvana.');
+}
+
+function updateTrackStats() {
+  if (!trackPoints || trackPoints.length < 2) return;
+  // Calculate distance
+  var dist = 0;
+  for (var i = 1; i < trackPoints.length; i++) {
+    dist += haversine(trackPoints[i-1].lat, trackPoints[i-1].lon, trackPoints[i].lat, trackPoints[i].lon);
+  }
+  var elapsed = (Date.now() - trackStartTime) / 1000;
+  var min = Math.floor(elapsed / 60);
+  var sec = Math.floor(elapsed % 60);
+  var distStr = dist < 1000 ? dist.toFixed(0) + 'm' : (dist/1000).toFixed(2) + 'km';
+  var timeStr = min > 0 ? min + 'min ' + sec + 's' : sec + 's';
+  document.getElementById('track-stats').textContent = distStr + ' · ' + timeStr + ' · ' + trackPoints.length + ' tačaka';
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  var R = 6371000; // meters
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLon = (lon2 - lon1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function saveTrack() {
+  var username = getCurrentUsername();
+  if (!username || trackPoints.length === 0) return;
+  var key = 'km_track_' + username;
+  var data = {
+    points: trackPoints,
+    startTime: trackStartTime,
+    date: new Date().toISOString()
+  };
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadSavedTrack() {
+  var username = getCurrentUsername();
+  if (!username) return;
+  var key = 'km_track_' + username;
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    if (data.points && data.points.length > 1) {
+      trackPoints = data.points;
+      trackStartTime = data.startTime;
+      var latlngs = trackPoints.map(function(p) { return [p.lat, p.lon]; });
+      trackPolyline = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(leafletMap);
+      // Fit bounds to show the track
+      leafletMap.fitBounds(trackPolyline.getBounds(), { padding: [30, 30] });
+      updateTrackStats();
+    }
+  } catch(e) {}
+}
+
+function clearTrack() {
+  var username = getCurrentUsername();
+  if (!username) return;
+  if (trackPolyline) { leafletMap.removeLayer(trackPolyline); trackPolyline = null; }
+  if (trackMarker) { leafletMap.removeLayer(trackMarker); trackMarker = null; }
+  trackPoints = [];
+  trackStartTime = null;
+  localStorage.removeItem('km_track_' + username);
+  showToast('🗑️ Putanja obrisana');
 }
 
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v3.3';
+const KM_VERSION = 'v3.4';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
