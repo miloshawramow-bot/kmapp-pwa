@@ -17211,10 +17211,10 @@ function stopTrackedUsersMap() {
 
 async function refreshTrackedUsersMap() {
   try {
-    const res = await fetch(KM_API_BASE + '/getActiveTracks', {
+    const res = await fetch(KM_API_BASE + '/syncGpsTrack', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestedBy: getCurrentUsername() })
+      body: JSON.stringify({ action: 'getActive' })
     });
     const data = await res.json();
     if (!data.success || !data.tracks || data.tracks.length === 0) return;
