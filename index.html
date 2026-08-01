@@ -1199,7 +1199,7 @@ initTapSound();
     <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Mapa
   </button>
   <button onclick="switchTab('ai')" id="tab-ai">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 8H4m16 0h-4M12 4V2m0 12v-2"/><rect x="8" y="14" width="8" height="6" rx="2"/><line x1="10" y1="20" x2="10" y2="22"/><line x1="14" y1="20" x2="14" y2="22"/></svg></span>Asistent
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><path d="M5 8l-2.5 5a3 3 0 0 0 5 0z"/><path d="M19 8l-2.5 5a3 3 0 0 0 5 0z"/><path d="M4 21h16"/><circle cx="12" cy="4" r="1.5"/></svg></span>Asistent
   </button>
   <button onclick="switchTab('podesavanja')" id="tab-podesavanja">
     <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>Info
@@ -18192,17 +18192,12 @@ if (new URLSearchParams(window.location.search).get('dl')) {
 <!-- ===== AI ASISTENT ===== -->
 <div class="screen" id="screen-ai" style="display:none;flex-direction:column;flex:1;background:var(--bg);">
   <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px;" id="ai-chat-area">
-    <div style="text-align:center;padding:30px 20px;">
-      <div style="font-size:2.5rem;margin-bottom:10px;">🤖</div>
-      <h2 style="font-size:1.1rem;font-weight:800;color:var(--navy);margin:0 0 6px;">AI Pravni Asistent</h2>
-      <p style="font-size:0.78rem;color:var(--muted);margin:0;">Postavite pitanje o zakonima i odlukama iz aplikacije.</p>
-    </div>
-    <div style="background:var(--card);border-radius:12px;padding:12px 14px;font-size:0.8rem;color:var(--muted);line-height:1.5;">
-      <b style="color:var(--navy);">Predlozi pitanja:</b><br>
-      • Kada se izdaje upozorenje?<br>
-      • Kako se vrši asistencija u izvršenjima?<br>
-      • Koja su ovlašćenja prilikom utvrđivanja identiteta?<br>
-      • Kakva je saradnja sa inspekcijskim službama?
+    <div style="text-align:center;padding:24px 20px 16px;">
+      <div style="width:52px;height:52px;margin:0 auto 10px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 6a3 3 0 0 0 6 0z"/><path d="M19 7l-3 6a3 3 0 0 0 6 0z"/><path d="M3 21h18"/><circle cx="12" cy="5" r="2"/></svg>
+      </div>
+      <h2 style="font-size:1.1rem;font-weight:800;color:var(--navy);margin:0 0 4px;">AI Pravni Asistent</h2>
+      <p style="font-size:0.78rem;color:var(--muted);margin:0;">Postavite pitanje o zakonima i odlukama.</p>
     </div>
   </div>
   <div style="padding:10px 12px calc(62px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
