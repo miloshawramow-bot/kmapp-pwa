@@ -436,6 +436,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
+    flex-shrink: 0;
   }
 
   .settings-title {
@@ -899,7 +900,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v98</div>
+    <div class="side-menu-footer">KMapp · Beograd · v99</div>
   </div>
 </div>
 
@@ -16852,7 +16853,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v98';
+const KM_VERSION = 'v99';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16867,7 +16868,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v98') caches.delete(n);
+          if (n !== 'kmapp-v99') caches.delete(n);
         });
       });
     }
@@ -16881,7 +16882,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=98');
+      return navigator.serviceWorker.register('sw.js?v=99');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
