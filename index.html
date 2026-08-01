@@ -80,7 +80,7 @@
     flex-direction: column;
     max-width: 480px;
     margin: 0 auto;
-    padding-bottom: 56px;
+    padding-bottom: 0px;
   }
 
   /* HEADER */
@@ -124,7 +124,7 @@
     transform: translateX(-50%);
     width: 100%;
     max-width: 480px;
-    display: flex;
+    display: none;
     background: var(--navy2);
     border-top: 2px solid var(--gold);
     justify-content: space-around;
@@ -769,7 +769,7 @@
 </div>
 
 <header>
-  <img src="data:image/png;base64,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" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gold);" alt="KMapp">
+  <img src="data:image/png;base64,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" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gold);cursor:pointer;" alt="KMapp" onclick="toggleSideMenu()" title="Meni">
   <div class="header-text">
     <h1>KMapp</h1>
     <p>@milos.avramov</p>
@@ -802,7 +802,7 @@
     </div>
     <div class="side-menu-scroll">
       <div class="side-menu-section-title">Navigacija</div>
-    <div class="side-menu-item" onclick="switchTab('docs'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('docs'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Dokumenti</span>
@@ -810,7 +810,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('poruke'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('poruke'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Poruke</span>
@@ -818,7 +818,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('mapa'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('mapa'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Mapa</span>
@@ -826,7 +826,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('ai'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('ai'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 8H4m16 0h-4M12 4V2m0 12v-2"/><rect x="8" y="14" width="8" height="6" rx="2"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Asistent</span>
@@ -834,7 +834,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('pelceri'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('pelceri'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Pelceri</span>
@@ -842,7 +842,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('akti'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('akti'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 9l9-6 9 6"/><path d="M5 9v10a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1V9"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Pravni akti</span>
@@ -850,7 +850,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('linkovi'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('linkovi'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Linkovi</span>
@@ -858,7 +858,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('informator'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('informator'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Informator</span>
@@ -866,7 +866,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('kamera'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('kamera'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Kamera</span>
@@ -874,7 +874,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('imenik'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('imenik'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Imenik</span>
@@ -882,7 +882,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('kalendar'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('kalendar'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Kalendar</span>
@@ -890,7 +890,7 @@
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('podesavanja'); closeSideMenu();">
+    <div class="side-menu-item" onclick="switchTab('podesavanja'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
       <div class="side-menu-label">
         <span class="side-menu-title">Podešavanja</span>
@@ -899,7 +899,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v90</div>
+    <div class="side-menu-footer">KMapp · Beograd · v93</div>
   </div>
 </div>
 
@@ -2237,6 +2237,10 @@ function switchTab(name) {
   if (name === 'login') {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
   }
+  // Highlight active item in side menu
+  document.querySelectorAll('.side-menu-item').forEach(function(item) {
+    item.classList.remove('side-menu-active');
+  });
   closeMoreGrid();
 }
 
@@ -16766,7 +16770,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v92';
+const KM_VERSION = 'v93';
 if (sessionStorage.getItem('km_version') && sessionStorage.getItem('km_version') !== KM_VERSION) {
   sessionStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
