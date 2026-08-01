@@ -1053,7 +1053,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v102</div>
+    <div class="side-menu-footer">KMapp · Beograd · v109</div>
   </div>
 </div>
 
@@ -3689,6 +3689,11 @@ function doLogout() {
 })();
 
 (function initAuthGate() {
+  // Safety: hide loader after 8s no matter what
+  setTimeout(function() {
+    var l = document.getElementById('app-loader');
+    if (l) { l.classList.add('hidden'); setTimeout(function() { if(l) l.remove(); }, 500); }
+  }, 8000);
   function gateCheck() {
     try {
       initDarkMode();
