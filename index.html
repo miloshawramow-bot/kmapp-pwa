@@ -899,7 +899,7 @@
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v94</div>
+    <div class="side-menu-footer">KMapp · Beograd · v95</div>
   </div>
 </div>
 
@@ -955,6 +955,10 @@
 
       <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:12px;">Prijavi se</button>
 
+      <div style="text-align:center;margin-top:10px;">
+        <span onclick="showForgotPassword()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">Zaboravljena lozinka?</span>
+      </div>
+
       <div style="text-align:center;margin-top:12px;"><div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <span style="color:var(--muted);font-size:0.72rem;">KMapp · Beograd</span>
       </div>
@@ -980,6 +984,22 @@
         <span onclick="showLoginForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">← Nazad na prijavu</span>
       </div>
     </div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgot-password-box" style="display:none;width:100%;max-width:320px;background:white;border-radius:16px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Oporavak lozinke</div>
+  </div>
+  <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;text-align:center;">Unesite vaše korisničko ime (Ime.Prezime). Lozinka će biti resetovana na podrazumevani broj telefona iz imenika.</p>
+  <input id="forgot-username" type="text" placeholder="Ime.Prezime" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;" onkeydown="if(event.key==='Enter')resetPassword()">
+  <div id="forgot-error" style="display:none;color:var(--danger);font-size:0.78rem;margin-top:8px;text-align:center;"></div>
+  <div id="forgot-success" style="display:none;color:#2a8a3a;font-size:0.78rem;margin-top:8px;text-align:center;"></div>
+  <button onclick="resetPassword()" style="width:100%;background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);color:white;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:8px;">Resetuj lozinku</button>
+  <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+    <span onclick="showLoginForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">← Nazad na prijavu</span>
+  </div>
+</div>
+</div>
 
     <p style="color:#8fa7c9;font-size:0.68rem;margin-top:22px;text-align:center;max-width:300px;">Pristup aplikaciji je ograničen na ovlašćene korisnike.</p>
   </div>
@@ -3313,6 +3333,49 @@ function doRegister() {
   document.getElementById('tab-login').style.display = 'none';
   switchTab('docs');
   showToast('✅ Nalog kreiran! Dobrodošli, ' + u);
+}
+
+
+function showForgotPassword() {
+  document.getElementById('login-form-box').style.display = 'none';
+  document.getElementById('register-form-box').style.display = 'none';
+  var fp = document.getElementById('forgot-password-box');
+  if (fp) fp.style.display = 'block';
+}
+
+function resetPassword() {
+  var username = (document.getElementById('forgot-username').value || '').trim().toLowerCase();
+  var errEl = document.getElementById('forgot-error');
+  var successEl = document.getElementById('forgot-success');
+  errEl.style.display = 'none';
+  successEl.style.display = 'none';
+  
+  if (!username) {
+    errEl.textContent = 'Unesite korisničko ime.';
+    errEl.style.display = 'block';
+    return;
+  }
+  
+  // Pronadji korisnika u imeniku
+  var imenikUsers = getImenikUsers();
+  var imUser = imenikUsers.find(function(x) { return x.username.toLowerCase() === username; });
+  
+  if (!imUser) {
+    errEl.textContent = 'Korisnik nije pronađen u imeniku.';
+    errEl.style.display = 'block';
+    return;
+  }
+  
+  // Ukloni korisnika iz localStorage (km_users_v1) ako postoji - vratice se na imenik default
+  var users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
+  var filtered = users.filter(function(x) { return x.username.toLowerCase() !== username; });
+  localStorage.setItem(KM_USERS_KEY, JSON.stringify(filtered));
+  
+  var phone = imUser.password || '';
+  var maskedPhone = phone.length > 3 ? phone.substring(0, 3) + '***' + phone.substring(phone.length - 3) : '***';
+  successEl.innerHTML = '✅ Lozinka resetovana! Vaša podrazumevana lozinka je broj telefona iz imenika: <b>' + maskedPhone + '</b><br>Prijavite se sa njom.';
+  successEl.style.display = 'block';
+  document.getElementById('forgot-username').value = '';
 }
 
 function doLogin() {
@@ -16770,7 +16833,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v94';
+const KM_VERSION = 'v95';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -16785,7 +16848,7 @@ if ('serviceWorker' in navigator) {
     if (window.caches) {
       caches.keys().then(names => {
         names.forEach(n => {
-          if (n !== 'kmapp-v94') caches.delete(n);
+          if (n !== 'kmapp-v95') caches.delete(n);
         });
       });
     }
@@ -16799,7 +16862,7 @@ if ('serviceWorker' in navigator) {
       return Promise.all(keys.map(k => caches.delete(k)));
     }).then(() => {
       // Registruj novi SW
-      return navigator.serviceWorker.register('sw.js?v=94');
+      return navigator.serviceWorker.register('sw.js?v=95');
     }).then(reg => {
       reg.update();
       setInterval(() => reg.update(), 30000);
