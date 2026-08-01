@@ -18012,7 +18012,7 @@ let aiMessages = [];
 
 function aiPreselect(q) {
   // Pametna preselecija akata na klijentskoj strani pre slanja na server
-  // Cilj: smanjiti payload sa 1.5MB na <100KB
+  // MAX: 5 akata x 2000 chars = ~12KB total (ispod Base44 backend limit)
   var qLow = q.toLowerCase();
   var qWords = qLow.split(/\s+/).filter(function(w){ return w.length > 2; });
 
@@ -18020,116 +18020,97 @@ function aiPreselect(q) {
   var stems = [];
   qWords.forEach(function(w){
     stems.push(w);
-    if (w.endsWith('nja')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nje')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nog')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nom')) stems.push(w.slice(0,-3));
-    if (w.endsWith('ima')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
-    if (w.endsWith('anju')) stems.push(w.slice(0,-4));
-    if (w.endsWith('anje')) stems.push(w.slice(0,-4));
-    if (w.endsWith('anja')) stems.push(w.slice(0,-4));
-    if (w.endsWith('nom')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nog')) stems.push(w.slice(0,-3));
-    if (w.endsWith('nih')) stems.push(w.slice(0,-3));
+    var stem = w;
+    if (stem.length > 5) {
+      ['nja','nje','nog','nom','ima','nih','anju','anje','anja'].forEach(function(suf){
+        if (stem.endsWith(suf)) stems.push(stem.slice(0,-suf.length));
+      });
+    }
   });
 
-  // Provera da li se konkretni akt pominje u pitanju
   var wantsPenalty = qLow.indexOf('prekršaj')!==-1||qLow.indexOf('kazna')!==-1||qLow.indexOf('kazn')!==-1||qLow.indexOf('materijal')!==-1;
   var clanMatch = q.match(/(?:član|clan|Član|čl\.|cl\.)\s*(\d+[a-z]?)/i);
   var trazeniClan = clanMatch ? clanMatch[1] : null;
 
-  // Scoring svakog akta
+  // Detekcija naziva akta u pitanju
+  var trazeniAktNaziv = null;
+  aktiData.forEach(function(a){
+    var nazWords = a.naziv.toLowerCase().replace(/^(odluka o |zakon o |pravilnik o )/,'').split(/\s+/).filter(function(w){ return w.length > 3; });
+    var hits = 0;
+    nazWords.forEach(function(nw){ if (qLow.indexOf(nw) !== -1) hits++; });
+    if (hits > 0 && hits >= Math.ceil(nazWords.length / 2)) trazeniAktNaziv = a.naziv;
+  });
+
+  // Scoring akata
   var scored = aktiData.map(function(a){
     var fullText = (a.naziv + ' ' + (a.sadrzaj||'')).toLowerCase();
     var score = 0;
-
-    // Tip bonus: odluke prioritet
     if (a.tip === 'odluka' || a.naziv.toLowerCase().indexOf('odluka') !== -1) score += 10;
-
-    // Ako se naziv akta pominje u pitanju - huge bonus
-    var aktNazLow = a.naziv.toLowerCase();
-    var nazWords = aktNazLow.replace(/^(odluka o |zakon o |pravilnik o )/,'').split(/\s+/).filter(function(w){ return w.length > 3; });
-    var nazHits = 0;
-    nazWords.forEach(function(nw){ if (qLow.indexOf(nw) !== -1) nazHits++; });
-    if (nazHits > 0 && nazHits >= Math.ceil(nazWords.length / 2)) score += 500;
-
-    // Keyword matching sa stemming
-    stems.forEach(function(s){
-      if (s.length > 2 && fullText.indexOf(s) !== -1) score += 2;
-    });
-
-    // Kaznene/materijalne odredbe bonus
+    if (trazeniAktNaziv && a.naziv === trazeniAktNaziv) score += 1000;
+    stems.forEach(function(s){ if (s.length > 2 && fullText.indexOf(s) !== -1) score += 2; });
     if (wantsPenalty) {
       if (fullText.indexOf('kaznena')!==-1) score += 8;
       if (fullText.indexOf('materijalna')!==-1) score += 8;
       if (fullText.indexOf('kazniće')!==-1) score += 5;
-      if (fullText.indexOf('novčana kazna')!==-1) score += 5;
     }
-
     return { a: a, score: score };
   });
 
   scored.sort(function(x,y){ return y.score - x.score; });
 
-  // Uzmi top akti (odluke prioritet, max 8 total)
+  // MAX 5 akata
   var selected = [];
-  var odlukeCount = 0;
-  var zakonCount = 0;
-
-  for (var i = 0; i < scored.length && selected.length < 8; i++) {
-    var entry = scored[i];
-    if (entry.score <= 0) continue;
-    var isOdluka = (entry.a.tip === 'odluka' || entry.a.naziv.toLowerCase().indexOf('odluka') !== -1);
-    if (isOdluka && odlukeCount < 6) { selected.push(entry.a); odlukeCount++; }
-    else if (!isOdluka && zakonCount < 3) { selected.push(entry.a); zakonCount++; }
+  var odlukeCount = 0, zakonCount = 0;
+  for (var i = 0; i < scored.length && selected.length < 5; i++) {
+    if (scored[i].score <= 0) continue;
+    var isOdluka = (scored[i].a.tip === 'odluka' || scored[i].a.naziv.toLowerCase().indexOf('odluka') !== -1);
+    if (isOdluka && odlukeCount < 4) { selected.push(scored[i].a); odlukeCount++; }
+    else if (!isOdluka && zakonCount < 2) { selected.push(scored[i].a); zakonCount++; }
   }
 
-  // Ako je score specificiran akt ima 500+, stavi ga prvi
-  if (scored.length > 0 && scored[0].score >= 500) {
-    var topAkt = scored[0].a;
-    selected = selected.filter(function(a){ return a.naziv !== topAkt.naziv; });
-    selected.unshift(topAkt);
+  // Ako je specificiran akt, stavi ga prvog
+  if (trazeniAktNaziv && selected.length > 0) {
+    selected = selected.filter(function(a){ return a.naziv !== trazeniAktNaziv; });
+    var foundAkt = aktiData.find(function(a){ return a.naziv === trazeniAktNaziv; });
+    if (foundAkt) selected.unshift(foundAkt);
   }
 
-  // Trim sadrzaj po aktu: ako je specificiran clan, uzmi relevantne clanove, inace prvih 12000 znakova
+  // Trim sadrzaj: MAX 2000 chars po aktu
+  var MAX_PER_AKT = 2000;
   return selected.map(function(a){
     var sadrzaj = a.sadrzaj || '';
+    var isTargeted = (trazeniAktNaziv && a.naziv === trazeniAktNaziv);
 
-    if (trazeniClan && scored[0].score >= 500 && scored[0].a.naziv === a.naziv) {
-      // Specificiran clan u specificiranom aktu — uzmi taj clan + kaznene + materijalne odredbe
-      var parts = sadrzaj.split(/(?=Član \d)/);
-      var relevant = [];
+    var parts = sadrzaj.split(/(?=Član \d)/);
+    var relevant = [];
+
+    if (trazeniClan && isTargeted) {
+      // Trazeni clan + kaznene/materijalne odredbe
       var clanPat = 'Član ' + trazeniClan;
       parts.forEach(function(p){
-        if (p.toLowerCase().indexOf(clanPat.toLowerCase()) === 0) relevant.push(p);
+        if (p.toLowerCase().indexOf(clanPat.toLowerCase()) === 0) relevant.push(p.slice(0, 600));
       });
-      // Dodaj kaznene i materijalne
       parts.forEach(function(p){
         var pl = p.toLowerCase();
-        if ((pl.indexOf('kaznena')!==-1||pl.indexOf('kazniće')!==-1||pl.indexOf('novčana kazna')!==-1||pl.indexOf('materijalna')!==-1) && relevant.indexOf(p)===-1) {
-          relevant.push(p);
+        if ((pl.indexOf('kaznena')!==-1||pl.indexOf('kazniće')!==-1||pl.indexOf('materijalna')!==-1||pl.indexOf('novčana kazna')!==-1)) {
+          var already = relevant.some(function(r){ return r.slice(0,30) === p.slice(0,30); });
+          if (!already) relevant.push(p.slice(0, 600));
         }
       });
-      sadrzaj = relevant.length > 0 ? relevant.slice(0,12).join('\n\n') : sadrzaj.slice(0,15000);
     } else {
-      // Uzmimo relevantne clanove za opstu pretragu — split po clanu
-      var parts = sadrzaj.split(/(?=Član \d)/);
-      var relevant = [];
+      // Opsta pretraga: relevantni clanovi po stemovima
       parts.forEach(function(p){
+        if (relevant.join('').length > MAX_PER_AKT) return;
         var pl = p.toLowerCase();
         var hit = false;
         stems.forEach(function(s){ if (s.length > 2 && pl.indexOf(s)!==-1) hit = true; });
-        if (wantsPenalty && (pl.indexOf('kaznena')!==-1||pl.indexOf('materijalna')!==-1||pl.indexOf('kazniće')!==-1||pl.indexOf('novčana kazna')!==-1)) hit = true;
-        if (hit) relevant.push(p);
+        if (wantsPenalty && (pl.indexOf('kaznena')!==-1||pl.indexOf('materijalna')!==-1||pl.indexOf('kazniće')!==-1)) hit = true;
+        if (hit) relevant.push(p.slice(0, 500));
       });
-      // Max 10 clanova, max 10000 znakova po aktu
-      sadrzaj = relevant.length > 0 ? relevant.slice(0,10).join('\n\n').slice(0,10000) : sadrzaj.slice(0,8000);
     }
 
-    return { naziv: a.naziv, broj: a.broj, tip: a.tip, sadrzaj: sadrzaj };
+    var trimmed = relevant.length > 0 ? relevant.slice(0, 6).join('\n\n').slice(0, MAX_PER_AKT) : sadrzaj.slice(0, MAX_PER_AKT);
+    return { naziv: a.naziv, broj: a.broj, tip: a.tip, sadrzaj: trimmed };
   });
 }
 
