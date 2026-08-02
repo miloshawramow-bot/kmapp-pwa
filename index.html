@@ -32,6 +32,33 @@
     }
   }
 })();
+
+// ===== PWA INSTALL (early definition - must be before all external scripts) =====
+let deferredInstallPrompt = null;
+function installPwa() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => {
+      deferredInstallPrompt = null;
+      var btn = document.getElementById('pwa-install-btn');
+      if (btn) btn.style.display = 'none';
+    });
+  } else {
+    if (typeof showToast === 'function') showToast('📱 iOS: Safari > Share (⬆️) > Add to Home Screen');
+    setTimeout(() => alert('Da instalirate KMapp na iPhone:\n\n1. Pritisnite dugme Share (⬆️) u Safari\n2. Izaberite "Add to Home Screen"\n3. Pritisnite "Add"'), 300);
+  }
+}
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', function() {
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+  if (typeof showToast === 'function') showToast('✅ KMapp je instaliran');
+});
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -5817,38 +5844,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ===== PWA: dugme za instalaciju =====
-let deferredInstallPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  const btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.style.display = 'flex';
-});
 
-function installPwa() {
-  const btn = document.getElementById('pwa-install-btn');
-  if (deferredInstallPrompt) {
-    // Android/Chrome: show native install prompt
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.finally(() => {
-      deferredInstallPrompt = null;
-      if (btn) btn.style.display = 'none';
-    });
-  } else {
-    // iOS: show instructions
-    showToast('📱 iOS: Safari > Share (⬆️) > Add to Home Screen');
-    setTimeout(() => {
-      alert('Da instalirate KMapp na iPhone:\n\n1. Pritisnite dugme Share (⬆️) u Safari\n2. Izaberite "Add to Home Screen"\n3. Pritisnite "Add"');
-    }, 300);
-  }
-}
-
-window.addEventListener('appinstalled', () => {
-  const btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.style.display = 'none';
-  showToast('✅ KMapp je instaliran');
-});
 
 // ===== CLOCK & CALENDAR =====
 let calCurrentDate = new Date();
