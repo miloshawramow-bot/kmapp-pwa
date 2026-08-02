@@ -1124,6 +1124,7 @@ function getImenikUsers() {
   return (typeof imenikData !== 'undefined' ? imenikData : []).map(c => ({
     username: imenikToUsername(c.name),
     password: (c.phones && c.phones[0]) ? c.phones[0] : '',
+    phones: c.phones || [],
     displayName: c.name,
     role: 'user',
     source: 'imenik'
@@ -1259,6 +1260,10 @@ function doLogin() {
   if (!user) {
     user = users.find(x => normUser(x.username) === u && x.password && normPhone(x.password) === normPhone(p));
   }
+  // Pokusaj i sa alternativnim brojevima telefona
+  if (!user) {
+    user = users.find(x => normUser(x.username) === u && x.phones && x.phones.some(ph => ph === p || normPhone(ph) === normPhone(p)));
+  }
   
   // 2. Fallback: direktno iz imenika (uvek radi, bez obzira na localStorage)
   if (!user) {
@@ -1267,6 +1272,10 @@ function doLogin() {
     if (imUser && imUser.password) {
       if (imUser.password === p || normPhone(imUser.password) === normPhone(p)) {
         user = imUser;
+      } else if (imUser.phones && imUser.phones.length > 1) {
+        // Pokusaj sa bilo kojim brojem telefona iz imenika
+        const matched = imUser.phones.some(ph => ph === p || normPhone(ph) === normPhone(p));
+        if (matched) user = imUser;
       }
     }
   }
