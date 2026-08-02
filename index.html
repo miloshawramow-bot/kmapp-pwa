@@ -2783,18 +2783,31 @@ async function porukeCheckNew() {
 function porukeStartPolling() {
   if (porukePollTimer) return;
   if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
+    Notification.requestPermission().then(function(perm) {
+      if (perm === 'granted') {
+        setTimeout(subscribeToPush, 500);
+      }
+    });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    setTimeout(subscribeToPush, 500);
   }
   porukeCheckNew();
   porukePollTimer = setInterval(porukeCheckNew, 15000);
-  // Subscribe to push notifications
-  subscribeToPush();
 }
 
 // ===== PUSH NOTIFICATIONS =====
 async function subscribeToPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.log('Push not supported on this device');
+    return;
+  }
+  // Ne pokusavaj ako nema dozvolu za notifikacije
+  if ('Notification' in window && Notification.permission === 'denied') {
+    console.log('Push notifications denied by user - skipping');
+    return;
+  }
+  if ('Notification' in window && Notification.permission === 'default') {
+    console.log('Push notification permission not requested yet - skipping');
     return;
   }
   try {
@@ -2832,8 +2845,8 @@ async function subscribeToPush() {
       console.log('Push subscription save failed:', data);
     }
   } catch(e) {
-    console.log('Push subscription error:', e.message || e);
-    showToast('⚠️ Push greška: ' + (e.message || e));
+    console.log('Push subscription error (non-critical):', e.message || e);
+    // Ne prikazuj grešku korisniku - push je opcionalno
   }
 }
 
@@ -3803,7 +3816,7 @@ function doLogin() {
     checkAdminAccess();
     // Start message polling and push subscription after login
     porukeStartPolling();
-    subscribeToPush();
+    // subscribeToPush() - odlozeno, poziva se iz porukeStartPolling
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
@@ -3847,7 +3860,7 @@ function doLogout() {
         switchTab('docs');
         // Start polling and push subscription for returning users
         porukeStartPolling();
-        subscribeToPush();
+        // subscribeToPush() - odlozeno, poziva se iz porukeStartPolling
       }
     } catch(e) {
       document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
