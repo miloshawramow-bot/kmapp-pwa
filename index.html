@@ -15,7 +15,7 @@ if ('serviceWorker' in navigator) {
       window.location.reload();
     }
   });
-  navigator.serviceWorker.register('./sw3.js?v=150', { updateViaCache: 'none' }).then(function(reg) {
+  navigator.serviceWorker.register('./sw4.js?v=150', { updateViaCache: 'none' }).then(function(reg) {
       reg.update();
     }).catch(function(){});
 }
