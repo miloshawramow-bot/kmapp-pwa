@@ -17514,18 +17514,27 @@ function exportTrackPDF() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v125';
-if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
+const KM_VERSION = 'v136';
+// Uvek proveri verziju - ako se razlikuje, ocisti sve i reloaduj
+(function() {
+  var stored = localStorage.getItem('km_version');
+  if (stored && stored !== KM_VERSION) {
+    console.log('Version mismatch: ' + stored + ' -> ' + KM_VERSION + ', clearing cache and reloading');
+    localStorage.setItem('km_version', KM_VERSION);
+    if ('caches' in window) {
+      caches.keys().then(function(names) { return Promise.all(names.map(function(n) { return caches.delete(n); })); });
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); });
+    }
+    setTimeout(function() { window.location.reload(); }, 300);
+    return;
+  }
   localStorage.setItem('km_version', KM_VERSION);
-  caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
-  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-  location.reload(true);
-} else {
-  localStorage.setItem('km_version', KM_VERSION);
-}
+})();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=125').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=136').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
