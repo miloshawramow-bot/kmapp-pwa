@@ -2,7 +2,7 @@
   "name": "KMapp - aplikacija za komunalne poslove",
   "short_name": "KMapp",
   "description": "KMapp - aplikacija za komunalne poslove",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -10,11 +10,7 @@
   "background_color": "#0d2240",
   "lang": "sr",
   "dir": "ltr",
-  "categories": [
-    "productivity",
-    "utilities",
-    "business"
-  ],
+  "categories": ["productivity", "utilities", "business"],
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -52,10 +48,5 @@
       "sizes": "16x16",
       "purpose": "any"
     }
-  ],
-  "display_override": [
-    "standalone",
-    "minimal-ui"
-  ],
-  "id": "kmapp-v172"
+  ]
 }
