@@ -2,20 +2,46 @@
 <!-- KMapp PWA -->
 <html lang="sr"><head>
 <script>
-// ===== AGGRESSIVE SW UPDATE (runs before anything else) =====
+// ===== NUKLEARNI AUTO-UPDATE (verzija 142) =====
+window.__KMAPP_VERSION = '142';
 (function() {
-  // Global error handler - show errors on screen so we can debug
   window.addEventListener('error', function(e) {
-    var d = document.getElementById('diag-error');
-    if (d) {
-      d.style.display = 'block';
-      d.textContent = 'JS Error: ' + (e.message || 'unknown') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '');
-    }
     console.error('KMapp error:', e.message, e.filename, e.lineno);
   });
-  // Service Worker - registracija i auto-update
+  
+  // 1. Proveri da li se verzija promena u odnosu na onu u localStorage
+  var storedVer = localStorage.getItem('kmapp_version');
+  var currentVer = window.__KMAPP_VERSION;
+  var versionChanged = storedVer && storedVer !== currentVer;
+  
+  // 2. Ako se verzija promenila - OBRISI SVE keševe i unregister SW
+  if (versionChanged) {
+    console.log('KMapp: verzija promenjena ' + storedVer + ' -> ' + currentVer + ', ciscenje...');
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        return Promise.all(names.map(function(n) { return caches.delete(n); }));
+      }).then(function() { console.log('KMapp: svi kesevi obrisani'); });
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        return Promise.all(regs.map(function(r) { return r.unregister(); }));
+      }).then(function() {
+        console.log('KMapp: svi SW unregisterovani, reload...');
+        localStorage.setItem('kmapp_version', currentVer);
+        window.location.reload(true);
+      });
+    } else {
+      localStorage.setItem('kmapp_version', currentVer);
+      window.location.reload(true);
+    }
+    return; // Ne radi nista vise, ceka reload
+  }
+  
+  // Sacuvaj trenutnu verziju
+  localStorage.setItem('kmapp_version', currentVer);
+  
+  // 3. Registruj SW sa auto-update
   if ('serviceWorker' in navigator) {
-    // Unregister stare SW verzije
     navigator.serviceWorker.getRegistrations().then(function(regs) {
       regs.forEach(function(r) {
         var url = (r.active && r.active.scriptURL) || (r.installing && r.installing.scriptURL) || '';
@@ -24,22 +50,19 @@
           console.log('Unregistered old SW:', url);
         }
       });
-    }).catch(function(e) { console.warn('SW unregister failed:', e); });
+    }).catch(function() {});
     
-    // Registruj novi SW
-    navigator.serviceWorker.register('./sw3.js?v=141', { updateViaCache: 'none' })
+    navigator.serviceWorker.register('./sw3.js?v=142', { updateViaCache: 'none' })
       .then(function(reg) {
         console.log('SW registered:', reg.scope);
-        // Proveri update odmah i svakih 5 minuta
         reg.update();
-        setInterval(function() { reg.update(); }, 5 * 60 * 1000);
-        // Kad novi SW postane aktivan - automatski reload
+        setInterval(function() { reg.update(); }, 3 * 60 * 1000);
         reg.addEventListener('updatefound', function() {
-          var newWorker = reg.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener('statechange', function() {
-            if (newWorker.state === 'activated') {
-              console.log('Nova verzija KMapp-a dostupna - reload...');
+          var nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', function() {
+            if (nw.state === 'activated') {
+              console.log('Nova verzija - auto reload');
               window.location.reload(true);
             }
           });
@@ -47,7 +70,6 @@
       })
       .catch(function(e) { console.warn('SW registration failed:', e); });
     
-    // Ako controller promeni (novi SW preuzeo) - reload
     navigator.serviceWorker.addEventListener('controllerchange', function() {
       window.location.reload(true);
     });
@@ -102,7 +124,7 @@ window.addEventListener('appinstalled', function() {
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="stylesheet" href="style.css?v=141">
+<link rel="stylesheet" href="style.css?v=142">
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -110,8 +132,8 @@ window.addEventListener('appinstalled', function() {
 </head>
 <body>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
-<script src="js/loader.js?v=141"></script>
-<script src="js/tap-sound.js?v=141"></script>
+<script src="js/loader.js?v=142"></script>
+<script src="js/tap-sound.js?v=142"></script>
 <div id="app-loader">
   <div class="loader-ring-wrap">
     <img src="icons/icon-192.png" alt="KMapp" class="loader-icon">
@@ -1401,10 +1423,10 @@ window.addEventListener('appinstalled', function() {
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
 
-<script src="js/misc.js?v=141"></script>
+<script src="js/misc.js?v=142"></script>
 
-<script src="js/weather.js?v=141"></script>
-<script src="js/app-core.js?v=141"></script><script src="akti-data.js?v=141"></script><script src="js/app-akti.js?v=141"></script><script src="imenik-data.js?v=141"></script><script src="js/app-imenik.js?v=141"></script>
+<script src="js/weather.js?v=142"></script>
+<script src="js/app-core.js?v=142"></script><script src="akti-data.js?v=142"></script><script src="js/app-akti.js?v=142"></script><script src="imenik-data.js?v=142"></script><script src="js/app-imenik.js?v=142"></script>
 
 <!-- ===== GLOBAL SEARCH OVERLAY ===== -->
 <div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
@@ -1483,7 +1505,7 @@ window.addEventListener('appinstalled', function() {
 
 <script>
 // ===== PELCERI =====
-</script><script src="pelceri-data.js?v=141"></script><script src="js/app-mapa.js?v=141"></script>
+</script><script src="pelceri-data.js?v=142"></script><script src="js/app-mapa.js?v=142"></script>
 
 
 
