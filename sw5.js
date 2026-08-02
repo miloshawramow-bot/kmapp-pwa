@@ -1,7 +1,7 @@
 // ===== KMapp Service Worker — FINAL STABLE VERSION =====
 // One SW to rule them all. No cache-busting tricks. No version churn.
 
-const CACHE = 'kmapp-v176';
+const CACHE = 'kmapp-v177';
 const VERSION = 'v176';
 
 // Only pre-cache SMALL essential files. Large data files (imenik-data.js 3.8MB,
@@ -31,7 +31,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(PRECACHE).catch(() => {}))
   );
-  // No skipWaiting — activate on next visit, no forced reload
+  self.skipWaiting(); // Activate immediately
 });
 
 // ===== ACTIVATE: delete old caches, claim clients =====
@@ -105,15 +105,3 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 
-// Unregister any other service workers (sw.js, sw2.js, sw3.js, sw4.js)
-self.addEventListener('install', () => {
-  if (self.registration) {
-    navigator.serviceWorker.getRegistrations().then(function(regs) {
-      regs.forEach(function(r) {
-        if (r.active && r.active.scriptURL.indexOf('sw5.js') === -1) {
-          r.unregister();
-        }
-      });
-    }).catch(function(){});
-  }
-});
