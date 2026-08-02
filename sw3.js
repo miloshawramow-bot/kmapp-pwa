@@ -1,5 +1,5 @@
-// KMapp Service Worker v57 - network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v149';
+// KMapp Service Worker v58 - network-first for HTML, cache-first for assets, push notifications
+const CACHE = 'kmapp-v150';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -45,6 +45,12 @@ self.addEventListener('activate', (event) => {
         keys.map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll())
+      .then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage('SW_UPDATED');
+        });
+      })
   );
 });
 
