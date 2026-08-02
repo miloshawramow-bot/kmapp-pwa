@@ -912,7 +912,7 @@
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" async defer onerror="console.warn('jsPDF CDN failed to load')"></script>
 </head>
 <body>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
@@ -17301,6 +17301,16 @@ function exportTrackPDF() {
   var endPoint = trackPoints[trackPoints.length - 1];
   
   // Kreiranje PDF-a
+  if (!window.jspdf) {
+    // jsPDF nije ucitan - ucitaj ga dinamicki pa ponovi
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = function() { exportTrackPDF(); };
+    s.onerror = function() { showToast('❌ PDF biblioteka nije dostupna (potreban internet)'); };
+    document.head.appendChild(s);
+    showToast('⏳ Učitavanje PDF biblioteke...');
+    return;
+  }
   var { jsPDF } = window.jspdf;
   var doc = new jsPDF('portrait', 'mm', 'a4');
   var pageW = 210, pageH = 297, margin = 15;
