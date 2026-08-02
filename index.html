@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// KMapp v145
+// KMapp v146
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw3.js?v=145', { updateViaCache: 'none' }).catch(function(){});
 }
@@ -49,6 +49,18 @@ if ('serviceWorker' in navigator) {
   </div>
   <p>Učitavanje...</p>
 </div>
+<script>
+// Emergency loader hide — ne zavisi od nikakvog eksternog fajla
+setTimeout(function() {
+  var l = document.getElementById('app-loader');
+  if (l && !l.classList.contains('hidden')) {
+    var s = document.getElementById('screen-login');
+    if (s && !document.querySelector('.screen.active')) { s.classList.add('active'); s.style.display = 'flex'; }
+    l.classList.add('hidden');
+    setTimeout(function() { if(l) l.remove(); }, 500);
+  }
+}, 2500);
+</script>
 
 <header>
     <img src="icons/icon-192.png" alt="KMapp" onclick="openSideMenu()" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;cursor:pointer;" title="Meni">
@@ -1334,7 +1346,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/misc.js?v=145"></script>
 
 <script src="js/weather.js?v=145"></script>
-<script src="js/app-core.js?v=145"></script><script src="akti-data.js?v=145"></script><script src="js/app-akti.js?v=145"></script><script src="imenik-data.js?v=145"></script><script src="js/app-imenik.js?v=145"></script>
+<script src="js/app-core.js?v=145"></script><script defer src="akti-data.js?v=145"></script><script defer src="js/app-akti.js?v=145"></script><script defer src="imenik-data.js?v=145"></script><script defer src="js/app-imenik.js?v=145"></script>
 
 <!-- ===== GLOBAL SEARCH OVERLAY ===== -->
 <div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
@@ -1349,7 +1361,7 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 
-<script src="js/mammoth.browser.min.js"></script>
+<script defer src="js/mammoth.browser.min.js"></script>
 
 <!-- ===== MAPA ===== -->
 <div class="screen" id="screen-mapa" style="display: none;">
@@ -1413,7 +1425,7 @@ if ('serviceWorker' in navigator) {
 
 <script>
 // ===== PELCERI =====
-</script><script src="pelceri-data.js?v=145"></script><script src="js/app-mapa.js?v=145"></script>
+</script><script defer src="pelceri-data.js?v=145"></script><script defer src="js/app-mapa.js?v=145"></script>
 
 
 
