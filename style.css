@@ -110,7 +110,7 @@
     transform: none;
     width: 100%;
     max-width: 100%;
-    display: none;
+    display: flex;
     background: var(--navy2);
     border-top: 2px solid var(--gold);
     justify-content: space-around;
