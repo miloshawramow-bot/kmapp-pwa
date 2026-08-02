@@ -1,10 +1,11 @@
 // KMapp Service Worker v57 — network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v133-final';
+const CACHE = 'kmapp-v136';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './js/mammoth.browser.min.js',
+  './js/imenik-photos.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-192.png',
