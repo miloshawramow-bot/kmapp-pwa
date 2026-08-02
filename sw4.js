@@ -1,8 +1,8 @@
 // ===== KMapp Service Worker — FINAL STABLE VERSION =====
 // One SW to rule them all. No cache-busting tricks. No version churn.
 
-const CACHE = 'kmapp-v172';
-const VERSION = 'v165';
+const CACHE = 'kmapp-v173';
+const VERSION = 'v173';
 
 // Only pre-cache SMALL essential files. Large data files (imenik-data.js 3.8MB,
 // akti-data.js 1.5MB, pelceri-data.js 51KB) are cached on-demand via fetch handler.
