@@ -1,8 +1,8 @@
 // ===== KMapp Service Worker — FINAL STABLE VERSION =====
 // One SW to rule them all. No cache-busting tricks. No version churn.
 
-const CACHE = 'kmapp-v160';
-const VERSION = 'v160';
+const CACHE = 'kmapp-v161';
+const VERSION = 'v161';
 
 // Only pre-cache SMALL essential files. Large data files (imenik-data.js 3.8MB,
 // akti-data.js 1.5MB, pelceri-data.js 51KB) are cached on-demand via fetch handler.
@@ -34,7 +34,8 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// ===== ACTIVATE: delete ALL old caches, unregister old SWs, claim clients =====
+// ===== ACTIVATE: delete old caches, claim clients =====
+// NO postMessage — that caused infinite reload loops.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
@@ -42,10 +43,6 @@ self.addEventListener('activate', (event) => {
         keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll())
-      .then((clients) => {
-        clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED', version: VERSION }));
-      })
   );
 });
 

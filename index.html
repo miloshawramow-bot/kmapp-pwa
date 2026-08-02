@@ -7,27 +7,19 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// KMapp v155 — stable SW registration
-window.KM_VERSION = 'v160';
-// Inline version check: if localStorage version differs, JS files are stale
+// KMapp — STABLE: no reload loops
+window.KM_VERSION = 'v161';
+// Version check: just update localStorage. No reload. SW handles cache cleanup.
 (function() {
   var stored = localStorage.getItem('km_version');
   if (stored && stored !== window.KM_VERSION) {
-    // Version changed — clear caches and reload
-    console.log('Version changed: ' + stored + ' -> ' + window.KM_VERSION + ' — clearing cache and reloading');
-    localStorage.setItem('km_version', window.KM_VERSION);
+    console.log('KMapp version: ' + stored + ' -> ' + window.KM_VERSION);
+    // Clear caches silently in background — no reload
     if ('caches' in window) {
       caches.keys().then(function(names) {
         Promise.all(names.map(function(n) { return caches.delete(n); }));
       });
     }
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
-      });
-    }
-    window.location.reload();
-    return;
   }
   localStorage.setItem('km_version', window.KM_VERSION);
 })();
@@ -37,18 +29,7 @@ window.addEventListener('DOMContentLoaded', function() {
   if (sv) sv.textContent = window.KM_VERSION || 'v?';
 });
 if ('serviceWorker' in navigator) {
-  // Listen for SW update messages
-  navigator.serviceWorker.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'SW_UPDATED') {
-      // SW was updated — reload once to pick up new version
-      window.location.reload();
-    }
-  });
-  // Register SW — same URL always, cache name changes inside SW
-  navigator.serviceWorker.register('./sw4.js', { updateViaCache: 'none' }).then(function(reg) {
-    // Check for updates every 30s while page is open
-    setInterval(function() { reg.update(); }, 30000);
-  }).catch(function(){});
+  navigator.serviceWorker.register('./sw4.js', { updateViaCache: 'none' }).catch(function(){});
 }
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
