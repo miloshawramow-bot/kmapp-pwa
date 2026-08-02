@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // KMapp — STABLE: no reload loops
-window.KM_VERSION = 'v177';
+window.KM_VERSION = 'v178';
 // Version check: just update localStorage. No reload. SW handles cache cleanup.
 (function() {
   var stored = localStorage.getItem('km_version');
@@ -53,42 +53,29 @@ if ('serviceWorker' in navigator) {
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="stylesheet" href="style.css?v=177">
+<link rel="stylesheet" href="style.css?v=178">
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body style="margin:0;padding:0;width:100%;height:100%;overflow:hidden;">
 <script>
-// ===== NUCLEAR SW RESET — runs before anything else =====
-// Force-clear ALL service workers and caches on version mismatch
+// Silent cleanup — unregister old SWs, clear caches. No reload.
 (function(){
-  var REQUIRED_VERSION = 'v177';
-  var storedVersion = localStorage.getItem('km_app_version') || '';
-  if (storedVersion !== REQUIRED_VERSION) {
-    localStorage.setItem('km_app_version', REQUIRED_VERSION);
-    // Unregister ALL service workers
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
-      }).catch(function(){});
-    }
-    // Clear ALL caches
-    if ('caches' in window) {
-      caches.keys().then(function(keys) {
-        keys.forEach(function(k) { caches.delete(k); });
-      }).catch(function(){});
-    }
-    // Reload once to get fresh files without SW interference
-    // Only reload if we haven't already reloaded (prevent loop)
-    if (!sessionStorage.getItem('km_reloaded')) {
-      sessionStorage.setItem('km_reloaded', '1');
-      location.reload();
-      return;
-    }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(r) {
+        if (r.active && r.active.scriptURL.indexOf('sw5.js') === -1) {
+          r.unregister();
+        }
+      });
+    }).catch(function(){});
   }
-  // Clear reload flag after successful load
-  sessionStorage.removeItem('km_reloaded');
+  if ('caches' in window) {
+    caches.keys().then(function(keys) {
+      keys.forEach(function(k) { caches.delete(k); });
+    }).catch(function(){});
+  }
 })();
 </script>
 <script>
@@ -113,24 +100,44 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
-<script src="js/loader.js?v=177"></script>
-<script src="js/tap-sound.js?v=177"></script>
-<div id="app-loader">
-  <div class="loader-ring-wrap">
-    <img src="icons/icon-192.png" alt="KMapp" class="loader-icon">
-    <div class="loader-ring"></div>
-  </div>
-  <p>Učitavanje...</p>
-</div>
-<script>
-// Emergency loader hide — ONLY removes the loader, does NOT touch screens
-// gateCheck in app-core.js handles which screen to show
-setTimeout(function() {
-  var l = document.getElementById('app-loader');
-  if (l) { l.style.display = 'none'; l.remove(); }
-}, 3000);
-</script>
+<script src="js/tap-sound.js?v=178"></script>
+<!-- app-loader removed — no more blinking -->
 
+<script>
+// Inline gateCheck fallback — runs immediately, doesn't wait for deferred files
+// If user is logged in, show docs. Otherwise show login. No loader needed.
+(function(){
+  function gate(){
+    try {
+      var loggedIn = localStorage.getItem('km_auth_v1') === '1';
+      var screens = document.querySelectorAll('.screen');
+      screens.forEach(function(s){ s.classList.remove('active'); s.style.display = 'none'; });
+      if (loggedIn) {
+        var docs = document.getElementById('screen-docs');
+        if (docs) { docs.classList.add('active'); docs.style.display = 'flex'; }
+        var header = document.querySelector('header');
+        if (header) header.style.display = 'flex';
+        var nav = document.querySelector('nav');
+        if (nav) nav.style.display = 'flex';
+      } else {
+        var login = document.getElementById('screen-login');
+        if (login) { login.classList.add('active'); login.style.display = 'flex'; }
+        var nav = document.querySelector('nav');
+        if (nav) nav.style.display = 'flex';
+      }
+    } catch(e) {
+      // If anything fails, show login
+      var login = document.getElementById('screen-login');
+      if (login) { login.style.display = 'flex'; }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', gate);
+  } else {
+    gate();
+  }
+})();
+</script>
 <header style="display:none;">
     <img src="icons/icon-192.png" alt="KMapp" onclick="openSideMenu()" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;cursor:pointer;" title="Meni">
   <div class="header-text">
@@ -1404,10 +1411,10 @@ setTimeout(function() {
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
 
-<script src="js/misc.js?v=177"></script>
+<script src="js/misc.js?v=178"></script>
 
-<script src="js/weather.js?v=177"></script>
-<script src="js/app-core.js?v=177"></script><script defer src="akti-data.js?v=177"></script><script defer src="js/app-akti.js?v=177"></script><script defer src="imenik-data.js?v=177"></script><script defer src="js/app-imenik.js?v=177"></script>
+<script src="js/weather.js?v=178"></script>
+<script src="js/app-core.js?v=178"></script><script defer src="akti-data.js?v=178"></script><script defer src="js/app-akti.js?v=178"></script><script defer src="imenik-data.js?v=178"></script><script defer src="js/app-imenik.js?v=178"></script>
 
 <!-- ===== GLOBAL SEARCH OVERLAY ===== -->
 <div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
@@ -1485,7 +1492,7 @@ setTimeout(function() {
 
 <script>
 // ===== PELCERI =====
-</script><script defer src="pelceri-data.js?v=177"></script><script defer src="js/app-mapa.js?v=177"></script>
+</script><script defer src="pelceri-data.js?v=178"></script><script defer src="js/app-mapa.js?v=178"></script>
 
 
 

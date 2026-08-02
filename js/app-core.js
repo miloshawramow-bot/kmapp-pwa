@@ -1351,10 +1351,7 @@ function doLogout() {
 
 (function initAuthGate() {
   // Safety: hide loader after 8s no matter what
-  setTimeout(function() {
-    var l = document.getElementById('app-loader');
-    if (l) { l.style.display = 'none'; l.remove(); }
-  }, 1000);
+  // app-loader removed — no loader to hide
   function gateCheck() {
     try {
       initDarkMode();
@@ -1372,8 +1369,7 @@ function doLogout() {
       if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
     }
     // Hide loader
-    var loader = document.getElementById('app-loader');
-    if (loader) { loader.style.display = 'none'; loader.remove(); } // immediate DOM removal
+    // app-loader removed — no loader to hide
   }
   // SW update handled in index.html — no duplicate listener
 
