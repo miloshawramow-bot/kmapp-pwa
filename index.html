@@ -2,25 +2,16 @@
 <!-- KMapp PWA -->
 <html lang="sr"><head>
 <script>
-// ===== AGGRESSIVE SW UPDATE (runs before anything else) =====
+// ===== SW CLEANUP (runs before anything else) =====
 (function() {
-  // Global error handler - show errors on screen so we can debug
+  // Error handler - console only, no scary red banner
   window.addEventListener('error', function(e) {
-    var d = document.getElementById('diag-error');
-    if (d) {
-      d.style.display = 'block';
-      d.textContent = 'JS Error: ' + (e.message || 'unknown') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '');
-    }
     console.error('KMapp error:', e.message, e.filename, e.lineno);
   });
-  // Force unregister old SW + clear caches, then register new SW
+  // Unregister ALL service workers, clear ALL caches
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(regs) {
-      regs.forEach(function(r) {
-        if (!r.active || !r.active.scriptURL.includes('sw2.js')) {
-          r.unregister();
-        }
-      });
+      regs.forEach(function(r) { r.unregister(); });
     });
     if (window.caches) {
       caches.keys().then(function(names) {
@@ -28,8 +19,8 @@
       });
     }
   }
-})();
-</script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+})();</script>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>KMapp</title>
@@ -914,7 +905,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
-<div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
+<div id="diag-error" style="display:none !important;"></div>
 <script>
 // ===== INDEPENDENT LOADER SAFETY (immune to main script crashes) =====
 (function() {
@@ -17261,7 +17252,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=125').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=133').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
