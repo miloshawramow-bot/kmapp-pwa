@@ -9,6 +9,28 @@
 <script>
 // KMapp v155 — stable SW registration
 window.KM_VERSION = 'v155';
+// Inline version check: if localStorage version differs, JS files are stale
+(function() {
+  var stored = localStorage.getItem('km_version');
+  if (stored && stored !== window.KM_VERSION) {
+    // Version changed — clear caches and reload
+    console.log('Version changed: ' + stored + ' -> ' + window.KM_VERSION + ' — clearing cache and reloading');
+    localStorage.setItem('km_version', window.KM_VERSION);
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        Promise.all(names.map(function(n) { return caches.delete(n); }));
+      });
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+      });
+    }
+    window.location.reload();
+    return;
+  }
+  localStorage.setItem('km_version', window.KM_VERSION);
+})();
 if ('serviceWorker' in navigator) {
   // Listen for SW update messages
   navigator.serviceWorker.addEventListener('message', function(event) {
