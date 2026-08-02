@@ -7,17 +7,24 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// KMapp v150
+// KMapp v155 — stable SW registration
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (!sessionStorage.getItem('kmapp_sw_reloaded')) {
-      sessionStorage.setItem('kmapp_sw_reloaded', '1');
+  // Listen for SW update messages
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'SW_UPDATED') {
+      // SW was updated — reload once to pick up new version
       window.location.reload();
     }
   });
-  navigator.serviceWorker.register('./sw4.js?v=150', { updateViaCache: 'none' }).then(function(reg) {
-      reg.update();
-    }).catch(function(){});
+  // Listen for controller change (new SW took over)
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    window.location.reload();
+  });
+  // Register SW — same URL always, cache name changes inside SW
+  navigator.serviceWorker.register('./sw4.js', { updateViaCache: 'none' }).then(function(reg) {
+    // Check for updates every 30s while page is open
+    setInterval(function() { reg.update(); }, 30000);
+  }).catch(function(){});
 }
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
@@ -287,7 +294,6 @@ setTimeout(function() {
   <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
     <span onclick="showLoginForm()" style="color:var(--accent);font-size:0.78rem;cursor:pointer;font-weight:600;">← Nazad na prijavu</span>
   </div>
-</div>
 </div>
 
     <p style="color:#8fa7c9;font-size:0.68rem;margin-top:22px;text-align:center;max-width:300px;">Pristup aplikaciji je ograničen na ovlašćene korisnike.</p>

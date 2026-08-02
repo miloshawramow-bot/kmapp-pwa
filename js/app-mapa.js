@@ -1017,19 +1017,7 @@ const KM_VERSION = 'v138';
   }
   localStorage.setItem('km_version', KM_VERSION);
 })();
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw3.js?v=138').then(reg => {
-      reg.update();
-      // Reload when new SW takes over (no session guard - always reload)
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        location.reload();
-      });
-    }).catch(err => {
-      console.warn('SW registracija neuspešna:', err);
-    });
-  });
-}
+// SW registration handled in index.html — do not duplicate here
 
 
 

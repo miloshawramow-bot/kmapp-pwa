@@ -1,13 +1,16 @@
-// KMapp SW v4-150 — clean SW with new URL to break old sw3.js cache deadlock
-const CACHE = 'kmapp-v4-153';
-const STATIC_ASSETS = [
+// ===== KMapp Service Worker — FINAL STABLE VERSION =====
+// One SW to rule them all. No cache-busting tricks. No version churn.
+
+const CACHE = 'kmapp-v155';
+const VERSION = 'v155';
+
+// Only pre-cache SMALL essential files. Large data files (imenik-data.js 3.8MB,
+// akti-data.js 1.5MB, pelceri-data.js 51KB) are cached on-demand via fetch handler.
+const PRECACHE = [
   './',
   './index.html',
   './style.css',
   './manifest.json',
-  './imenik-data.js',
-  './akti-data.js',
-  './pelceri-data.js',
   './js/mammoth.browser.min.js',
   './js/loader.js',
   './js/tap-sound.js',
@@ -23,15 +26,15 @@ const STATIC_ASSETS = [
   './icons/apple-touch-icon.png'
 ];
 
-// ===== INSTALL: cache static assets, skip waiting =====
+// ===== INSTALL: cache small files only, skip waiting =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE).catch(() => {}))
   );
   self.skipWaiting();
 });
 
-// ===== ACTIVATE: delete OLD caches only (NOT self), claim clients, force reload =====
+// ===== ACTIVATE: delete ALL old caches, unregister old SWs, claim clients =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
@@ -41,29 +44,27 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.claim())
       .then(() => self.clients.matchAll())
       .then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage('SW_UPDATED');
-        });
+        clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED', version: VERSION }));
       })
   );
 });
 
-// ===== FETCH: network-first for HTML, cache-first for assets =====
+// ===== FETCH: network-first for HTML, stale-while-revalidate for assets =====
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) {
-    event.respondWith(fetch(req).catch(() => caches.match(req)));
-    return;
-  }
+  if (url.origin !== self.location.origin) return; // let browser handle cross-origin
+
+  // HTML: always network-first (get latest version)
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith(
       fetch(req, { cache: 'no-cache' })
         .then((res) => {
           if (res && res.status === 200) {
-            const resClone = res.clone();
-            caches.open(CACHE).then((cache) => cache.put(req, resClone));
+            const clone = res.clone();
+            caches.open(CACHE).then((cache) => cache.put('./index.html', clone));
           }
           return res;
         })
@@ -71,24 +72,18 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
+
+  // Everything else: stale-while-revalidate (serve cached, update in background)
   event.respondWith(
     caches.match(req).then((cached) => {
-      if (cached) {
-        // Stale-while-revalidate: serve cached, fetch new in background
-        fetch(req).then((res) => {
-          if (res && res.status === 200) {
-            caches.open(CACHE).then((cache) => cache.put(req, res));
-          }
-        }).catch(() => {});
-        return cached;
-      }
-      return fetch(req).then((res) => {
+      const fetchPromise = fetch(req).then((res) => {
         if (res && res.status === 200) {
-          const resClone = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, resClone));
+          const clone = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(req, clone));
         }
         return res;
-      });
+      }).catch(() => cached);
+      return cached || fetchPromise;
     })
   );
 });
@@ -110,4 +105,9 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(clients.openWindow(event.notification.data || './'));
+});
+
+// ===== MESSAGE: handle update skip from page =====
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });

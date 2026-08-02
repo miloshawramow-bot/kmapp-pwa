@@ -1368,17 +1368,7 @@ function doLogout() {
     var loader = document.getElementById('app-loader');
     if (loader) { loader.classList.add('hidden'); setTimeout(function() { loader.remove(); }, 500); }
   }
-  // Listen for SW update messages
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', function(event) {
-    if (event.data === 'SW_UPDATED') {
-      if (!sessionStorage.getItem('kmapp_sw_reloaded2')) {
-        sessionStorage.setItem('kmapp_sw_reloaded2', '1');
-        window.location.reload();
-      }
-    }
-  });
-}
+  // SW update handled in index.html — no duplicate listener
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', gateCheck);
