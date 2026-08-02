@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // KMapp — STABLE: no reload loops
-window.KM_VERSION = 'v175';
+window.KM_VERSION = 'v176';
 // Version check: just update localStorage. No reload. SW handles cache cleanup.
 (function() {
   var stored = localStorage.getItem('km_version');
@@ -29,7 +29,7 @@ window.addEventListener('DOMContentLoaded', function() {
   if (sv) sv.textContent = window.KM_VERSION || 'v?';
 });
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw4.js', { updateViaCache: 'none' }).catch(function(e) { console.warn('SW reg failed:', e); });
+  navigator.serviceWorker.register('./sw5.js', { updateViaCache: 'none' }).catch(function(e) { console.warn('SW reg failed:', e); });
 }
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
@@ -53,15 +53,36 @@ if ('serviceWorker' in navigator) {
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="stylesheet" href="style.css?v=175">
+<link rel="stylesheet" href="style.css?v=176">
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body style="margin:0;padding:0;width:100%;height:100%;overflow:hidden;">
+<script>
+// INLINE CLOCK — runs immediately, not blocked by deferred files
+(function(){
+  function tick(){
+    var n = new Date();
+    var h = String(n.getHours()).padStart(2,'0');
+    var m = String(n.getMinutes()).padStart(2,'0');
+    var days = ['Ned','Pon','Uto','Sre','Cet','Pet','Sub'];
+    var t = document.getElementById('clock-time');
+    var d = document.getElementById('clock-date');
+    if (t) t.textContent = h+':'+m;
+    if (d) d.textContent = days[n.getDay()]+' '+n.getDate()+'.'+(n.getMonth()+1)+'.';
+  }
+  // Run immediately and set interval
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ tick(); setInterval(tick, 30000); });
+  } else {
+    tick(); setInterval(tick, 30000);
+  }
+})();
+</script>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
-<script src="js/loader.js?v=175"></script>
-<script src="js/tap-sound.js?v=175"></script>
+<script src="js/loader.js?v=176"></script>
+<script src="js/tap-sound.js?v=176"></script>
 <div id="app-loader">
   <div class="loader-ring-wrap">
     <img src="icons/icon-192.png" alt="KMapp" class="loader-icon">
@@ -70,21 +91,12 @@ if ('serviceWorker' in navigator) {
   <p>Učitavanje...</p>
 </div>
 <script>
-// Emergency loader hide — ne zavisi od nikakvog eksternog fajla
-// Immediately hide loader when DOM is ready (no delay needed)
-document.addEventListener('DOMContentLoaded', function() {
-  // Give gateCheck 800ms to run, then force-hide loader
-  setTimeout(function() {
-    var l = document.getElementById('app-loader');
-    if (!l) return; // already removed
-    var s = document.getElementById('screen-login');
-    if (s && !document.querySelector('.screen.active')) { 
-      s.classList.add('active'); s.style.display = 'flex'; 
-    }
-    l.style.display = 'none'; // immediate, no animation
-    l.remove();
-  }, 800);
-});
+// Emergency loader hide — ONLY removes the loader, does NOT touch screens
+// gateCheck in app-core.js handles which screen to show
+setTimeout(function() {
+  var l = document.getElementById('app-loader');
+  if (l) { l.style.display = 'none'; l.remove(); }
+}, 3000);
 </script>
 
 <header style="display:none;">
@@ -1360,10 +1372,10 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
 
-<script src="js/misc.js?v=175"></script>
+<script src="js/misc.js?v=176"></script>
 
-<script src="js/weather.js?v=175"></script>
-<script src="js/app-core.js?v=175"></script><script defer src="akti-data.js?v=175"></script><script defer src="js/app-akti.js?v=175"></script><script defer src="imenik-data.js?v=175"></script><script defer src="js/app-imenik.js?v=175"></script>
+<script src="js/weather.js?v=176"></script>
+<script src="js/app-core.js?v=176"></script><script defer src="akti-data.js?v=176"></script><script defer src="js/app-akti.js?v=176"></script><script defer src="imenik-data.js?v=176"></script><script defer src="js/app-imenik.js?v=176"></script>
 
 <!-- ===== GLOBAL SEARCH OVERLAY ===== -->
 <div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
@@ -1441,7 +1453,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 // ===== PELCERI =====
-</script><script defer src="pelceri-data.js?v=175"></script><script defer src="js/app-mapa.js?v=175"></script>
+</script><script defer src="pelceri-data.js?v=176"></script><script defer src="js/app-mapa.js?v=176"></script>
 
 
 

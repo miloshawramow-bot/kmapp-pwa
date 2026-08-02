@@ -1,6 +1,6 @@
 
 
-let filteredPelceri = [...pelceriData];
+let filteredPelceri = (typeof pelceriData !== 'undefined') ? [...pelceriData] : [];
 let activePelcerKat = 'Све';
 
 function renderPelceri(data) {
@@ -875,9 +875,8 @@ function nextMonth() {
   renderCalendar();
 }
 
-// Update clock every second
-updateClock();
-setInterval(updateClock, 1000);
+// Clock is now handled by inline script in index.html (not blocked by deferred files)
+// Keep updateClock function for renderCalendar compatibility
 
 
 // ===== PASSWORD CHANGE =====

@@ -9,19 +9,14 @@
     document.body.appendChild(vText);
   });
   
-  // Safety: remove loader from DOM after 1.2s no matter what
+  // Safety: remove loader from DOM — DO NOT touch any screens
+  // gateCheck in app-core.js handles which screen to show
   function forceHideLoader() {
     var l = document.getElementById('app-loader');
     if (!l) return;
-    var hasActive = document.querySelector('.screen.active');
-    if (!hasActive) {
-      var ls = document.getElementById('screen-login');
-      if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
-      var nav = document.querySelector('nav');
-      if (nav) { nav.style.display = 'flex'; }
-    }
     l.style.display = 'none';
-    l.remove(); // permanently remove from DOM — no more opacity tricks
+    l.remove();
   }
-  setTimeout(forceHideLoader, 1200);
+  // Only force-hide after 5s as absolute last resort
+  setTimeout(forceHideLoader, 5000);
 })();
