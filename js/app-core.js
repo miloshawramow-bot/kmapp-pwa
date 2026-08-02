@@ -75,6 +75,10 @@ function switchTab(name) {
   if (navEl) {
     navEl.style.display = (name === 'login') ? 'none' : 'flex';
   }
+  var headerEl = document.querySelector('header');
+  if (headerEl) {
+    headerEl.style.display = (name === 'login') ? 'none' : '';
+  }
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
