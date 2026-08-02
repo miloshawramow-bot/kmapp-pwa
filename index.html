@@ -31,6 +31,11 @@ window.KM_VERSION = 'v158';
   }
   localStorage.setItem('km_version', window.KM_VERSION);
 })();
+// Set side menu version dynamically
+window.addEventListener('DOMContentLoaded', function() {
+  var sv = document.getElementById('side-version');
+  if (sv) sv.textContent = window.KM_VERSION || 'v?';
+});
 if ('serviceWorker' in navigator) {
   // Listen for SW update messages
   navigator.serviceWorker.addEventListener('message', function(event) {
@@ -228,7 +233,7 @@ setTimeout(function() {
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v119</div>
+    <div class="side-menu-footer">KMapp &middot; Beograd &middot; <span id="side-version"></span></div>
   </div>
 </div>
 
