@@ -7,61 +7,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// ===== NUKLEARNI AUTO-UPDATE v143 =====
-window.__KMAPP_VERSION = '143';
-(function() {
-  // 1. UVEK obriši keševe i unregister SW ako verzija nije 143
-  var storedVer = localStorage.getItem('kmapp_version');
-  
-  if (storedVer !== '143') {
-    console.log('KMapp: update needed ' + (storedVer||'none') + ' -> 143');
-    // Obriši sve keseve
-    if ('caches' in window) {
-      caches.keys().then(function(names) {
-        return Promise.all(names.map(function(n) { return caches.delete(n); }));
-      }).then(function() { console.log('KMapp: svi kesevi obrisani'); }).catch(function(){});
-    }
-    // Unregister SVE service workere
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        return Promise.all(regs.map(function(r) { return r.unregister(); }));
-      }).then(function() {
-        console.log('KMapp: svi SW unregisterovani');
-        localStorage.setItem('kmapp_version', '143');
-        // Hard reload
-        window.location.href = window.location.pathname + '?v=143&t=' + Date.now();
-      }).catch(function() {
-        localStorage.setItem('kmapp_version', '143');
-        window.location.reload(true);
-      });
-    } else {
-      localStorage.setItem('kmapp_version', '143');
-      window.location.reload(true);
-    }
-    return; // Ne radi ništa više - čeka reload
-  }
-  
-  // 2. Registruj SW samo ako je verzija OK
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw3.js?v=143', { updateViaCache: 'none' })
-      .then(function(reg) {
-        reg.update();
-        setInterval(function() { reg.update(); }, 60000);
-        reg.addEventListener('updatefound', function() {
-          var nw = reg.installing;
-          if (!nw) return;
-          nw.addEventListener('statechange', function() {
-            if (nw.state === 'installed') nw.postMessage('SKIP_WAITING');
-            if (nw.state === 'activated') window.location.reload(true);
-          });
-        });
-      }).catch(function(e) { console.warn('SW reg failed:', e); });
-    
-    navigator.serviceWorker.addEventListener('controllerchange', function() {
-      window.location.reload(true);
-    });
-  }
-})();
+// KMapp v145
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw3.js?v=145', { updateViaCache: 'none' }).catch(function(){});
+}
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <title>KMapp</title>
@@ -83,7 +32,7 @@ window.__KMAPP_VERSION = '143';
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="stylesheet" href="style.css?v=143">
+<link rel="stylesheet" href="style.css?v=145">
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -91,8 +40,8 @@ window.__KMAPP_VERSION = '143';
 </head>
 <body>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
-<script src="js/loader.js?v=143"></script>
-<script src="js/tap-sound.js?v=143"></script>
+<script src="js/loader.js?v=145"></script>
+<script src="js/tap-sound.js?v=145"></script>
 <div id="app-loader">
   <div class="loader-ring-wrap">
     <img src="icons/icon-192.png" alt="KMapp" class="loader-icon">
@@ -1382,10 +1331,10 @@ window.__KMAPP_VERSION = '143';
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
 
-<script src="js/misc.js?v=143"></script>
+<script src="js/misc.js?v=145"></script>
 
-<script src="js/weather.js?v=143"></script>
-<script src="js/app-core.js?v=143"></script><script src="akti-data.js?v=143"></script><script src="js/app-akti.js?v=143"></script><script src="imenik-data.js?v=143"></script><script src="js/app-imenik.js?v=143"></script>
+<script src="js/weather.js?v=145"></script>
+<script src="js/app-core.js?v=145"></script><script src="akti-data.js?v=145"></script><script src="js/app-akti.js?v=145"></script><script src="imenik-data.js?v=145"></script><script src="js/app-imenik.js?v=145"></script>
 
 <!-- ===== GLOBAL SEARCH OVERLAY ===== -->
 <div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
@@ -1464,7 +1413,7 @@ window.__KMAPP_VERSION = '143';
 
 <script>
 // ===== PELCERI =====
-</script><script src="pelceri-data.js?v=143"></script><script src="js/app-mapa.js?v=143"></script>
+</script><script src="pelceri-data.js?v=145"></script><script src="js/app-mapa.js?v=145"></script>
 
 
 
