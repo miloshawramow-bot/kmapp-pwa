@@ -1259,6 +1259,8 @@ function resetPassword() {
 }
 
 function doLogin() {
+  // Ako imenik jos nije ucitan (3.8MB deferred), pokusaj iz localStorage
+  // ali ne blokiraj login — admin/test01 uvek rade
   const rawU = (document.getElementById('login-username').value || '').trim();
   const p = (document.getElementById('login-password').value || '').trim();
   const errEl = document.getElementById('login-error');
@@ -1267,18 +1269,26 @@ function doLogin() {
   const normUser = s => transliterateSerbian(s).toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.+/g, '.');
   const u = normUser(rawU);
   
-  // 1. Probaj iz svih korisnika (localStorage + imenik)
-  const users = getKMUsers();
-  let user = users.find(x => normUser(x.username) === u && x.password === p);
-  if (!user) {
-    user = users.find(x => normUser(x.username) === u && x.password && normPhone(x.password) === normPhone(p));
-  }
-  // Pokusaj i sa alternativnim brojevima telefona
-  if (!user) {
-    user = users.find(x => normUser(x.username) === u && x.phones && x.phones.some(ph => ph === p || normPhone(ph) === normPhone(p)));
+  // 0. Brzi admin/test01 login — uvek radi, ne zavisi od imenika
+  if (u === 'admin' && p === 'admin') {
+    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
+  } else if (u === 'test01' && p === 'test01') {
+    user = { username: 'test01', password: 'test01', displayName: 'Test', role: 'user' };
   }
   
-  // 2. Fallback: direktno iz imenika (uvek radi, bez obzira na localStorage)
+  // 1. Probaj iz localStorage korisnika (uvek ucitani, brzo)
+  if (!user) {
+    const users = getKMUsers();
+    user = users.find(x => normUser(x.username) === u && x.password === p);
+    if (!user) {
+      user = users.find(x => normUser(x.username) === u && x.password && normPhone(x.password) === normPhone(p));
+    }
+    if (!user) {
+      user = users.find(x => normUser(x.username) === u && x.phones && x.phones.some(ph => ph === p || normPhone(ph) === normPhone(p)));
+    }
+  }
+  
+  // 2. Fallback: direktno iz imenika (ako je ucitan)
   if (!user) {
     const imenikUsers = getImenikUsers();
     const imUser = imenikUsers.find(x => normUser(x.username) === u);
@@ -1286,16 +1296,10 @@ function doLogin() {
       if (imUser.password === p || normPhone(imUser.password) === normPhone(p)) {
         user = imUser;
       } else if (imUser.phones && imUser.phones.length > 1) {
-        // Pokusaj sa bilo kojim brojem telefona iz imenika
         const matched = imUser.phones.some(ph => ph === p || normPhone(ph) === normPhone(p));
         if (matched) user = imUser;
       }
     }
-  }
-  
-  // 3. Fallback: admin sa default lozinkom
-  if (!user && u.toLowerCase() === 'admin' && p === 'admin') {
-    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
   }
 
   if (user) {
