@@ -116,7 +116,7 @@ setTimeout(function() {
     <div class="side-menu-item" onclick="switchTab('poruke'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
       <div class="side-menu-label">
-        <span class="side-menu-title">Poruke</span>
+        <span class="side-menu-title">Poruke <span id="side-poruke-badge" style="background:#e53935;color:white;font-size:0.6rem;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 4px;margin-left:6px;vertical-align:middle;"></span></span>
         <span class="side-menu-desc">Komunikacija</span>
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -207,24 +207,10 @@ setTimeout(function() {
 </div>
 
 
-<nav>
-  <button class="active" onclick="switchTab('docs')" id="tab-docs">
+<nav style="justify-content:flex-start;padding-left:12px;">
+  <button class="active" onclick="switchTab('docs')" id="tab-docs" style="flex:none;padding:9px 16px 7px;">
     <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>Dokumenti
   </button>
-  <button onclick="switchTab('poruke')" id="tab-poruke" style="position:relative;">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Poruke
-    <span id="poruke-badge" style="position:absolute;top:-2px;right:-2px;background:#e53935;color:white;font-size:0.6rem;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 3px;z-index:1;"></span>
-  </button>
-  <button onclick="switchTab('mapa')" id="tab-mapa">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Mapa
-  </button>
-  <button onclick="switchTab('ai')" id="tab-ai">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><path d="M5 8l-2.5 5a3 3 0 0 0 5 0z"/><path d="M19 8l-2.5 5a3 3 0 0 0 5 0z"/><path d="M4 21h16"/><circle cx="12" cy="4" r="1.5"/></svg></span>Asistent
-  </button>
-  <button onclick="switchTab('podesavanja')" id="tab-podesavanja">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>Info
-  </button>
-
 </nav>
 
 <!-- More grid overlay -->

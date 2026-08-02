@@ -197,8 +197,8 @@
   .screen.active { display: flex; }
 
   /* ===== DOKUMENTI ===== */
-  #screen-docs { padding: 0 0 70px 0; }
-  #screen-poruke { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  #screen-docs { padding: 0 0 55px 0; }
+  #screen-poruke { padding-bottom: calc(55px + env(safe-area-inset-bottom, 0px)); }
   #screen-docs #view-list { background: transparent; }
   #screen-docs .saved-list { background: transparent; }
   #screen-docs .doc-card {
@@ -416,7 +416,7 @@
   .sh-gmail { background: #ea4335; }
 
   /* ===== PODEŠAVANJA ===== */
-  #screen-podesavanja { padding: 10px 10px calc(40px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
+  #screen-podesavanja { padding: 10px 10px calc(35px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
 
   .settings-section {
     background: var(--card-bg, #fff);
@@ -577,7 +577,7 @@
   #gs-results {
     flex: 1; overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 8px 12px calc(60px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 12px calc(55px + env(safe-area-inset-bottom, 0px));
   }
   .gs-result {
     display: flex; align-items: center; gap: 12px;

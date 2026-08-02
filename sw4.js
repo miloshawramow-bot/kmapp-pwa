@@ -1,5 +1,5 @@
 // KMapp SW v4-150 — clean SW with new URL to break old sw3.js cache deadlock
-const CACHE = 'kmapp-v4-150';
+const CACHE = 'kmapp-v4-153';
 const STATIC_ASSETS = [
   './',
   './index.html',

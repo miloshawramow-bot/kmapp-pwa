@@ -219,6 +219,16 @@ async function porukeCheckNew() {
         badge.style.display = 'none';
       }
     }
+    // Side menu badge
+    const sideBadge = document.getElementById('side-poruke-badge');
+    if (sideBadge) {
+      if (count > 0) {
+        sideBadge.textContent = count > 9 ? '9+' : count;
+        sideBadge.style.display = 'inline-flex';
+      } else {
+        sideBadge.style.display = 'none';
+      }
+    }
     if (count > 0) {
       showMsgToast(count);
       const lastSeen = parseInt(sessionStorage.getItem('_km_last_msg_count') || '0');
