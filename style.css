@@ -50,9 +50,9 @@
     font-family: 'Segoe UI', Arial, sans-serif;
     background: var(--light);
     color: var(--text);
+    height: 100vh;
     height: 100svh;
     height: 100dvh;
-    height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -198,6 +198,7 @@
 
   /* ===== DOKUMENTI ===== */
   #screen-docs { padding: 0 0 55px 0; }
+  .screen:not(#screen-login) { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
   #screen-poruke { padding-bottom: calc(55px + env(safe-area-inset-bottom, 0px)); }
   #screen-docs #view-list { background: transparent; }
   #screen-docs .saved-list { background: transparent; }
@@ -331,7 +332,7 @@
   }
 
   /* ===== PRAVNI AKTI ===== */
-  #screen-akti { padding: 0; }
+  #screen-akti { padding: 0 0 calc(56px + env(safe-area-inset-bottom, 0px)) 0; }
 
   .search-bar {
     padding: 12px;
@@ -416,7 +417,7 @@
   .sh-gmail { background: #ea4335; }
 
   /* ===== PODEŠAVANJA ===== */
-  #screen-podesavanja { padding: 10px 10px calc(35px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
+  #screen-podesavanja { padding: 10px 10px calc(56px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
 
   .settings-section {
     background: var(--card-bg, #fff);
