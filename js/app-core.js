@@ -1646,17 +1646,23 @@ window.addEventListener('appinstalled', function() {
 });
 
 function installPwa() {
-  if (!_deferredPrompt) {
-    showToast('📲 Instalacija je dostupna iz menija browsera → "Add to Home Screen"');
+  if (_deferredPrompt) {
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(choice) {
+      if (choice.outcome === 'accepted') {
+        showToast('✅ KMapp instalirana!');
+      }
+      _deferredPrompt = null;
+      var btn = document.getElementById('pwa-install-btn');
+      if (btn) btn.style.display = 'none';
+    });
     return;
   }
-  _deferredPrompt.prompt();
-  _deferredPrompt.userChoice.then(function(choice) {
-    if (choice.outcome === 'accepted') {
-      showToast('✅ KMapp instalirana!');
-    }
-    _deferredPrompt = null;
-    var btn = document.getElementById('pwa-install-btn');
-    if (btn) btn.style.display = 'none';
-  });
+  // Fallback: ako je vec instalirana kao PWA (standalone), pokazi poruku
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    showToast('✅ KMapp je već instalirana!');
+    return;
+  }
+  // Fallback: otvori uputstvo
+  showToast('📲 Chrome: klikni ⋮ (tri tačke, gore desno) → Instaliraj aplikaciju');
 }
