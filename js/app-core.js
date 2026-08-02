@@ -70,6 +70,11 @@ function switchTab(name) {
   if (name !== 'login' && !isLoggedIn()) {
     name = 'login';
   }
+  // Prikaži ili sakrij nav bar
+  var navEl = document.querySelector('nav');
+  if (navEl) {
+    navEl.style.display = (name === 'login') ? 'none' : 'flex';
+  }
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
