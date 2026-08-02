@@ -13,10 +13,17 @@
     }
     console.error('KMapp error:', e.message, e.filename, e.lineno);
   });
-  // Force unregister ALL old SWs + clear ALL caches (aggressive update)
+  // Force unregister ALL old SWs (sw2.js AND sw3.js) + clear ALL caches
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(regs) {
-      regs.forEach(function(r) { r.unregister(); });
+      // Unregister any SW that is NOT our current sw3.js?v=138
+      regs.forEach(function(r) {
+        var url = (r.active && r.active.scriptURL) || (r.installing && r.installing.scriptURL) || '';
+        if (!url.includes('sw3.js?v=138')) {
+          r.unregister();
+          console.log('Unregistered old SW:', url);
+        }
+      });
     }).catch(function(e) { console.warn('SW unregister failed:', e); });
     if (window.caches) {
       caches.keys().then(function(names) {
@@ -918,7 +925,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v137';
+  vText.textContent = 'v138';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -17510,7 +17517,7 @@ function exportTrackPDF() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v137';
+const KM_VERSION = 'v138';
 // Uvek proveri verziju - ako se razlikuje, ocisti sve i reloaduj
 (function() {
   var stored = localStorage.getItem('km_version');
@@ -17542,7 +17549,7 @@ const KM_VERSION = 'v137';
 })();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=137').then(reg => {
+    navigator.serviceWorker.register('sw3.js?v=138').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
