@@ -9,6 +9,12 @@
 <script>
 // KMapp v146
 if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (!sessionStorage.getItem('kmapp_sw_reloaded')) {
+      sessionStorage.setItem('kmapp_sw_reloaded', '1');
+      window.location.reload();
+    }
+  });
   navigator.serviceWorker.register('./sw3.js?v=146', { updateViaCache: 'none' }).catch(function(){});
 }
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
