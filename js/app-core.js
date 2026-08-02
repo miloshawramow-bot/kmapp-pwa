@@ -1322,7 +1322,7 @@ function doLogout() {
   setTimeout(function() {
     var l = document.getElementById('app-loader');
     if (l) { l.classList.add('hidden'); setTimeout(function() { if(l) l.remove(); }, 500); }
-  }, 8000);
+  }, 3000);
   function gateCheck() {
     try {
       initDarkMode();

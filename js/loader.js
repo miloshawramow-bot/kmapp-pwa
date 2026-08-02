@@ -25,7 +25,7 @@
       l.classList.add('hidden');
       setTimeout(function() { if (l) l.remove(); }, 500);
     }
-  }, 5000);
+  }, 2000);
   
   // Also make loader dismissible by tapping (emergency)
   setTimeout(function() {
@@ -44,5 +44,5 @@
         setTimeout(function() { l.remove(); }, 500);
       });
     }
-  }, 3000);
+  }, 2000);
 })();
