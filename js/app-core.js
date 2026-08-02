@@ -1621,3 +1621,35 @@ function downloadDocx() {
 }
 
 // ===== PRAVNI AKTI =====
+
+// ===== PWA INSTALL =====
+let _deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', function() {
+  _deferredPrompt = null;
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+function installPwa() {
+  if (!_deferredPrompt) {
+    showToast('📲 Instalacija je dostupna iz menija browsera → "Add to Home Screen"');
+    return;
+  }
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(choice) {
+    if (choice.outcome === 'accepted') {
+      showToast('✅ KMapp instalirana!');
+    }
+    _deferredPrompt = null;
+    var btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
