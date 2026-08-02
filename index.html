@@ -8,14 +8,20 @@
   window.addEventListener('error', function(e) {
     console.error('KMapp error:', e.message, e.filename, e.lineno);
   });
-  // Unregister ALL service workers, clear ALL caches
+  // Unregister OLD service workers (keep sw2.js), clear old caches
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(regs) {
-      regs.forEach(function(r) { r.unregister(); });
+      regs.forEach(function(r) {
+        if (r.active && !r.active.scriptURL.includes('sw2.js')) {
+          r.unregister();
+        }
+      });
     });
     if (window.caches) {
       caches.keys().then(function(names) {
-        names.forEach(function(n) { caches.delete(n); });
+        names.forEach(function(n) {
+          if (n !== 'kmapp-v133-final') caches.delete(n);
+        });
       });
     }
   }
