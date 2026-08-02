@@ -1,5 +1,5 @@
-// KMapp Service Worker v56 - network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v148';
+// KMapp Service Worker v57 - network-first for HTML, cache-first for assets, push notifications
+const CACHE = 'kmapp-v149';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -59,7 +59,7 @@ self.addEventListener('fetch', (event) => {
   }
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-cache' })
         .then((res) => {
           if (res && res.status === 200) {
             const resClone = res.clone();

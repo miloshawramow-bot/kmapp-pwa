@@ -1303,8 +1303,10 @@ function doLogin() {
     porukeStartPolling();
     // subscribeToPush() - odlozeno, poziva se iz porukeStartPolling
   } else {
+    errEl.textContent = 'Pogrešno korisničko ime ili lozinka! Probajte sa brojem telefona iz imenika.';
     errEl.style.display = 'block';
     document.getElementById('login-password').value = '';
+    console.log('Login fail: input user="' + rawU + '" norm="' + u + '" pass="' + p + '" normPhone="' + (ph => (ph||'').replace(/[^0-9+]/g,''))(p) + '"');
   }
 }
 

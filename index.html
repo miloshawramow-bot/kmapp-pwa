@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// KMapp v148
+// KMapp v149
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', function() {
     if (!sessionStorage.getItem('kmapp_sw_reloaded')) {
@@ -15,7 +15,9 @@ if ('serviceWorker' in navigator) {
       window.location.reload();
     }
   });
-  navigator.serviceWorker.register('./sw3.js?v=148', { updateViaCache: 'none' }).catch(function(){});
+  navigator.serviceWorker.register('./sw3.js?v=149', { updateViaCache: 'none' }).then(function(reg) {
+      reg.update();
+    }).catch(function(){});
 }
 </script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
@@ -38,7 +40,7 @@ if ('serviceWorker' in navigator) {
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="stylesheet" href="style.css?v=148">
+<link rel="stylesheet" href="style.css?v=149">
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -46,8 +48,8 @@ if ('serviceWorker' in navigator) {
 </head>
 <body>
 <div id="diag-error" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;padding:8px;font-size:12px;font-family:monospace;"></div>
-<script src="js/loader.js?v=148"></script>
-<script src="js/tap-sound.js?v=148"></script>
+<script src="js/loader.js?v=149"></script>
+<script src="js/tap-sound.js?v=149"></script>
 <div id="app-loader">
   <div class="loader-ring-wrap">
     <img src="icons/icon-192.png" alt="KMapp" class="loader-icon">
@@ -1349,10 +1351,10 @@ setTimeout(function() {
 <div id="watermark-dark" style="position:fixed;bottom:8px;right:12px;font-size:0.65rem;color:rgba(255,255,255,0.12);font-weight:600;z-index:9990;pointer-events:none;user-select:none;letter-spacing:0.5px;display:none;">@milosavramov</div>
 <div id="toast"></div>
 
-<script src="js/misc.js?v=148"></script>
+<script src="js/misc.js?v=149"></script>
 
-<script src="js/weather.js?v=148"></script>
-<script src="js/app-core.js?v=148"></script><script defer src="akti-data.js?v=148"></script><script defer src="js/app-akti.js?v=148"></script><script defer src="imenik-data.js?v=148"></script><script defer src="js/app-imenik.js?v=148"></script>
+<script src="js/weather.js?v=149"></script>
+<script src="js/app-core.js?v=149"></script><script defer src="akti-data.js?v=149"></script><script defer src="js/app-akti.js?v=149"></script><script defer src="imenik-data.js?v=149"></script><script defer src="js/app-imenik.js?v=149"></script>
 
 <!-- ===== GLOBAL SEARCH OVERLAY ===== -->
 <div id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
@@ -1431,7 +1433,7 @@ setTimeout(function() {
 
 <script>
 // ===== PELCERI =====
-</script><script defer src="pelceri-data.js?v=148"></script><script defer src="js/app-mapa.js?v=148"></script>
+</script><script defer src="pelceri-data.js?v=149"></script><script defer src="js/app-mapa.js?v=149"></script>
 
 
 
