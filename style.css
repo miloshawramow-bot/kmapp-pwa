@@ -46,26 +46,28 @@
   }
 
 
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
-    overflow: hidden;
-  }
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: var(--light);
     color: var(--text);
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    min-height: 100dvh;
+    max-width: 100%;
+    margin: 0;
+    padding-bottom: 0px;
   }
   
-
+  /* Na desktopu centrirati i limitirati širinu */
+  @media (min-width: 600px) {
+    body {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+  }
 
   /* HEADER */
   header {
@@ -667,11 +669,7 @@
     background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
     transition: opacity 0.4s ease;
   }
-  #app-loader.hidden { 
-    opacity: 0; 
-    pointer-events: none; 
-    visibility: hidden;
-  }
+  #app-loader.hidden { opacity: 0; pointer-events: none; }
 
   #app-loader p {
     color: var(--gold); font-size: 0.7rem; font-weight: 700;

@@ -1259,8 +1259,6 @@ function resetPassword() {
 }
 
 function doLogin() {
-  // Ako imenik jos nije ucitan (3.8MB deferred), pokusaj iz localStorage
-  // ali ne blokiraj login — admin/test01 uvek rade
   const rawU = (document.getElementById('login-username').value || '').trim();
   const p = (document.getElementById('login-password').value || '').trim();
   const errEl = document.getElementById('login-error');
@@ -1269,26 +1267,18 @@ function doLogin() {
   const normUser = s => transliterateSerbian(s).toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.+/g, '.');
   const u = normUser(rawU);
   
-  // 0. Brzi admin/test01 login — uvek radi, ne zavisi od imenika
-  if (u === 'admin' && p === 'admin') {
-    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
-  } else if (u === 'test01' && p === 'test01') {
-    user = { username: 'test01', password: 'test01', displayName: 'Test', role: 'user' };
-  }
-  
-  // 1. Probaj iz localStorage korisnika (uvek ucitani, brzo)
+  // 1. Probaj iz svih korisnika (localStorage + imenik)
+  const users = getKMUsers();
+  let user = users.find(x => normUser(x.username) === u && x.password === p);
   if (!user) {
-    const users = getKMUsers();
-    user = users.find(x => normUser(x.username) === u && x.password === p);
-    if (!user) {
-      user = users.find(x => normUser(x.username) === u && x.password && normPhone(x.password) === normPhone(p));
-    }
-    if (!user) {
-      user = users.find(x => normUser(x.username) === u && x.phones && x.phones.some(ph => ph === p || normPhone(ph) === normPhone(p)));
-    }
+    user = users.find(x => normUser(x.username) === u && x.password && normPhone(x.password) === normPhone(p));
+  }
+  // Pokusaj i sa alternativnim brojevima telefona
+  if (!user) {
+    user = users.find(x => normUser(x.username) === u && x.phones && x.phones.some(ph => ph === p || normPhone(ph) === normPhone(p)));
   }
   
-  // 2. Fallback: direktno iz imenika (ako je ucitan)
+  // 2. Fallback: direktno iz imenika (uvek radi, bez obzira na localStorage)
   if (!user) {
     const imenikUsers = getImenikUsers();
     const imUser = imenikUsers.find(x => normUser(x.username) === u);
@@ -1296,10 +1286,16 @@ function doLogin() {
       if (imUser.password === p || normPhone(imUser.password) === normPhone(p)) {
         user = imUser;
       } else if (imUser.phones && imUser.phones.length > 1) {
+        // Pokusaj sa bilo kojim brojem telefona iz imenika
         const matched = imUser.phones.some(ph => ph === p || normPhone(ph) === normPhone(p));
         if (matched) user = imUser;
       }
     }
+  }
+  
+  // 3. Fallback: admin sa default lozinkom
+  if (!user && u.toLowerCase() === 'admin' && p === 'admin') {
+    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
   }
 
   if (user) {
@@ -1351,7 +1347,10 @@ function doLogout() {
 
 (function initAuthGate() {
   // Safety: hide loader after 8s no matter what
-  // app-loader removed — no loader to hide
+  setTimeout(function() {
+    var l = document.getElementById('app-loader');
+    if (l) { l.classList.add('hidden'); setTimeout(function() { if(l) l.remove(); }, 500); }
+  }, 3000);
   function gateCheck() {
     try {
       initDarkMode();
@@ -1369,7 +1368,8 @@ function doLogout() {
       if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
     }
     // Hide loader
-    // app-loader removed — no loader to hide
+    var loader = document.getElementById('app-loader');
+    if (loader) { loader.classList.add('hidden'); setTimeout(function() { loader.remove(); }, 500); }
   }
   // SW update handled in index.html — no duplicate listener
 
@@ -1642,23 +1642,17 @@ window.addEventListener('appinstalled', function() {
 });
 
 function installPwa() {
-  if (_deferredPrompt) {
-    _deferredPrompt.prompt();
-    _deferredPrompt.userChoice.then(function(choice) {
-      if (choice.outcome === 'accepted') {
-        showToast('✅ KMapp instalirana!');
-      }
-      _deferredPrompt = null;
-      var btn = document.getElementById('pwa-install-btn');
-      if (btn) btn.style.display = 'none';
-    });
+  if (!_deferredPrompt) {
+    showToast('📲 Instalacija je dostupna iz menija browsera → "Add to Home Screen"');
     return;
   }
-  // Fallback: ako je vec instalirana kao PWA (standalone), pokazi poruku
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-    showToast('✅ KMapp je već instalirana!');
-    return;
-  }
-  // Fallback: otvori uputstvo
-  showToast('📲 Chrome: klikni ⋮ (tri tačke, gore desno) → Instaliraj aplikaciju');
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(choice) {
+    if (choice.outcome === 'accepted') {
+      showToast('✅ KMapp instalirana!');
+    }
+    _deferredPrompt = null;
+    var btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'none';
+  });
 }
