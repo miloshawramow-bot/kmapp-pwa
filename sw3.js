@@ -45,6 +45,12 @@ self.addEventListener('activate', (event) => {
         keys.map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => {
+        // Automatski reload svih klijenata kada se novi SW aktivira
+        return self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => client.navigate(client.url));
+        });
+      })
   );
 });
 

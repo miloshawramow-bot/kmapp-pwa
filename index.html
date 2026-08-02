@@ -13,23 +13,44 @@
     }
     console.error('KMapp error:', e.message, e.filename, e.lineno);
   });
-  // Force unregister ALL old SWs (sw2.js AND sw3.js) + clear ALL caches
+  // Service Worker - registracija i auto-update
   if ('serviceWorker' in navigator) {
+    // Unregister stare SW verzije
     navigator.serviceWorker.getRegistrations().then(function(regs) {
-      // Unregister any SW that is NOT our current sw3.js?v=141
       regs.forEach(function(r) {
         var url = (r.active && r.active.scriptURL) || (r.installing && r.installing.scriptURL) || '';
-        if (!url.includes('sw3.js?v=141')) {
+        if (!url.includes('sw3.js')) {
           r.unregister();
           console.log('Unregistered old SW:', url);
         }
       });
     }).catch(function(e) { console.warn('SW unregister failed:', e); });
-    if (window.caches) {
-      caches.keys().then(function(names) {
-        names.forEach(function(n) { caches.delete(n); });
-      });
-    }
+    
+    // Registruj novi SW
+    navigator.serviceWorker.register('./sw3.js?v=141', { updateViaCache: 'none' })
+      .then(function(reg) {
+        console.log('SW registered:', reg.scope);
+        // Proveri update odmah i svakih 5 minuta
+        reg.update();
+        setInterval(function() { reg.update(); }, 5 * 60 * 1000);
+        // Kad novi SW postane aktivan - automatski reload
+        reg.addEventListener('updatefound', function() {
+          var newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'activated') {
+              console.log('Nova verzija KMapp-a dostupna - reload...');
+              window.location.reload(true);
+            }
+          });
+        });
+      })
+      .catch(function(e) { console.warn('SW registration failed:', e); });
+    
+    // Ako controller promeni (novi SW preuzeo) - reload
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      window.location.reload(true);
+    });
   }
 })();
 

@@ -55,9 +55,17 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    max-width: 480px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     padding-bottom: 0px;
+  }
+  
+  /* Na desktopu centrirati i limitirati širinu */
+  @media (min-width: 600px) {
+    body {
+      max-width: 520px;
+      margin: 0 auto;
+    }
   }
 
   /* HEADER */
@@ -97,10 +105,10 @@
   nav {
     position: fixed;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    transform: none;
     width: 100%;
-    max-width: 480px;
+    max-width: 100%;
     display: none;
     background: var(--navy2);
     border-top: 2px solid var(--gold);
@@ -148,7 +156,7 @@
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 480px;
+    max-width: 100%;
     background: rgba(13, 34, 64, 0.98);
     backdrop-filter: blur(10px);
     border-top: 1px solid var(--gold);
@@ -550,7 +558,7 @@
   #gs-overlay.open { display: flex; }
   #gs-box {
     width: 100%;
-    max-width: 480px;
+    max-width: 100%;
     background: white;
     border-radius: 16px 16px 0 0;
     flex: 1;
@@ -603,7 +611,7 @@
   .modal {
     background: white; border-radius: 18px 18px 0 0;
     padding: 20px 16px 32px;
-    width: 100%; max-width: 480px;
+    width: 100%; max-width: 100%;
     max-height: 85vh; overflow-y: auto;
   }
   .modal h3 { font-size: 1rem; font-weight: 800; color: var(--navy); margin-bottom: 14px; }
@@ -813,7 +821,7 @@
   }
   #weather-modal.open { display: flex; }
   .weather-panel {
-    width: 100%; max-width: 480px;
+    width: 100%; max-width: 100%;
     background: linear-gradient(180deg, #0d2240 0%, #0a1a30 100%);
     border-radius: 20px 20px 0 0;
     border-top: 2px solid rgba(200,168,75,0.3);
