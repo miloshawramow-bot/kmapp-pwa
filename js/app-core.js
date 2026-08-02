@@ -1353,8 +1353,8 @@ function doLogout() {
   // Safety: hide loader after 8s no matter what
   setTimeout(function() {
     var l = document.getElementById('app-loader');
-    if (l) { l.classList.add('hidden'); setTimeout(function() { if(l) l.remove(); }, 500); }
-  }, 3000);
+    if (l) { l.style.display = 'none'; l.remove(); }
+  }, 1000);
   function gateCheck() {
     try {
       initDarkMode();
@@ -1373,7 +1373,7 @@ function doLogout() {
     }
     // Hide loader
     var loader = document.getElementById('app-loader');
-    if (loader) { loader.classList.add('hidden'); setTimeout(function() { loader.remove(); }, 500); }
+    if (loader) { loader.style.display = 'none'; loader.remove(); } // immediate DOM removal
   }
   // SW update handled in index.html — no duplicate listener
 

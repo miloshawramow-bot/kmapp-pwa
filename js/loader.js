@@ -9,40 +9,19 @@
     document.body.appendChild(vText);
   });
   
-  // Safety: hide loader after 5s no matter what
-  setTimeout(function() {
+  // Safety: remove loader from DOM after 1.2s no matter what
+  function forceHideLoader() {
     var l = document.getElementById('app-loader');
-    if (l && !l.classList.contains('hidden')) {
-      // Check if gateCheck ran by looking for active screen
-      var hasActive = document.querySelector('.screen.active');
-      if (!hasActive) {
-        // Main script probably crashed - show login screen manually
-        var ls = document.getElementById('screen-login');
-        if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
-        var nav = document.querySelector('nav');
-        if (nav) { nav.style.display = 'flex'; }
-      }
-      l.classList.add('hidden');
-      setTimeout(function() { if (l) l.remove(); }, 500);
+    if (!l) return;
+    var hasActive = document.querySelector('.screen.active');
+    if (!hasActive) {
+      var ls = document.getElementById('screen-login');
+      if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
+      var nav = document.querySelector('nav');
+      if (nav) { nav.style.display = 'flex'; }
     }
-  }, 1500);
-  
-  // Also make loader dismissible by tapping (emergency)
-  setTimeout(function() {
-    var l = document.getElementById('app-loader');
-    if (l && !l.classList.contains('hidden')) {
-      l.style.cursor = 'pointer';
-      l.addEventListener('click', function() {
-        var hasActive = document.querySelector('.screen.active');
-        if (!hasActive) {
-          var ls = document.getElementById('screen-login');
-          if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
-          var nav = document.querySelector('nav');
-          if (nav) { nav.style.display = 'flex'; }
-        }
-        l.classList.add('hidden');
-        setTimeout(function() { l.remove(); }, 500);
-      });
-    }
-  }, 1500);
+    l.style.display = 'none';
+    l.remove(); // permanently remove from DOM — no more opacity tricks
+  }
+  setTimeout(forceHideLoader, 1200);
 })();

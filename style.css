@@ -667,7 +667,11 @@
     background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
     transition: opacity 0.4s ease;
   }
-  #app-loader.hidden { opacity: 0; pointer-events: none; }
+  #app-loader.hidden { 
+    opacity: 0; 
+    pointer-events: none; 
+    visibility: hidden;
+  }
 
   #app-loader p {
     color: var(--gold); font-size: 0.7rem; font-weight: 700;
