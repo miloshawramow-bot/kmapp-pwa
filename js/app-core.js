@@ -1250,7 +1250,7 @@ function doLogin() {
   const errEl = document.getElementById('login-error');
   const normPhone = ph => (ph || '').replace(/[^0-9+]/g, '');
   // Normalizuj username: "S A" -> "s.a", "SA" -> "s.a", "S.A" -> "s.a"
-  const normUser = s => s.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.+/g, '.');
+  const normUser = s => transliterateSerbian(s).toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.+/g, '.');
   const u = normUser(rawU);
   
   // 1. Probaj iz svih korisnika (localStorage + imenik)
