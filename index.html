@@ -18012,23 +18012,63 @@ let aiMessages = [];
 
 function aiPreselect(q) {
   // Pametna preselecija akata na klijentskoj strani pre slanja na server
-  // MAX: 5 akata x 2000 chars = ~12KB total (ispod Base44 backend limit)
+  // MAX: 6 akata x 3000 chars = ~20KB total (ispod Base44 backend limit)
   var qLow = q.toLowerCase();
   var qWords = qLow.split(/\s+/).filter(function(w){ return w.length > 2; });
 
-  // Stemming srpskih reci
+  // Prosireni stemming srpskih reci
   var stems = [];
   qWords.forEach(function(w){
     stems.push(w);
     var stem = w;
-    if (stem.length > 5) {
-      ['nja','nje','nog','nom','ima','nih','anju','anje','anja'].forEach(function(suf){
-        if (stem.endsWith(suf)) stems.push(stem.slice(0,-suf.length));
+    if (stem.length > 4) {
+      ['nja','nje','nog','nom','ima','nih','anju','anje','anja','nju','nji','ama','ova','ovi','iku','ika','ici','ara','enje','enja','avan','ivan','osti','ost','cu','ci','ka','ke','ko','ku','og','om','im','ima','oga','ome','e','a','u','i','o'].forEach(function(suf){
+        if (stem.endsWith(suf) && stem.length - suf.length >= 3) stems.push(stem.slice(0,-suf.length));
       });
     }
   });
+  // Dodaj sinonime za ceste pojmove
+  var sinonimi = {
+    'parkiranj': ['parkirali', 'parkiralist', 'parking', 'parkir', 'parkiran'],
+    'parkirali': ['parkiranj', 'parkirali', 'parking', 'parkir'],
+    'buka': ['buke', 'buku', 'bukom', 'buci', 'buc', 'zvuk', 'decibel', 'glasn', 'zvucn'],
+    'otpad': ['deponij', 'otpada', 'odlaganj', 'otpada', 'smece', 'smeceg'],
+    'izliva': ['izliva', 'proliva', 'prosipa', 'prosipanj', 'izlivanj', 'prolivanj'],
+    'nepropisn': ['suprotno', 'zabranjen', 'nedozvoljen', 'protivno', 'nepraviln'],
+    'komunaln': ['komunaln', 'komunal', 'komunalna', 'komunalne'],
+    'saobrac': ['saobracajn', 'saobr', 'promet', 'saobracaj', 'vozilo', 'vozila'],
+    'zelenil': ['zelen', 'drvo', 'biljka', 'park', 'zelenila', 'zelenilo', 'drvece'],
+    'gradnj': ['gradnj', 'izgradnj', 'gradjevin', 'objekat', 'izgradnj', 'gradnje'],
+    'reklam': ['reklamn', 'oglas', 'plakat', 'natpis', 'reklame', 'oglasa', 'plakata'],
+    'zivotinj': ['pas', 'kuca', 'ljubimac', 'zivotinj', 'psi', 'psa', 'life'],
+    'cistoc': ['cistoc', 'ciscenj', 'cistoca', 'nečistoc', 'otpada', 'odrzavanj'],
+    'sneg': ['snežn', 'snež', 'zimsk', 'odrzavanj', 'snežnog', 'led'],
+    'voda': ['vodovod', 'vodn', 'kanalizac', 'vode', 'vodu', 'vodom', 'vodov'],
+    'rasvet': ['rasvet', 'svetlo', 'osvetljenj', 'rasvete', 'rasvetu', 'svetla'],
+    'spomenik': ['spomenic', 'spomen', 'kulturo', 'spomenika', 'spomenici'],
+    'decibel': ['decibela', 'decibelu', 'db', 'buke', 'zvuka'],
+    'zabranj': ['zabranjeno', 'zabranjena', 'zabranjene', 'zabranjen', 'zabrana'],
+    'kazn': ['kazna', 'kazne', 'kaznu', 'kaznom', 'kazniće', 'kaznena', 'kaznene', 'novčana', 'novčanu'],
+    'materijaln': ['materijalna', 'materijalne', 'materijalnu', 'materijalnom'],
+    'vozilo': ['vozila', 'vozilom', 'automobil', 'automobila', 'auto'],
+    'stan': ['stanovanj', 'stanu', 'stamben', 'stana', 'stambene'],
+    'ugovor': ['ugovora', 'ugovoru', 'ugovorom', 'ugovorn'],
+    'dokument': ['dokumenta', 'dokumente', 'dokumentu', 'dokumenata'],
+    'rok': 'roka roku rokom'.split(' '),
+    'prijava': ['prijave', 'prijavu', 'prijavom', 'prijava', 'prijavljenj'],
+    'dozvola': ['dozvole', 'dozvolu', 'dozvolom', 'dozvol'],
+    'placanje': ['placanj', 'uplat', 'naplat', 'placa', 'uplata', 'naplata'],
+    'porez': ['poreza', 'porezu', 'porezom', 'porezn', 'taksa', 'takse'],
+    'komunaln': ['komunalna', 'komunalne', 'komunalnu', 'komunalnom', 'komunalne'],
+    'javno': ['javna', 'javne', 'javnu', 'javnom', 'javna', 'javne']
+  };
+  qWords.forEach(function(w){
+    var sinKey = Object.keys(sinonimi).find(function(k){ return w.indexOf(k) !== -1 || k.indexOf(w) !== -1; });
+    if (sinKey) sinonimi[sinKey].forEach(function(s){ stems.push(s); });
+  });
 
-  var wantsPenalty = qLow.indexOf('prekršaj')!==-1||qLow.indexOf('kazna')!==-1||qLow.indexOf('kazn')!==-1||qLow.indexOf('materijal')!==-1;
+  // UVEK traziti kaznene odredbe
+  var wantsPenalty = true;
   var clanMatch = q.match(/(?:član|clan|Član|čl\.|cl\.)\s*(\d+[a-z]?)/i);
   var trazeniClan = clanMatch ? clanMatch[1] : null;
 
@@ -18048,20 +18088,20 @@ function aiPreselect(q) {
     if (a.tip === 'odluka' || a.naziv.toLowerCase().indexOf('odluka') !== -1) score += 10;
     if (trazeniAktNaziv && a.naziv === trazeniAktNaziv) score += 1000;
     stems.forEach(function(s){ if (s.length > 2 && fullText.indexOf(s) !== -1) score += 2; });
-    if (wantsPenalty) {
-      if (fullText.indexOf('kaznena')!==-1) score += 8;
-      if (fullText.indexOf('materijalna')!==-1) score += 8;
-      if (fullText.indexOf('kazniće')!==-1) score += 5;
-    }
+    // UVEK bonus za kaznene/materijalne odredbe
+    if (fullText.indexOf('kaznena')!==-1) score += 8;
+    if (fullText.indexOf('materijalna')!==-1) score += 8;
+    if (fullText.indexOf('kazniće')!==-1) score += 5;
+    if (fullText.indexOf('novčana kazna')!==-1) score += 5;
     return { a: a, score: score };
   });
 
   scored.sort(function(x,y){ return y.score - x.score; });
 
-  // MAX 5 akata
+  // MAX 6 akata (4 odluke + 2 zakona)
   var selected = [];
   var odlukeCount = 0, zakonCount = 0;
-  for (var i = 0; i < scored.length && selected.length < 5; i++) {
+  for (var i = 0; i < scored.length && selected.length < 6; i++) {
     if (scored[i].score <= 0) continue;
     var isOdluka = (scored[i].a.tip === 'odluka' || scored[i].a.naziv.toLowerCase().indexOf('odluka') !== -1);
     if (isOdluka && odlukeCount < 4) { selected.push(scored[i].a); odlukeCount++; }
@@ -18075,41 +18115,54 @@ function aiPreselect(q) {
     if (foundAkt) selected.unshift(foundAkt);
   }
 
-  // Trim sadrzaj: MAX 2000 chars po aktu
-  var MAX_PER_AKT = 2000;
+  // Trim sadrzaj: MAX 3000 chars po aktu, clanovi do 1200 chars
+  var MAX_PER_AKT = 3000;
+  var MAX_CLAN_LEN = 1200;
   return selected.map(function(a){
     var sadrzaj = a.sadrzaj || '';
     var isTargeted = (trazeniAktNaziv && a.naziv === trazeniAktNaziv);
 
     var parts = sadrzaj.split(/(?=Član \d)/);
     var relevant = [];
+    var penaltyParts = [];
+
+    // UVEK izdvoji kaznene i materijalne odredbe
+    parts.forEach(function(p){
+      var pl = p.toLowerCase();
+      if (pl.indexOf('kaznena')!==-1 || pl.indexOf('kazniće')!==-1 || pl.indexOf('novčana kazna')!==-1 || pl.indexOf('materijalna')!==-1) {
+        penaltyParts.push(p);
+      }
+    });
 
     if (trazeniClan && isTargeted) {
-      // Trazeni clan + kaznene/materijalne odredbe
+      // Trazeni clan + kaznene/materijalne odredbe - PUN tekst clana
       var clanPat = 'Član ' + trazeniClan;
       parts.forEach(function(p){
-        if (p.toLowerCase().indexOf(clanPat.toLowerCase()) === 0) relevant.push(p.slice(0, 600));
+        if (p.toLowerCase().indexOf(clanPat.toLowerCase()) === 0) relevant.push(p.slice(0, MAX_CLAN_LEN));
       });
-      parts.forEach(function(p){
-        var pl = p.toLowerCase();
-        if ((pl.indexOf('kaznena')!==-1||pl.indexOf('kazniće')!==-1||pl.indexOf('materijalna')!==-1||pl.indexOf('novčana kazna')!==-1)) {
-          var already = relevant.some(function(r){ return r.slice(0,30) === p.slice(0,30); });
-          if (!already) relevant.push(p.slice(0, 600));
-        }
+      // Dodaj sve kaznene/materijalne
+      penaltyParts.forEach(function(pp){
+        var already = relevant.some(function(r){ return r.slice(0,30) === pp.slice(0,30); });
+        if (!already) relevant.push(pp.slice(0, MAX_CLAN_LEN));
       });
     } else {
-      // Opsta pretraga: relevantni clanovi po stemovima
+      // Opsta pretraga: relevantni clanovi po stemovima i sinonimima
       parts.forEach(function(p){
+        if (p.length < 5) return;
         if (relevant.join('').length > MAX_PER_AKT) return;
         var pl = p.toLowerCase();
         var hit = false;
         stems.forEach(function(s){ if (s.length > 2 && pl.indexOf(s)!==-1) hit = true; });
-        if (wantsPenalty && (pl.indexOf('kaznena')!==-1||pl.indexOf('materijalna')!==-1||pl.indexOf('kazniće')!==-1)) hit = true;
-        if (hit) relevant.push(p.slice(0, 500));
+        if (hit) relevant.push(p.slice(0, MAX_CLAN_LEN));
+      });
+      // UVEK dodaj kaznene i materijalne odredbe ako ih vec nema
+      penaltyParts.forEach(function(pp){
+        var already = relevant.some(function(r){ return r.slice(0,30) === pp.slice(0,30); });
+        if (!already && relevant.join('').length < MAX_PER_AKT) relevant.push(pp.slice(0, MAX_CLAN_LEN));
       });
     }
 
-    var trimmed = relevant.length > 0 ? relevant.slice(0, 6).join('\n\n').slice(0, MAX_PER_AKT) : sadrzaj.slice(0, MAX_PER_AKT);
+    var trimmed = relevant.length > 0 ? relevant.slice(0, 10).join('\n\n').slice(0, MAX_PER_AKT) : sadrzaj.slice(0, MAX_PER_AKT);
     return { naziv: a.naziv, broj: a.broj, tip: a.tip, sadrzaj: trimmed };
   });
 }
