@@ -535,7 +535,6 @@ function startTracking(resume) {
   document.getElementById('track-status').textContent = '🟢 Praćenje aktivno';
   document.getElementById('track-status').style.color = '#27ae60';
   document.getElementById('btn-track-stop').style.display = 'inline-block';
-  document.getElementById('btn-track-pdf').style.display = 'none';
   document.getElementById('btn-track-clear').style.display = 'none';
   document.getElementById('btn-track-stop').style.display = 'inline-block';
   document.getElementById('track-status').textContent = '🟢 Praćenje aktivno';
@@ -612,7 +611,6 @@ function stopTracking() {
   document.getElementById('track-status').textContent = '⏹ Praćenje zaustavljeno';
   document.getElementById('track-status').style.color = '#e74c3c';
   document.getElementById('btn-track-stop').style.display = 'none';
-  document.getElementById('btn-track-pdf').style.display = 'inline-block';
   document.getElementById('btn-track-clear').style.display = 'inline-block';
   document.getElementById('btn-track').style.background = 'white';
   document.getElementById('btn-track').style.color = 'var(--text)';
@@ -621,7 +619,7 @@ function stopTracking() {
   // Save final track
   saveTrack();
   clearTrackingState();
-  showToast('⏹ Praćenje zaustavljeno. PDF dostupan.');
+  showToast('⏹ Praćenje zaustavljeno.');
 }
 
 function updateTrackStats() {
@@ -735,7 +733,6 @@ function loadSavedTrack() {
       // Fit bounds to show the track
       leafletMap.fitBounds(trackPolyline.getBounds(), { padding: [30, 30] });
       updateTrackStats();
-      document.getElementById('btn-track-pdf').style.display = 'inline-block';
       document.getElementById('btn-track-clear').style.display = 'inline-block';
       document.getElementById('btn-track-stop').style.display = 'none';
       document.getElementById('track-status').textContent = '📍 Sačuvana staza';
@@ -753,237 +750,8 @@ function clearTrack() {
   trackPoints = [];
   trackStartTime = null;
   localStorage.removeItem('km_track_' + username);
-  document.getElementById('btn-track-pdf').style.display = 'none';
   showToast('🗑️ Putanja obrisana');
 }
-
-function exportTrackPDF() {
-  if (!trackPoints || trackPoints.length < 2) {
-    showToast('❌ Nema dovoljno tačaka za PDF izveštaj');
-    return;
-  }
-  
-  var username = getCurrentUsername() || 'Korisnik';
-  var now = new Date();
-  var dateStr = now.toLocaleDateString('sr-RS');
-  var timeStr = now.toLocaleTimeString('sr-RS');
-  
-  // Racunanje statistike
-  var totalDist = 0;
-  for (var i = 1; i < trackPoints.length; i++) {
-    totalDist += haversine(trackPoints[i-1].lat, trackPoints[i-1].lon, trackPoints[i].lat, trackPoints[i].lon);
-  }
-  var distStr = totalDist < 1000 ? totalDist.toFixed(0) + ' m' : (totalDist/1000).toFixed(2) + ' km';
-  
-  var elapsed = trackStartTime ? (Date.now() - trackStartTime) / 1000 : 0;
-  var hours = Math.floor(elapsed / 3600);
-  var mins = Math.floor((elapsed % 3600) / 60);
-  var secs = Math.floor(elapsed % 60);
-  var durStr = hours > 0 ? hours + 'h ' + mins + 'min' : mins + 'min ' + secs + 's';
-  
-  var avgSpeed = elapsed > 0 ? (totalDist / elapsed * 3.6).toFixed(1) : '0.0';
-  
-  var startPoint = trackPoints[0];
-  var endPoint = trackPoints[trackPoints.length - 1];
-  
-  // Kreiranje PDF-a
-  if (!window.jspdf) {
-    // jsPDF nije ucitan - ucitaj ga dinamicki pa ponovi
-    var s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload = function() { exportTrackPDF(); };
-    s.onerror = function() { showToast('❌ PDF biblioteka nije dostupna (potreban internet)'); };
-    document.head.appendChild(s);
-    showToast('⏳ Učitavanje PDF biblioteke...');
-    return;
-  }
-  var { jsPDF } = window.jspdf;
-  var doc = new jsPDF('portrait', 'mm', 'a4');
-  var pageW = 210, pageH = 297, margin = 15;
-  
-  // Header - zlatna boja
-  doc.setFillColor(193, 154, 58);
-  doc.rect(0, 0, pageW, 30, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('KMapp - Izveštaj o kretanju', margin, 14);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Grad Beograd - Komunalna uprava', margin, 22);
-  doc.text(dateStr + ' ' + timeStr, pageW - margin - 40, 22);
-  
-  // Korisnik
-  doc.setTextColor(50, 50, 50);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Korisnik: ' + username, margin, 42);
-  
-  // Info box
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  var boxY = 48;
-  doc.setDrawColor(200, 200, 200);
-  doc.setFillColor(248, 248, 248);
-  doc.roundedRect(margin, boxY, pageW - 2*margin, 35, 2, 2, 'FD');
-  
-  // Statistika u 3 kolone
-  var colW = (pageW - 2*margin) / 3;
-  var col1 = margin + 8;
-  var col2 = margin + colW + 8;
-  var col3 = margin + 2*colW + 8;
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(120, 120, 120);
-  doc.text('UDALJENOST', col1, boxY + 8);
-  doc.text('VREME TRAJANJA', col2, boxY + 8);
-  doc.text('BROJ TAČAKA', col3, boxY + 8);
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(193, 154, 58);
-  doc.text(distStr, col1, boxY + 18);
-  doc.text(durStr, col2, boxY + 18);
-  doc.text(String(trackPoints.length), col3, boxY + 18);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Prosečna brzina: ' + avgSpeed + ' km/h', col1, boxY + 28);
-  doc.text('Praćenje: GPS (high accuracy)', col2, boxY + 28);
-  
-  // Start i kraj
-  doc.setFontSize(10);
-  doc.setTextColor(50, 50, 50);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Podaci o stazi:', margin, boxY + 45);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  var startT = trackStartTime ? new Date(trackStartTime).toLocaleString('sr-RS') : '/';
-  var endT = endPoint.t ? new Date(endPoint.t).toLocaleString('sr-RS') : '/';
-  doc.text('Početak praćenja: ' + startT, margin, boxY + 52);
-  doc.text('Kraj praćenja: ' + endT, margin, boxY + 58);
-  doc.text('Start: ' + startPoint.lat.toFixed(6) + ', ' + startPoint.lon.toFixed(6), margin, boxY + 64);
-  doc.text('Kraj: ' + endPoint.lat.toFixed(6) + ', ' + endPoint.lon.toFixed(6), margin, boxY + 70);
-  
-  // Crtanje staze na canvas
-  var mapY = boxY + 80;
-  var mapW = pageW - 2*margin;
-  var mapH = 80;
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(50, 50, 50);
-  doc.text('Pregled staze:', margin, mapY - 2);
-  
-  // Pozadina mape
-  doc.setFillColor(240, 243, 245);
-  doc.setDrawColor(200, 200, 200);
-  doc.roundedRect(margin, mapY, mapW, mapH, 2, 2, 'FD');
-  
-  // Crtanje polyline u PDF
-  if (trackPoints.length > 1) {
-    var minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-    for (var i = 0; i < trackPoints.length; i++) {
-      var p = trackPoints[i];
-      if (p.lat < minLat) minLat = p.lat;
-      if (p.lat > maxLat) maxLat = p.lat;
-      if (p.lon < minLon) minLon = p.lon;
-      if (p.lon > maxLon) maxLon = p.lon;
-    }
-    var latRange = maxLat - minLat || 0.001;
-    var lonRange = maxLon - minLon || 0.001;
-    var padding = 8;
-    var drawW = mapW - 2*padding;
-    var drawH = mapH - 2*padding;
-    var scale = Math.min(drawW / lonRange, drawH / latRange);
-    var offsetX = margin + padding + (drawW - lonRange * scale) / 2;
-    var offsetY = mapY + padding + (drawH - latRange * scale) / 2;
-    
-    // Crtanje linije
-    doc.setDrawColor(231, 76, 60);
-    doc.setLineWidth(0.8);
-    for (var i = 1; i < trackPoints.length; i++) {
-      var x1 = offsetX + (trackPoints[i-1].lon - minLon) * scale;
-      var y1 = offsetY + (maxLat - trackPoints[i-1].lat) * scale;
-      var x2 = offsetX + (trackPoints[i].lon - minLon) * scale;
-      var y2 = offsetY + (maxLat - trackPoints[i].lat) * scale;
-      doc.line(x1, y1, x2, y2);
-    }
-    
-    // Start tačka (zelena)
-    var sx = offsetX + (trackPoints[0].lon - minLon) * scale;
-    var sy = offsetY + (maxLat - trackPoints[0].lat) * scale;
-    doc.setFillColor(39, 174, 96);
-    doc.circle(sx, sy, 1.5, 'F');
-    
-    // End tačka (crvena)
-    var ex = offsetX + (endPoint.lon - minLon) * scale;
-    var ey = offsetY + (maxLat - endPoint.lat) * scale;
-    doc.setFillColor(231, 76, 60);
-    doc.circle(ex, ey, 1.5, 'F');
-  }
-  
-  // Legenda
-  doc.setFontSize(7);
-  doc.setTextColor(100, 100, 100);
-  doc.setFillColor(39, 174, 96);
-  doc.circle(margin + 5, mapY + mapH + 5, 1, 'F');
-  doc.text('Start', margin + 9, mapY + mapH + 6);
-  doc.setFillColor(231, 76, 60);
-  doc.circle(margin + 25, mapY + mapH + 5, 1, 'F');
-  doc.text('Kraj', margin + 29, mapY + mapH + 6);
-  
-  // Koordinate tablica
-  var tableY = mapY + mapH + 15;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(50, 50, 50);
-  doc.text('Koordinate tačaka (' + trackPoints.length + '):', margin, tableY);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(80, 80, 80);
-  
-  var rowH = 4;
-  var maxRows = Math.floor((pageH - tableY - 15) / rowH);
-  var cols = 4;
-  var perCol = Math.ceil(Math.min(trackPoints.length, maxRows * cols) / cols);
-  var colWidth = (pageW - 2*margin) / cols;
-  
-  for (var i = 0; i < Math.min(trackPoints.length, perCol * cols); i++) {
-    var col = Math.floor(i / perCol);
-    var row = i % perCol;
-    var x = margin + col * colWidth;
-    var y = tableY + 6 + row * rowH;
-    var p = trackPoints[i];
-    var t = p.t ? new Date(p.t).toLocaleTimeString('sr-RS') : '';
-    doc.text((i+1) + '. ' + p.lat.toFixed(5) + ', ' + p.lon.toFixed(5) + ' ' + t, x, y);
-  }
-  
-  if (trackPoints.length > perCol * cols) {
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(150, 150, 150);
-    doc.text('... i još ' + (trackPoints.length - perCol*cols) + ' tačaka', margin, tableY + 6 + perCol * rowH + 2);
-  }
-  
-  // Footer
-  doc.setDrawColor(193, 154, 58);
-  doc.setLineWidth(0.5);
-  doc.line(margin, pageH - 12, pageW - margin, pageH - 12);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(120, 120, 120);
-  doc.text('KMapp · Beograd | Generisano: ' + dateStr + ' ' + timeStr + ' | Korisnik: ' + username, margin, pageH - 7);
-  
-  // Sacuvaj
-  var fileName = 'kmapp-staza-' + now.toISOString().slice(0,10) + '-' + now.getHours() + 'h' + now.getMinutes() + 'm.pdf';
-  doc.save(fileName);
-  showToast('✅ PDF sačuvan: ' + fileName);
-}
-
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch

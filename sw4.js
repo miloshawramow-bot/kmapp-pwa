@@ -1,7 +1,7 @@
 // ===== KMapp Service Worker — FINAL STABLE VERSION =====
 // One SW to rule them all. No cache-busting tricks. No version churn.
 
-const CACHE = 'kmapp-v170';
+const CACHE = 'kmapp-v171';
 const VERSION = 'v165';
 
 // Only pre-cache SMALL essential files. Large data files (imenik-data.js 3.8MB,
