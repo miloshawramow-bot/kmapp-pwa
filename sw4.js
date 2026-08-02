@@ -1,8 +1,5 @@
 // KMapp SW v4 — SELF-DESTRUCT STUB
-// This replaces the old sw4.js. When the PWA updates to this,
-// it clears ALL caches, unregisters itself, and forces a clean reload.
-const CACHE = 'kmapp-destruct';
-
+// Replaces old sw4.js. Clears ALL caches, unregisters self, forces reload to clear.html
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -15,18 +12,22 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then(keys => Promise.all(keys.map(k => caches.delete(k))))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ includeUncontrolled: true }))
+      .then(() => self.clients.matchAll({ includeUncontrolled: true, type: 'window' }))
       .then(clients => {
-        clients.forEach(c => c.navigate(c.url));
+        clients.forEach(c => {
+          try { c.navigate(c.url.split('?')[0] + '?fresh=' + Date.now()); } catch(e) {}
+        });
       })
       .then(() => self.registration.unregister())
   );
 });
 
+// Network-only — never serve from cache
 self.addEventListener('fetch', (event) => {
-  // Always go to network, bypass cache completely
   if (event.request.method === 'GET') {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+    event.respondWith(
+      fetch(event.request).catch(() => new Response('Reload the page', { status: 503, headers: { 'Content-Type': 'text/html' } }))
+    );
   }
 });
 

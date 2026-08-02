@@ -1,9 +1,10 @@
-// KMapp SW v5 — SELF-DESTRUCT STUB (same as sw4)
-const CACHE = 'kmapp-destruct5';
-
+// KMapp SW v4 — SELF-DESTRUCT STUB
+// Replaces old sw4.js. Clears ALL caches, unregisters self, forces reload to clear.html
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -11,15 +12,22 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then(keys => Promise.all(keys.map(k => caches.delete(k))))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ includeUncontrolled: true }))
-      .then(clients => { clients.forEach(c => c.navigate(c.url)); })
+      .then(() => self.clients.matchAll({ includeUncontrolled: true, type: 'window' }))
+      .then(clients => {
+        clients.forEach(c => {
+          try { c.navigate(c.url.split('?')[0] + '?fresh=' + Date.now()); } catch(e) {}
+        });
+      })
       .then(() => self.registration.unregister())
   );
 });
 
+// Network-only — never serve from cache
 self.addEventListener('fetch', (event) => {
   if (event.request.method === 'GET') {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+    event.respondWith(
+      fetch(event.request).catch(() => new Response('Reload the page', { status: 503, headers: { 'Content-Type': 'text/html' } }))
+    );
   }
 });
 

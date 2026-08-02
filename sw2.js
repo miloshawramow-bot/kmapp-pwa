@@ -1,5 +1,5 @@
-// KMapp Service Worker v56 - network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v133';
+// KMapp Service Worker v57 — network-first for HTML, cache-first for assets, push notifications
+const CACHE = 'kmapp-v133-final';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -12,10 +12,9 @@ const STATIC_ASSETS = [
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/favicon-16.png',
-    './icons/beograd-grb.png'
+  './icons/beograd-grb.png'
 ];
 
-// ===== INSTALL: pre-cache static assets, force immediate activation =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
@@ -25,18 +24,14 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ===== ACTIVATE: delete ALL old caches, claim all clients, force reload =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(
-        keys.map((k) => caches.delete(k))
-      ))
+      .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
-// ===== FETCH: network-first for HTML, cache-first for assets =====
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -79,7 +74,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// ===== PUSH: notification when push message arrives (app closed) =====
 self.addEventListener('push', (event) => {
   let data = { title: 'KMapp - Nova poruka', body: 'Imate novu poruku' };
   try {
@@ -101,7 +95,6 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// ===== NOTIFICATION CLICK: open/focus the app =====
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const targetUrl = (event.notification.data && event.notification.data.url) || 'https://miloshawramow-bot.github.io/kmapp-pwa/';
@@ -115,7 +108,6 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ===== MESSAGE: allow page to trigger immediate update =====
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
