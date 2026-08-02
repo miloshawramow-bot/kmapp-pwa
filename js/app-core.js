@@ -79,16 +79,19 @@ function switchTab(name) {
   if (headerEl) {
     headerEl.style.display = (name === 'login') ? 'none' : 'flex';
   }
+  // PRVO prikazi novi ekran, PA sakrij stare — sprecava blink
+  const newScreen = document.getElementById('screen-' + name);
+  if (newScreen) {
+    newScreen.classList.add('active');
+    newScreen.style.display = 'flex';
+  }
   document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.display = 'none';
+    if (s !== newScreen) {
+      s.classList.remove('active');
+      s.style.display = 'none';
+    }
   });
   document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.remove('active'));
-  const screen = document.getElementById('screen-' + name);
-  if (screen) {
-    screen.classList.add('active');
-    screen.style.display = 'flex';
-  }
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
   if (name === 'akti') filterAkti();
