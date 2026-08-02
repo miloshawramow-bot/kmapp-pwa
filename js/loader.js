@@ -1,10 +1,19 @@
 
 // ===== INDEPENDENT LOADER SAFETY (immune to main script crashes) =====
 (function() {
+  // Version check: if HTML version doesn't match loader version, force reload
+  var LOADER_VERSION = 'v155';
+  if (window.KM_VERSION && window.KM_VERSION !== LOADER_VERSION) {
+    // Cached JS is stale — reload to get fresh version
+    console.log('Version mismatch: HTML=' + window.KM_VERSION + ' JS=' + LOADER_VERSION + ' — reloading');
+    window.location.reload();
+    return;
+  }
+  
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v155';
+  vText.textContent = LOADER_VERSION;
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
