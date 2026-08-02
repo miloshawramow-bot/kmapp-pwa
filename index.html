@@ -139,6 +139,7 @@
   
   /* TABS */
   nav {
+    display: none !important;
     position: fixed;
     bottom: 0;
     left: 50%;
@@ -628,7 +629,7 @@
 
   /* TOAST */
   #toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: #222; color: white;
     padding: 10px 20px; border-radius: 20px;
     font-size: 0.82rem; white-space: nowrap;
@@ -927,8 +928,7 @@
         // Main script probably crashed - show login screen manually
         var ls = document.getElementById('screen-login');
         if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
-        var nav = document.querySelector('nav');
-        if (nav) { nav.style.display = 'flex'; }
+        /* nav bar removed — using side menu only */
       }
       l.classList.add('hidden');
       setTimeout(function() { if (l) l.remove(); }, 500);
@@ -945,8 +945,6 @@
         if (!hasActive) {
           var ls = document.getElementById('screen-login');
           if (ls) { ls.classList.add('active'); ls.style.display = 'flex'; }
-          var nav = document.querySelector('nav');
-          if (nav) { nav.style.display = 'flex'; }
         }
         l.classList.add('hidden');
         setTimeout(function() { l.remove(); }, 500);
@@ -17851,7 +17849,7 @@ function showMsgToast(count) {
   if (!t) {
     t = document.createElement('div');
     t.id = 'msg-toast';
-    t.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 18px;border-radius:20px;font-size:0.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:150;display:none;transition:opacity 0.3s;cursor:pointer;';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 18px;border-radius:20px;font-size:0.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:150;display:none;transition:opacity 0.3s;cursor:pointer;';
     document.body.appendChild(t);
   }
   t.textContent = '📬 ' + count + ' nepročitana' + (count > 1 ? ' poruke' : ' poruka');
