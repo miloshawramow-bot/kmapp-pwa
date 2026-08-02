@@ -1,4 +1,4 @@
-// KMapp Service Worker v58 - network-first for HTML, cache-first for assets, push notifications
+// KMapp SW v4-150 — clean SW with new URL to break old sw3.js cache deadlock
 const CACHE = 'kmapp-v4-150';
 const STATIC_ASSETS = [
   './',
@@ -19,36 +19,25 @@ const STATIC_ASSETS = [
   './js/app-mapa.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon-maskable-192.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-32.png',
-  './icons/favicon-16.png',
-    './icons/beograd-grb.png'
+  './icons/icon-180.png',
+  './icons/apple-touch-icon.png'
 ];
 
-// ===== INSTALL: pre-cache static assets, force immediate activation =====
+// ===== INSTALL: cache static assets, skip waiting =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
-      .catch((err) => console.warn('SW install: some assets failed to cache', err))
+    caches.open(CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
   );
+  self.skipWaiting();
 });
 
-// ===== ACTIVATE: delete ALL old caches, claim all clients, force reload =====
+// ===== ACTIVATE: delete OLD caches only (NOT self), claim clients, force reload =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    // Delete ALL old caches
     caches.keys()
       .then((keys) => Promise.all(
-        keys.map((k) => caches.delete(k))
+        keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
       ))
-      .then(() => {
-        // Unregister old sw3.js workers
-        return self.registration.unregister();
-      })
       .then(() => self.clients.claim())
       .then(() => self.clients.matchAll())
       .then((clients) => {
@@ -85,6 +74,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) {
+        // Stale-while-revalidate: serve cached, fetch new in background
         fetch(req).then((res) => {
           if (res && res.status === 200) {
             caches.open(CACHE).then((cache) => cache.put(req, res));
@@ -93,52 +83,31 @@ self.addEventListener('fetch', (event) => {
         return cached;
       }
       return fetch(req).then((res) => {
-        if (!res || res.status !== 200) return res;
-        const resClone = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(req, resClone));
+        if (res && res.status === 200) {
+          const resClone = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(req, resClone));
+        }
         return res;
       });
     })
   );
 });
 
-// ===== PUSH: notification when push message arrives (app closed) =====
+// ===== PUSH NOTIFICATIONS =====
 self.addEventListener('push', (event) => {
-  let data = { title: 'KMapp - Nova poruka', body: 'Imate novu poruku' };
-  try {
-    if (event.data) data = event.data.json();
-  } catch(e) {
-    if (event.data) data.body = event.data.text();
-  }
-  const options = {
-    body: data.body || 'Imate novu poruku',
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
-    vibrate: [200, 100, 200],
-    tag: 'kmapp-push',
-    renotify: true,
-    data: { url: data.url || 'https://miloshawramow-bot.github.io/kmapp-pwa/' }
-  };
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch(e) { data = { body: event.data ? event.data.text() : '' }; }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'KMapp - Nova poruka', options)
-  );
-});
-
-// ===== NOTIFICATION CLICK: open/focus the app =====
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || 'https://miloshawramow-bot.github.io/kmapp-pwa/';
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes('kmapp-pwa') && 'focus' in client) return client.focus();
-      }
-      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    self.registration.showNotification(data.title || 'KMapp', {
+      body: data.body || '',
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      data: data.url || './'
     })
   );
 });
 
-// ===== MESSAGE: allow page to trigger immediate update =====
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data || './'));
 });
