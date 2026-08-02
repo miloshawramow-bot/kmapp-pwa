@@ -39,10 +39,6 @@ if ('serviceWorker' in navigator) {
       window.location.reload();
     }
   });
-  // Listen for controller change (new SW took over)
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    window.location.reload();
-  });
   // Register SW — same URL always, cache name changes inside SW
   navigator.serviceWorker.register('./sw4.js', { updateViaCache: 'none' }).then(function(reg) {
     // Check for updates every 30s while page is open
