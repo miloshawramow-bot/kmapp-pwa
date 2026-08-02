@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// KMapp v146
+// KMapp v147
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', function() {
     if (!sessionStorage.getItem('kmapp_sw_reloaded')) {
@@ -65,10 +65,10 @@ setTimeout(function() {
     l.classList.add('hidden');
     setTimeout(function() { if(l) l.remove(); }, 500);
   }
-}, 2500);
+}, 1500);
 </script>
 
-<header>
+<header style="display:none;">
     <img src="icons/icon-192.png" alt="KMapp" onclick="openSideMenu()" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;cursor:pointer;" title="Meni">
   <div class="header-text">
     <h1>KMapp</h1>

@@ -4,7 +4,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v146';
+  vText.textContent = 'v147';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -25,7 +25,7 @@
       l.classList.add('hidden');
       setTimeout(function() { if (l) l.remove(); }, 500);
     }
-  }, 2000);
+  }, 1500);
   
   // Also make loader dismissible by tapping (emergency)
   setTimeout(function() {
@@ -44,5 +44,5 @@
         setTimeout(function() { l.remove(); }, 500);
       });
     }
-  }, 2000);
+  }, 1500);
 })();

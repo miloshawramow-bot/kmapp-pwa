@@ -77,7 +77,7 @@ function switchTab(name) {
   }
   var headerEl = document.querySelector('header');
   if (headerEl) {
-    headerEl.style.display = (name === 'login') ? 'none' : '';
+    headerEl.style.display = (name === 'login') ? 'none' : 'flex';
   }
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
