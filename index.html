@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v140';
+  vText.textContent = 'v141';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v140</div>
+    <div class="side-menu-footer">KMapp · Beograd · v141</div>
   </div>
 </div>
 
@@ -2596,12 +2596,11 @@ const ugradeniDocs = [
 // ===== ACCORDION =====
 function toggleAccordion(id) {
   const panel = document.getElementById(id);
-  const arrow = document.getElementById(id + '-arrow');
-  const isOpen = panel.style.display === 'flex';
-  panel.style.display = isOpen ? 'none' : 'flex';
-  panel.style.flexDirection = 'column';
-  if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  if (!panel) return;
+  panel.classList.toggle('open');
 }
+// Alias so onclick="toggleAcc(...)" works
+const toggleAcc = toggleAccordion;
 
 // ===== TABS =====
 function switchTab(name) {
@@ -17324,7 +17323,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v140';
+const KM_VERSION = 'v141';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17335,7 +17334,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=140').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=141').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
