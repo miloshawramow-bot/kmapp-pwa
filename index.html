@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v138';
+  vText.textContent = 'v139';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v138</div>
+    <div class="side-menu-footer">KMapp · Beograd · v139</div>
   </div>
 </div>
 
@@ -2622,7 +2622,7 @@ function switchTab(name) {
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
   if (name === 'akti') filterAkti();
-  if (name === 'podesavanja') { updateSettings(); loadServerAkti().then(renderAdminAktiList); loadServerPelceri().then(renderAdminPelceriList); loadServerUsers().then(() => adminRenderUsersList()); loadTrackedUsers(); }
+  if (name === 'podesavanja') { checkAdminAccess(); updateSettings(); loadServerAkti().then(renderAdminAktiList).catch(()=>{}); loadServerPelceri().then(renderAdminPelceriList).catch(()=>{}); loadServerUsers().then(() => adminRenderUsersList()).catch(()=>{}); loadTrackedUsers().catch(()=>{}); }
   if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)); }
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
@@ -3893,6 +3893,7 @@ function doLogout() {
         switchTab('login');
       } else {
         switchTab('docs');
+        checkAdminAccess();
         // Start polling and push subscription for returning users
         porukeStartPolling();
         subscribeToPush();
@@ -17323,7 +17324,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v138';
+const KM_VERSION = 'v139';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17539,6 +17540,79 @@ function getCurrentUserRole() {
   const users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
   const user = users.find(x => x.username.toLowerCase() === username);
   return user ? user.role : 'user';
+}
+
+// ===== ADMIN USER MANAGEMENT =====
+function adminRenderUsersList() {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  const users = getKMUsers().filter(u => u.source === 'server' || u.source === 'local');
+  if (!users.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodatih korisnika.</div>'; return; }
+  el.innerHTML = users.map(u => 
+    '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:white;margin-bottom:6px;">' +
+    '<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">' + (u.username || '?').charAt(0).toUpperCase() + '</div>' +
+    '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (u.username || '') + '</div>' +
+    '<div style="font-size:0.68rem;color:var(--muted);">' + (u.role === 'admin' ? 'Admin' : 'Korisnik') + '</div></div>' +
+    '</div>'
+  ).join('');
+}
+
+async function adminCreateUser() {
+  const username = (document.getElementById('admin-user-username').value || '').trim();
+  const password = (document.getElementById('admin-user-password').value || '').trim();
+  const errEl = document.getElementById('admin-user-error');
+  if (!username) { errEl.textContent = 'Unesite korisničko ime.'; errEl.style.display = 'block'; return; }
+  if (!password) { errEl.textContent = 'Unesite lozinku.'; errEl.style.display = 'block'; return; }
+  
+  try {
+    const res = await fetch(KM_API_BASE + '/saveUser', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, displayName: username, role: 'user' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      serverUsers.push({ username, password, displayName: username, role: 'user', source: 'server' });
+      document.getElementById('admin-user-username').value = '';
+      document.getElementById('admin-user-password').value = '';
+      errEl.style.display = 'none';
+      adminRenderUsersList();
+      showToast('✅ Korisnik kreiran: ' + username);
+    } else {
+      errEl.textContent = 'Greška: ' + (data.error || 'Nepoznata');
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Greška: ' + (e.message || e);
+    errEl.style.display = 'block';
+  }
+}
+
+async function adminLoadLoginLogs(range) {
+  const el = document.getElementById('admin-login-logs');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);">Učitavanje...</div>';
+  try {
+    const res = await fetch(KM_API_BASE + '/getLoginLogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ range: range || 'today' })
+    });
+    const data = await res.json();
+    if (data.success && data.logs && data.logs.length > 0) {
+      el.innerHTML = data.logs.map(log => 
+        '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:white;">' +
+        '<div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;">' + (log.username || '?').charAt(0).toUpperCase() + '</div>' +
+        '<div style="flex:1;"><div style="font-size:0.78rem;font-weight:600;">' + (log.username || '') + '</div>' +
+        '<div style="font-size:0.66rem;color:var(--muted);">' + (log.device || log.timestamp || '').substring(0, 40) + '</div></div>' +
+        '</div>'
+      ).join('');
+    } else {
+      el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px;">Nema prijava.</div>';
+    }
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--danger);">Greška pri učitavanju.</div>';
+  }
 }
 
 function checkAdminAccess() {
