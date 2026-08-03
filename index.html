@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v142';
+  vText.textContent = 'v143';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v142</div>
+    <div class="side-menu-footer">KMapp · Beograd · v143</div>
   </div>
 </div>
 
@@ -1516,16 +1516,6 @@ initTapSound();
         <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
       </div>
 
-      <!-- 📍 Praćenje korisnika -->
-      <div class="acc-sub-section">
-        <div class="acc-sub-title">📍 Praćenje korisnika</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Dodaj korisnika da dobiješ notifikaciju kad se prijavi i da ga vidiš na mapi.</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-          <input id="track-user-input" type="text" placeholder="korisničko ime (npr. s.a)" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;">
-          <button onclick="addTrackedUser()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;cursor:pointer;font-weight:600;">➕ Dodaj</button>
-        </div>
-        <div id="tracked-users-list" style="font-size:0.8rem;color:var(--muted);">Učitavanje...</div>
-      </div>
 
     </div>
   </div>
@@ -2628,7 +2618,7 @@ function switchTab(name) {
       try { renderAdminAktiList(); } catch(e) { console.error(e); }
       try { (typeof loadServerPelceri === 'function' ? loadServerPelceri() : Promise.resolve()).then(renderAdminPelceriList).catch(()=>{}); } catch(e) { console.error(e); }
       try { (typeof loadServerUsers === 'function' ? loadServerUsers() : Promise.resolve()).then(() => adminRenderUsersList()).catch(()=>{}); } catch(e) { console.error(e); }
-      try { (typeof loadTrackedUsers === 'function' ? loadTrackedUsers() : Promise.resolve()).catch(()=>{}); } catch(e) { console.error(e); }
+  
     }
     if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); }
     if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
@@ -16241,7 +16231,6 @@ function closeImenikModal() {
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
-    <button onclick="toggleTrackedUsersMap()" id="btn-track-users" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;display:none;">👥 Korisnici</button>
     <button onclick="toggleTracking()" id="btn-track" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🟢 Prati</button>
   </div>
 
@@ -17335,7 +17324,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v142';
+const KM_VERSION = 'v143';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17346,7 +17335,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=142').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=143').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -17635,157 +17624,9 @@ function checkAdminAccess() {
       try { renderAdminAktiList(); } catch(e) { console.error('renderAdminAktiList:', e); }
       try { renderAdminPelceriList(); } catch(e) { console.error('renderAdminPelceriList:', e); }
       try { adminRenderUsersList(); } catch(e) { console.error('adminRenderUsersList:', e); }
-      try { loadTrackedUsers(); } catch(e) { console.error('loadTrackedUsers:', e); }
+
     }
   } catch(e) { console.error('checkAdminAccess:', e); }
-}
-
-// ===== TRACKED USERS (ADMIN) =====
-async function loadTrackedUsers() {
-  const el = document.getElementById('tracked-users-list');
-  if (!el) return;
-  try {
-    const res = await fetch(KM_API_BASE + '/manageTrackedUsers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list', requestedBy: getCurrentUsername() })
-    });
-    const data = await res.json();
-    if (!data.success || !data.trackedUsers || data.trackedUsers.length === 0) {
-      el.innerHTML = '<div style="color:var(--muted);">Nema praćenih korisnika.</div>';
-      return;
-    }
-    el.innerHTML = data.trackedUsers.map(function(u) {
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
-        '<div style="display:flex;align-items:center;gap:8px;">' +
-        '<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">' + u.charAt(0).toUpperCase() + '</div>' +
-        '<span style="font-size:0.82rem;font-weight:600;color:var(--text);">' + u + '</span>' +
-        '</div>' +
-        '<button onclick="removeTrackedUser(\''+ u +'\')" style="background:#e74c3c;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-weight:600;">Ukloni</button>' +
-        '</div>';
-    }).join('');
-  } catch(e) {
-    el.innerHTML = '<div style="color:var(--danger);">Greška pri učitavanju.</div>';
-  }
-}
-
-async function addTrackedUser() {
-  const input = document.getElementById('track-user-input');
-  if (!input || !input.value.trim()) return;
-  const username = input.value.trim().toLowerCase();
-  input.value = '';
-  try {
-    const res = await fetch(KM_API_BASE + '/manageTrackedUsers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add', username: username, requestedBy: getCurrentUsername() })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('✅ Korisnik ' + username + ' se sada prati');
-      loadTrackedUsers();
-    } else {
-      showToast('❌ Greška: ' + (data.error || 'Nepoznata'));
-    }
-  } catch(e) {
-    showToast('❌ Greška pri dodavanju');
-  }
-}
-
-async function removeTrackedUser(username) {
-  try {
-    const res = await fetch(KM_API_BASE + '/manageTrackedUsers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'remove', username: username, requestedBy: getCurrentUsername() })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('✅ Korisnik ' + username + ' uklonjen iz praćenja');
-      loadTrackedUsers();
-    }
-  } catch(e) {
-    showToast('❌ Greška pri uklanjanju');
-  }
-}
-
-// ===== TRACKED USERS ON MAP =====
-var trackedUsersActive = false;
-var trackedUsersInterval = null;
-var trackedUsersMarkers = {};
-
-async function toggleTrackedUsersMap() {
-  if (trackedUsersActive) {
-    stopTrackedUsersMap();
-  } else {
-    startTrackedUsersMap();
-  }
-}
-
-async function startTrackedUsersMap() {
-  if (!leafletMap) initLeafletMap();
-  trackedUsersActive = true;
-  var btn = document.getElementById('btn-track-users');
-  if (btn) { btn.style.background = '#27ae60'; btn.style.color = 'white'; btn.style.borderColor = '#27ae60'; }
-  showToast('👥 Učitavam lokacije praćenih korisnika...');
-  await refreshTrackedUsersMap();
-  trackedUsersInterval = setInterval(refreshTrackedUsersMap, 10000);
-}
-
-function stopTrackedUsersMap() {
-  trackedUsersActive = false;
-  if (trackedUsersInterval) { clearInterval(trackedUsersInterval); trackedUsersInterval = null; }
-  var btn = document.getElementById('btn-track-users');
-  if (btn) { btn.style.background = 'white'; btn.style.color = 'var(--text)'; btn.style.borderColor = 'var(--border)'; }
-  // Clear markers
-  Object.keys(trackedUsersMarkers).forEach(function(key) {
-    if (trackedUsersMarkers[key]) leafletMap.removeLayer(trackedUsersMarkers[key]);
-    delete trackedUsersMarkers[key];
-  });
-  showToast('⏹ Praćenje korisnika zaustavljeno');
-}
-
-async function refreshTrackedUsersMap() {
-  try {
-    const res = await fetch(KM_API_BASE + '/syncGpsTrack', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'getActive' })
-    });
-    const data = await res.json();
-    if (!data.success || !data.tracks || data.tracks.length === 0) return;
-    
-    data.tracks.forEach(function(track) {
-      if (track.lastLat === null || track.lastLon === null) return;
-      var key = track.username;
-      var latlng = [track.lastLat, track.lastLon];
-      
-      if (trackedUsersMarkers[key]) {
-        trackedUsersMarkers[key].setLatLng(latlng);
-      } else {
-        var icon = L.divIcon({
-          className: 'tracked-user-marker',
-          html: '<div style="background:#2980b9;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:white;font-size:14px;font-weight:bold;">' + track.username.charAt(0).toUpperCase() + '</span></div>',
-          iconSize: [32, 32],
-          iconAnchor: [16, 32]
-        });
-        trackedUsersMarkers[key] = L.marker(latlng, { icon: icon }).addTo(leafletMap);
-        trackedUsersMarkers[key].bindPopup('<b>' + track.username + '</b><br>Poslednja lokacija<br>' + track.pointCount + ' tačaka');
-      }
-      trackedUsersMarkers[key].setPopupContent('<b>' + track.username + '</b><br>Poslednja lokacija<br>' + track.pointCount + ' tačaka');
-    });
-    
-    // Remove markers for users no longer active
-    var activeUsers = data.tracks.map(function(t) { return t.username; });
-    Object.keys(trackedUsersMarkers).forEach(function(key) {
-      if (!activeUsers.includes(key)) {
-        leafletMap.removeLayer(trackedUsersMarkers[key]);
-        delete trackedUsersMarkers[key];
-      }
-    });
-  } catch(e) {
-    console.error('Tracked users map error:', e);
-  }
 }
 
 function checkMapAdminAccess() {
@@ -17793,10 +17634,8 @@ function checkMapAdminAccess() {
   const isAdmin = (role === 'admin');
   const btnTrack = document.getElementById('btn-track');
   const btnClear = document.getElementById('admin-clear-track');
-  const btnTrackUsers = document.getElementById('btn-track-users');
   if (btnTrack) btnTrack.style.display = isAdmin ? '' : 'none';
   if (btnClear) btnClear.style.display = isAdmin ? 'flex' : 'none';
-  if (btnTrackUsers) btnTrackUsers.style.display = isAdmin ? '' : 'none';
 }
 
 function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
