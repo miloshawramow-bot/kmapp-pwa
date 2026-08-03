@@ -2622,8 +2622,8 @@ function switchTab(name) {
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
   if (name === 'akti') filterAkti();
-  if (name === 'podesavanja') { updateSettings(); renderAdminAktiList(); }
-  if (name === 'pelceri') renderPelceri(pelceriData);
+  if (name === 'podesavanja') { updateSettings(); renderAdminAktiList(); loadServerPelceri().then(renderAdminPelceriList); }
+  if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)); }
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
   if (name === 'kalendar') renderCalendar();
@@ -17712,24 +17712,45 @@ function adminDeleteAkt(id) {
   showToast('🗑️ Akt obrisan.');
 }
 
-// ===== ADMIN PELCERI =====
-const KM_CUSTOM_PELCERI_KEY = 'km_custom_pelceri';
+// ===== ADMIN PELCERI (SERVER-BACKED) =====
+let serverPelceri = [];
+let serverPelceriLoaded = false;
 
-function getCustomPelceri() { return JSON.parse(localStorage.getItem(KM_CUSTOM_PELCERI_KEY) || '[]'); }
-function saveCustomPelceri(p) { localStorage.setItem(KM_CUSTOM_PELCERI_KEY, JSON.stringify(p)); }
+async function loadServerPelceri() {
+  if (serverPelceriLoaded) return;
+  try {
+    const res = await fetch(KM_API_BASE + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await res.json();
+    if (data.success && data.pelceri) {
+      serverPelceri = data.pelceri;
+      // Merge server pelceri into pelceriData (skip duplicates)
+      data.pelceri.forEach(p => {
+        if (!pelceriData.find(x => x.naziv === p.naziv)) {
+          pelceriData.push({ id: 'srv_' + p.id, kategorija: p.kategorija, naziv: p.naziv, tekst: p.tekst, _serverId: p.id });
+        }
+      });
+    }
+    serverPelceriLoaded = true;
+  } catch(e) {
+    console.error('loadServerPelceri error:', e);
+    serverPelceriLoaded = true;
+  }
+}
+
+// Load server pelceri on startup
+loadServerPelceri();
 
 function getNextPelcerId() {
   let maxId = 0;
-  pelceriData.forEach(p => { if (p.id > maxId) maxId = p.id; });
-  getCustomPelceri().forEach(p => { if (p.id > maxId) maxId = p.id; });
+  pelceriData.forEach(p => { if (typeof p.id === 'number' && p.id > maxId) maxId = p.id; });
   return maxId + 1;
 }
 
 function loadCustomPelceri() {
-  getCustomPelceri().forEach(p => { if (!pelceriData.find(x => x.id === p.id)) pelceriData.push(p); });
+  // No-op: pelceri are now loaded from server
 }
 
-function adminSavePelcer() {
+async function adminSavePelcer() {
   const kategorija = document.getElementById('admin-pelcer-kategorija').value.trim();
   const naziv = document.getElementById('admin-pelcer-naziv').value.trim();
   const tekst = document.getElementById('admin-pelcer-tekst').value.trim();
@@ -17737,613 +17758,76 @@ function adminSavePelcer() {
   if (!kategorija) { errEl.textContent = 'Unesite kategoriju.'; errEl.style.display = 'block'; return; }
   if (!naziv) { errEl.textContent = 'Unesite naziv pelcera.'; errEl.style.display = 'block'; return; }
   if (!tekst) { errEl.textContent = 'Unesite tekst pelcera.'; errEl.style.display = 'block'; return; }
-  const custom = getCustomPelceri();
-  const id = getNextPelcerId();
-  custom.push({ id, kategorija, naziv, tekst });
-  saveCustomPelceri(custom);
-  pelceriData.push({ id, kategorija, naziv, tekst });
-  document.getElementById('admin-pelcer-kategorija').value = '';
-  document.getElementById('admin-pelcer-naziv').value = '';
-  document.getElementById('admin-pelcer-tekst').value = '';
-  errEl.style.display = 'none';
-  renderAdminPelceriList();
-  showToast('✅ Pelcer sačuvan: ' + naziv);
+  
+  // Show saving state
+  const saveBtn = document.querySelector('button[onclick="adminSavePelcer()"]');
+  if (saveBtn) { saveBtn.textContent = 'Čuvanje...'; saveBtn.disabled = true; }
+  
+  try {
+    const res = await fetch(KM_API_BASE + '/savePelcer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kategorija, naziv, tekst })
+    });
+    const data = await res.json();
+    if (data.success && data.pelcer) {
+      const srvId = data.pelcer.id;
+      pelceriData.push({ id: 'srv_' + srvId, kategorija, naziv, tekst, _serverId: srvId });
+      serverPelceri.push(data.pelcer);
+      document.getElementById('admin-pelcer-kategorija').value = '';
+      document.getElementById('admin-pelcer-naziv').value = '';
+      document.getElementById('admin-pelcer-tekst').value = '';
+      errEl.style.display = 'none';
+      renderAdminPelceriList();
+      showToast('✅ Pelcer sačuvan na serveru: ' + naziv);
+    } else {
+      errEl.textContent = 'Greška: ' + (data.error || 'Nepoznata');
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Greška pri čuvanju: ' + (e.message || e);
+    errEl.style.display = 'block';
+  } finally {
+    if (saveBtn) { saveBtn.textContent = '💾 Sačuvaj pelcer'; saveBtn.disabled = false; }
+  }
 }
 
 function renderAdminPelceriList() {
   const el = document.getElementById('admin-pelceri-list');
   if (!el) return;
-  const custom = getCustomPelceri();
+  const custom = pelceriData.filter(p => p._serverId);
   if (!custom.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodanih pelcera.</div>'; return; }
   el.innerHTML = custom.map(p => 
     '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);">' +
-    '<span style="background:#1a4a8a;color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;">' + p.kategorija.substring(0,15) + '</span>' +
-    '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.naziv + '</div></div>' +
-    '<button onclick="adminDeletePelcer(' + p.id + ')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;flex-shrink:0;">Obriši</button></div>'
+    '<span style="background:#1a4a8a;color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;">' + (p.kategorija || '').substring(0,15) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (p.naziv || '') + '</div></div>' +
+    '<button onclick="adminDeletePelcer(' + p._serverId + ')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;flex-shrink:0;">Obriši</button></div>'
   ).join('');
 }
 
-function adminDeletePelcer(id) {
-  if (!confirm('Obrisati ovaj pelcer?')) return;
-  let custom = getCustomPelceri().filter(p => p.id !== id);
-  saveCustomPelceri(custom);
-  const idx = pelceriData.findIndex(p => p.id === id);
-  if (idx >= 0) pelceriData.splice(idx, 1);
-  renderAdminPelceriList();
-  showToast('🗑️ Pelcer obrisan.');
-}
-
-// ===== ADMIN: USER MANAGEMENT =====
-function adminCreateUser() {
-  const u = (document.getElementById('admin-user-username').value || '').trim();
-  const p = (document.getElementById('admin-user-password').value || '').trim();
-  const errEl = document.getElementById('admin-user-error');
-
-  if (u.length < 3) { errEl.textContent = 'Korisničko ime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
-  if (p.length < 4) { errEl.textContent = 'Lozinka mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
-
-  const users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
-  if (users.find(x => x.username.toLowerCase() === u.toLowerCase())) {
-    errEl.textContent = 'Korisnik već postoji!'; errEl.style.display = 'block'; return;
-  }
-
-  users.push({ username: u, password: p, role: 'user', created: Date.now() });
-  localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
-  errEl.style.display = 'none';
-  document.getElementById('admin-user-username').value = '';
-  document.getElementById('admin-user-password').value = '';
-  showToast('✅ Korisnik kreiran: ' + u);
-  adminRenderUsersList();
-}
-
-function adminDeleteUser(username) {
-  if (!confirm('Obrisati korisnika ' + username + '?')) return;
-  let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
-  users = users.filter(x => x.username !== username);
-  localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
-  showToast('🗑️ Korisnik obrisan: ' + username);
-  adminRenderUsersList();
-}
-
-function adminRenderUsersList() {
-  const el = document.getElementById('admin-users-list');
-  if (!el) return;
-  const users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
-  const customUsers = users.filter(u => u.username !== 'admin' && u.username !== 'test01');
-  if (!customUsers.length) { el.innerHTML = ''; return; }
-  el.innerHTML = '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;margin-top:10px;">Kreirani korisnici:</div>' +
-    customUsers.map(u =>
-      '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
-      '<div style="flex:1;font-size:0.8rem;font-weight:500;color:var(--text);">' + u.username + '</div>' +
-      '<button onclick="adminDeleteUser(\'' + u.username + '\')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;">Obriši</button></div>'
-    ).join('');
-}
-
-async function adminLoadLoginLogs(filter) {
-  const el = document.getElementById('admin-login-logs');
-  if (!el) return;
-  const f = filter || 'today';
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Ucitavanje...</div>';
+async function adminDeletePelcer(id) {
+  if (!confirm('Obrisati ovaj pelcer sa servera?')) return;
   try {
-    const res = await fetch(KM_API_BASE + '/getLoginLogs', {
+    const res = await fetch(KM_API_BASE + '/deletePelcer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filter: f })
+      body: JSON.stringify({ id })
     });
     const data = await res.json();
-    
-    if (!data.success) {
-      el.innerHTML = '<div style="text-align:center;color:var(--danger);padding:16px;">Greska: ' + (data.error || 'Nepoznata') + '</div>';
-      return;
-    }
-    
-    const logs = data.logs || [];
-    
-    if (!logs.length) {
-      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Nema prijava.</div>';
-      return;
-    }
-    
-    let titleText;
-    if (f === 'today') titleText = 'Danas';
-    else if (f === 'all') titleText = 'Istorija (svi korisnici)';
-    else titleText = f;
-    
-    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px;">' + titleText + ' \u2014 ' + logs.length + ' korisnik(a)</div>' +
-      logs.map(function(entry) {
-        var username = entry[0];
-        var info = entry[1];
-        var d = new Date(info.lastLogin);
-        var dateStr = d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
-        return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">' +
-          '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">' + username.charAt(0).toUpperCase() + '</div>' +
-          '<div style="flex:1;min-width:0;">' +
-          '<div style="font-size:0.82rem;font-weight:600;color:var(--text);">' + username + '</div>' +
-          '<div style="font-size:0.7rem;color:var(--muted);">Zadnja prijava: ' + dateStr + ' \u00b7 ' + info.count + 'x</div>' +
-          '</div></div>';
-      }).join('');
-  } catch (e) {
-    el.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Greska pri ucitavanju.</div>';
-  }
-}
-
-// ===== IN-APP MESSAGE NOTIFICATION TOAST =====
-function playMsgSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.4);
-    if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
-  } catch(e) { console.log('Audio error:', e); }
-}
-
-function showMsgToast(count) {
-  let t = document.getElementById('msg-toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'msg-toast';
-    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 18px;border-radius:20px;font-size:0.85rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:150;display:none;transition:opacity 0.3s;cursor:pointer;';
-    document.body.appendChild(t);
-  }
-  t.textContent = '📬 ' + count + ' nepročitana' + (count > 1 ? ' poruke' : ' poruka');
-  t.onclick = function() { t.style.display = 'none'; switchTab('poruke'); };
-  t.style.display = 'block';
-  t.style.opacity = '1';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.style.opacity = '0'; setTimeout(function(){ t.style.display = 'none'; }, 300); }, 5000);
-}
-
-// Load custom akti on startup
-loadCustomAkti();
-loadCustomPelceri();
-checkAdminAccess();
-
-
-
-// ===== ACCORDION TOGGLE =====
-function toggleAcc(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('open');
-}
-
-// ===== GLOBAL SEARCH =====
-function openGlobalSearch() {
-  var overlay = document.getElementById('gs-overlay');
-  if (!overlay) return;
-  overlay.classList.add('open');
-  setTimeout(function() {
-    var input = document.getElementById('gs-input');
-    if (input) { input.focus(); input.value = ''; gsSearch(''); }
-  }, 100);
-}
-
-function closeGlobalSearch() {
-  var overlay = document.getElementById('gs-overlay');
-  if (overlay) overlay.classList.remove('open');
-}
-
-function gsSearch(query) {
-  var resultsEl = document.getElementById('gs-results');
-  if (!resultsEl) return;
-  query = (query || '').trim().toLowerCase();
-  if (!query || query.length < 2) {
-    resultsEl.innerHTML = '<div class="gs-empty">Unesite najmanje 2 karaktera...</div>';
-    return;
-  }
-  var results = [];
-
-  // 1. Search documents (localStorage)
-  try {
-    var docs = JSON.parse(localStorage.getItem('bk_docs') || '[]');
-    docs.forEach(function(d) {
-      var text = (d.title || '') + ' ' + (d.type || '') + ' ' + (d.content || '');
-      if (text.toLowerCase().indexOf(query) !== -1) {
-        results.push({
-          icon: '📄',
-          title: d.title || d.type || 'Dokument',
-          desc: d.type || 'Lokalni dokument',
-          badge: 'Dokument',
-          action: "switchTab('docs')"
-        });
-      }
-    });
-  } catch(e) {}
-
-  // 2. Search imenik contacts
-  try {
-    imenikData.forEach(function(c) {
-      var name = (c.name || '').toLowerCase();
-      var phones = (c.phones || []).join(' ');
-      var email = (c.email || '').toLowerCase();
-      if (name.indexOf(query) !== -1 || phones.toLowerCase().indexOf(query) !== -1 || email.indexOf(query) !== -1) {
-        results.push({
-          icon: (c.photo || getImenikPhoto(c.photoKey)) ? '👤' : '👤',
-          title: c.name || 'Kontakt',
-          desc: (c.phones || [])[0] || c.email || '',
-          badge: 'Kontakt',
-          action: "switchTab('imenik')"
-        });
-      }
-    });
-  } catch(e) {}
-
-  // 3. Search legal acts (aktiData)
-  try {
-    aktiData.forEach(function(a) {
-      var naziv = (a.naziv || '').toLowerCase();
-      var sadrzaj = (a.sadrzaj || '').toLowerCase();
-      var broj = (a.broj || '').toLowerCase();
-      if (naziv.indexOf(query) !== -1 || broj.indexOf(query) !== -1 || sadrzaj.indexOf(query) !== -1) {
-        // Find a relevant snippet
-        var snippet = '';
-        if (sadrzaj.indexOf(query) !== -1) {
-          var idx = sadrzaj.indexOf(query);
-          snippet = '...' + (a.sadrzaj || '').substr(Math.max(0, idx - 30), 60) + '...';
-        } else {
-          snippet = (a.broj || a.tip || '');
-        }
-        results.push({
-          icon: '⚖️',
-          title: a.naziv || 'Akt',
-          desc: snippet,
-          badge: a.tip || 'Akt',
-          action: "switchTab('akti')"
-        });
-      }
-    });
-  } catch(e) {}
-
-  // 4. Search pelceri
-  try {
-    var savedPelceri = JSON.parse(localStorage.getItem('km_pelceri') || '[]');
-    var allPelceri = (pelceriData || []).concat(savedPelceri);
-    allPelceri.forEach(function(p) {
-      var text = ((p.kategorija || '') + ' ' + (p.naziv || '') + ' ' + (p.tekst || '')).toLowerCase();
-      if (text.indexOf(query) !== -1) {
-        results.push({
-          icon: '📋',
-          title: p.naziv || p.kategorija || 'Pelcer',
-          desc: p.kategoria || 'Pelcer',
-          badge: 'Pelcer',
-          action: "switchTab('pelceri')"
-        });
-      }
-    });
-  } catch(e) {}
-
-  // Limit to 30 results
-  results = results.slice(0, 30);
-
-  if (results.length === 0) {
-    resultsEl.innerHTML = '<div class="gs-empty">Nema rezultata za "' + query + '"</div>';
-    return;
-  }
-
-  resultsEl.innerHTML = results.map(function(r) {
-    return '<div class="gs-result" onclick="' + r.action + '; closeGlobalSearch();">' +
-      '<span class="gs-icon">' + r.icon + '</span>' +
-      '<div class="gs-info"><div class="gs-title">' + r.title + '</div>' +
-      '<div class="gs-desc">' + (r.desc || '') + '</div></div>' +
-      '<span class="gs-badge">' + r.badge + '</span></div>';
-  }).join('');
-}
-
-// ===== AI ASISTENT =====
-let aiMessages = [];
-
-function aiPreselect(q) {
-  // Pametna preselecija akata na klijentskoj strani pre slanja na server
-  // MAX: 6 akata x 3000 chars = ~20KB total (ispod Base44 backend limit)
-  var qLow = q.toLowerCase();
-  var qWords = qLow.split(/\s+/).filter(function(w){ return w.length > 2; });
-
-  // Prosireni stemming srpskih reci
-  var stems = [];
-  qWords.forEach(function(w){
-    stems.push(w);
-    var stem = w;
-    if (stem.length > 4) {
-      ['nja','nje','nog','nom','ima','nih','anju','anje','anja','nju','nji','ama','ova','ovi','iku','ika','ici','ara','enje','enja','avan','ivan','osti','ost','cu','ci','ka','ke','ko','ku','og','om','im','ima','oga','ome','e','a','u','i','o'].forEach(function(suf){
-        if (stem.endsWith(suf) && stem.length - suf.length >= 3) stems.push(stem.slice(0,-suf.length));
-      });
-    }
-  });
-  // Dodaj sinonime za ceste pojmove
-  var sinonimi = {
-    'parkiranj': ['parkirali', 'parkiralist', 'parking', 'parkir', 'parkiran'],
-    'parkirali': ['parkiranj', 'parkirali', 'parking', 'parkir'],
-    'buka': ['buke', 'buku', 'bukom', 'buci', 'buc', 'zvuk', 'decibel', 'glasn', 'zvucn'],
-    'otpad': ['deponij', 'otpada', 'odlaganj', 'otpada', 'smece', 'smeceg'],
-    'izliva': ['izliva', 'proliva', 'prosipa', 'prosipanj', 'izlivanj', 'prolivanj'],
-    'nepropisn': ['suprotno', 'zabranjen', 'nedozvoljen', 'protivno', 'nepraviln'],
-    'komunaln': ['komunaln', 'komunal', 'komunalna', 'komunalne'],
-    'saobrac': ['saobracajn', 'saobr', 'promet', 'saobracaj', 'vozilo', 'vozila'],
-    'zelenil': ['zelen', 'drvo', 'biljka', 'park', 'zelenila', 'zelenilo', 'drvece'],
-    'gradnj': ['gradnj', 'izgradnj', 'gradjevin', 'objekat', 'izgradnj', 'gradnje'],
-    'reklam': ['reklamn', 'oglas', 'plakat', 'natpis', 'reklame', 'oglasa', 'plakata'],
-    'zivotinj': ['pas', 'kuca', 'ljubimac', 'zivotinj', 'psi', 'psa', 'life'],
-    'cistoc': ['cistoc', 'ciscenj', 'cistoca', 'nečistoc', 'otpada', 'odrzavanj'],
-    'sneg': ['snežn', 'snež', 'zimsk', 'odrzavanj', 'snežnog', 'led'],
-    'voda': ['vodovod', 'vodn', 'kanalizac', 'vode', 'vodu', 'vodom', 'vodov'],
-    'rasvet': ['rasvet', 'svetlo', 'osvetljenj', 'rasvete', 'rasvetu', 'svetla'],
-    'spomenik': ['spomenic', 'spomen', 'kulturo', 'spomenika', 'spomenici'],
-    'decibel': ['decibela', 'decibelu', 'db', 'buke', 'zvuka'],
-    'zabranj': ['zabranjeno', 'zabranjena', 'zabranjene', 'zabranjen', 'zabrana'],
-    'kazn': ['kazna', 'kazne', 'kaznu', 'kaznom', 'kazniće', 'kaznena', 'kaznene', 'novčana', 'novčanu'],
-    'materijaln': ['materijalna', 'materijalne', 'materijalnu', 'materijalnom'],
-    'vozilo': ['vozila', 'vozilom', 'automobil', 'automobila', 'auto'],
-    'stan': ['stanovanj', 'stanu', 'stamben', 'stana', 'stambene'],
-    'ugovor': ['ugovora', 'ugovoru', 'ugovorom', 'ugovorn'],
-    'dokument': ['dokumenta', 'dokumente', 'dokumentu', 'dokumenata'],
-    'rok': 'roka roku rokom'.split(' '),
-    'prijava': ['prijave', 'prijavu', 'prijavom', 'prijava', 'prijavljenj'],
-    'dozvola': ['dozvole', 'dozvolu', 'dozvolom', 'dozvol'],
-    'placanje': ['placanj', 'uplat', 'naplat', 'placa', 'uplata', 'naplata'],
-    'porez': ['poreza', 'porezu', 'porezom', 'porezn', 'taksa', 'takse'],
-    'komunaln': ['komunalna', 'komunalne', 'komunalnu', 'komunalnom', 'komunalne'],
-    'javno': ['javna', 'javne', 'javnu', 'javnom', 'javna', 'javne']
-  };
-  qWords.forEach(function(w){
-    var sinKey = Object.keys(sinonimi).find(function(k){ return w.indexOf(k) !== -1 || k.indexOf(w) !== -1; });
-    if (sinKey) sinonimi[sinKey].forEach(function(s){ stems.push(s); });
-  });
-
-  // UVEK traziti kaznene odredbe
-  var wantsPenalty = true;
-  var clanMatch = q.match(/(?:član|clan|Član|čl\.|cl\.)\s*(\d+[a-z]?)/i);
-  var trazeniClan = clanMatch ? clanMatch[1] : null;
-
-  // Detekcija naziva akta u pitanju
-  var trazeniAktNaziv = null;
-  aktiData.forEach(function(a){
-    var nazWords = a.naziv.toLowerCase().replace(/^(odluka o |zakon o |pravilnik o )/,'').split(/\s+/).filter(function(w){ return w.length > 3; });
-    var hits = 0;
-    nazWords.forEach(function(nw){ if (qLow.indexOf(nw) !== -1) hits++; });
-    if (hits > 0 && hits >= Math.ceil(nazWords.length / 2)) trazeniAktNaziv = a.naziv;
-  });
-
-  // Scoring akata
-  var scored = aktiData.map(function(a){
-    var fullText = (a.naziv + ' ' + (a.sadrzaj||'')).toLowerCase();
-    var score = 0;
-    if (a.tip === 'odluka' || a.naziv.toLowerCase().indexOf('odluka') !== -1) score += 10;
-    if (trazeniAktNaziv && a.naziv === trazeniAktNaziv) score += 1000;
-    stems.forEach(function(s){ if (s.length > 2 && fullText.indexOf(s) !== -1) score += 2; });
-    // UVEK bonus za kaznene/materijalne odredbe
-    if (fullText.indexOf('kaznena')!==-1) score += 8;
-    if (fullText.indexOf('materijalna')!==-1) score += 8;
-    if (fullText.indexOf('kazniće')!==-1) score += 5;
-    if (fullText.indexOf('novčana kazna')!==-1) score += 5;
-    return { a: a, score: score };
-  });
-
-  scored.sort(function(x,y){ return y.score - x.score; });
-
-  // MAX 6 akata (4 odluke + 2 zakona)
-  var selected = [];
-  var odlukeCount = 0, zakonCount = 0;
-  for (var i = 0; i < scored.length && selected.length < 6; i++) {
-    if (scored[i].score <= 0) continue;
-    var isOdluka = (scored[i].a.tip === 'odluka' || scored[i].a.naziv.toLowerCase().indexOf('odluka') !== -1);
-    if (isOdluka && odlukeCount < 4) { selected.push(scored[i].a); odlukeCount++; }
-    else if (!isOdluka && zakonCount < 2) { selected.push(scored[i].a); zakonCount++; }
-  }
-
-  // Ako je specificiran akt, stavi ga prvog
-  if (trazeniAktNaziv && selected.length > 0) {
-    selected = selected.filter(function(a){ return a.naziv !== trazeniAktNaziv; });
-    var foundAkt = aktiData.find(function(a){ return a.naziv === trazeniAktNaziv; });
-    if (foundAkt) selected.unshift(foundAkt);
-  }
-
-  // Trim sadrzaj: MAX 3000 chars po aktu, clanovi do 1200 chars
-  var MAX_PER_AKT = 3000;
-  var MAX_CLAN_LEN = 1200;
-  return selected.map(function(a){
-    var sadrzaj = a.sadrzaj || '';
-    var isTargeted = (trazeniAktNaziv && a.naziv === trazeniAktNaziv);
-
-    var parts = sadrzaj.split(/(?=Član \d)/);
-    var relevant = [];
-    var penaltyParts = [];
-
-    // UVEK izdvoji kaznene i materijalne odredbe
-    parts.forEach(function(p){
-      var pl = p.toLowerCase();
-      if (pl.indexOf('kaznena')!==-1 || pl.indexOf('kazniće')!==-1 || pl.indexOf('novčana kazna')!==-1 || pl.indexOf('materijalna')!==-1) {
-        penaltyParts.push(p);
-      }
-    });
-
-    if (trazeniClan && isTargeted) {
-      // Trazeni clan + kaznene/materijalne odredbe - PUN tekst clana
-      var clanPat = 'Član ' + trazeniClan;
-      parts.forEach(function(p){
-        if (p.toLowerCase().indexOf(clanPat.toLowerCase()) === 0) relevant.push(p.slice(0, MAX_CLAN_LEN));
-      });
-      // Dodaj sve kaznene/materijalne
-      penaltyParts.forEach(function(pp){
-        var already = relevant.some(function(r){ return r.slice(0,30) === pp.slice(0,30); });
-        if (!already) relevant.push(pp.slice(0, MAX_CLAN_LEN));
-      });
+    if (data.success) {
+      const idx = pelceriData.findIndex(p => p._serverId === id);
+      if (idx >= 0) pelceriData.splice(idx, 1);
+      serverPelceri = serverPelceri.filter(p => p.id !== id);
+      renderAdminPelceriList();
+      showToast('🗑️ Pelcer obrisan sa servera.');
     } else {
-      // Opsta pretraga: relevantni clanovi po stemovima i sinonimima
-      parts.forEach(function(p){
-        if (p.length < 5) return;
-        if (relevant.join('').length > MAX_PER_AKT) return;
-        var pl = p.toLowerCase();
-        var hit = false;
-        stems.forEach(function(s){ if (s.length > 2 && pl.indexOf(s)!==-1) hit = true; });
-        if (hit) relevant.push(p.slice(0, MAX_CLAN_LEN));
-      });
-      // UVEK dodaj kaznene i materijalne odredbe ako ih vec nema
-      penaltyParts.forEach(function(pp){
-        var already = relevant.some(function(r){ return r.slice(0,30) === pp.slice(0,30); });
-        if (!already && relevant.join('').length < MAX_PER_AKT) relevant.push(pp.slice(0, MAX_CLAN_LEN));
-      });
+      showToast('⚠️ Greška: ' + (data.error || 'Brisanje nije uspelo'));
     }
-
-    var trimmed = relevant.length > 0 ? relevant.slice(0, 10).join('\n\n').slice(0, MAX_PER_AKT) : sadrzaj.slice(0, MAX_PER_AKT);
-    return { naziv: a.naziv, broj: a.broj, tip: a.tip, sadrzaj: trimmed };
-  });
-}
-
-function aiSend() {
-  const input = document.getElementById('ai-input');
-  const q = input.value.trim();
-  if (!q) return;
-  
-  // Add user message
-  aiAddMessage(q, 'user');
-  input.value = '';
-  
-  // Add loading indicator
-  const loadingId = aiAddMessage('Pretražujem propise...', 'ai-loading');
-  
-  // Pametna preselecija na klijentskoj strani — smanjuje payload sa 1.5MB na <100KB
-  const aktiForSearch = aiPreselect(q);
-  
-  fetch(KM_API_BASE + '/aiAssistant', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pitanje: q, akti: aktiForSearch })
-  })
-  .then(r => r.json())
-  .then(data => {
-    // Remove loading
-    const loadingEl = document.getElementById(loadingId);
-    if (loadingEl) loadingEl.remove();
-    
-    if (data.error) {
-      aiAddMessage(data.error, 'ai');
-    } else {
-      aiAddMessage(data.odgovor, 'ai');
-    }
-  })
-  .catch(err => {
-    const loadingEl = document.getElementById(loadingId);
-    if (loadingEl) loadingEl.remove();
-    aiAddMessage('Greška pri pretrazi. Pokušajte ponovo.', 'ai');
-  });
-}
-
-function aiAddMessage(text, sender) {
-  const area = document.getElementById('ai-chat-area');
-  const div = document.createElement('div');
-  const id = 'ai-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2,5);
-  div.id = id;
-  
-  if (sender === 'user') {
-    div.style.cssText = 'align-self:flex-end;max-width:85%;background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:0.88rem;line-height:1.4;';
-    div.textContent = text;
-  } else if (sender === 'ai-loading') {
-    div.style.cssText = 'align-self:flex-start;max-width:85%;background:var(--card);border:1px solid var(--border);border-radius:14px 14px 14px 4px;padding:10px 14px;font-size:0.88rem;color:var(--muted);';
-    div.innerHTML = '<span style="animation:blink 1s infinite;">⏳ ' + text + '</span>';
-  } else {
-    // AI response with markdown support
-    div.style.cssText = 'align-self:flex-start;max-width:90%;background:var(--card);border:1px solid var(--border);border-radius:14px 14px 14px 4px;padding:12px 14px;font-size:0.85rem;line-height:1.6;color:var(--text);';
-    let formatted = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\*\*(.+?)\*\*/g, '<b style="color:var(--navy);">$1</b>')
-      .replace(/^### (.+)$/gm, '<b style="color:var(--navy);font-size:0.9rem;">$1</b><br>')
-      .replace(/^## (.+)$/gm, '<b style="color:var(--navy);font-size:0.95rem;">$1</b><br>')
-      .replace(/^# (.+)$/gm, '<b style="color:var(--navy);font-size:1rem;">$1</b><br>')
-      .replace(/^\* (.+)$/gm, '• $1')
-      .replace(/^- (.+)$/gm, '• $1')
-      .replace(/\n\n/g, '<br><br>')
-      .replace(/\n/g, '<br>');
-    div.innerHTML = formatted;
-  }
-  
-  area.appendChild(div);
-  area.scrollTop = area.scrollHeight;
-  return id;
-}
-
-// Add blink animation
-if (!document.getElementById('ai-blink-style')) {
-  const style = document.createElement('style');
-  style.id = 'ai-blink-style';
-  style.textContent = '@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}';
-  document.head.appendChild(style);
-}
-
-// ===== Download shared document =====
-async function handleSharedDocDownload() {
-  const params = new URLSearchParams(window.location.search);
-  const dlKey = params.get('dl');
-  if (!dlKey) return;
-  
-  // Force white background regardless of dark mode
-  document.documentElement.style.background = '#ffffff';
-  document.body.style.cssText = 'margin:0;padding:0;background:#ffffff;font-family:system-ui,sans-serif;color:#333;';
-  document.title = 'Preuzimanje dokumenta...';
-  document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#ffffff;color:#333;padding:20px;text-align:center;"><div style="font-size:3rem;margin-bottom:20px;">\ud83d\udcc4</div><h2 style="margin:0 0 10px;color:#333;">Preuzimanje Word dokumenta...</h2><p style="color:#666;margin:0 0 20px;">Molimo sa\u010dekajte.</p><div id="dl-status" style="padding:15px 20px;border-radius:8px;background:#f0f0f0;color:#333;font-size:1rem;">U toku...</div></div>';
-  
-  // Remove dark mode class if present
-  document.documentElement.classList.remove('dark');
-  document.body.classList.remove('dark');
-  
-  try {
-    const res = await fetch('https://solas-799a3993.base44.app/functions/getSharedDoc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ downloadKey: dlKey })
-    });
-    const data = await res.json();
-    
-    if (!data.success) {
-      document.getElementById('dl-status').innerHTML = '\u274c Dokument nije prona\u0111en ili je istekao.';
-      return;
-    }
-    
-    // Reconstruct blob from base64
-    const byteChars = atob(data.fileContent);
-    const byteNumbers = new Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      byteNumbers[i] = byteChars.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/msword' });
-    
-    // Unique filename with timestamp
-    const now = new Date();
-    const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
-    const safeName = (data.title || 'dokument').replace(/[^a-zA-Z0-9_\-\u010c\u0107\u0160\u0161\u0110\u0111\u017d\u017e ]/g, '').trim();
-    const fileName = safeName + '_' + ts + '.doc';
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-    
-    document.getElementById('dl-status').innerHTML = 'Dokument <b>' + data.title + '</b> je preuzet! Proverite Downloads folder.';
-  } catch (e) {
-    console.error('Download error:', e);
-    document.getElementById('dl-status').innerHTML = 'Gre\u0161ka pri preuzimanju.';
+  } catch(e) {
+    showToast('⚠️ Greška pri brisanju: ' + (e.message || e));
   }
 }
 
-// Auto-run on page load
-if (new URLSearchParams(window.location.search).get('dl')) {
-  handleSharedDocDownload();
-}
 </script>
 
 
