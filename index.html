@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v137';
+  vText.textContent = 'v138';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v137</div>
+    <div class="side-menu-footer">KMapp · Beograd · v138</div>
   </div>
 </div>
 
@@ -2622,7 +2622,7 @@ function switchTab(name) {
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
   if (name === 'akti') filterAkti();
-  if (name === 'podesavanja') { updateSettings(); renderAdminAktiList(); loadServerPelceri().then(renderAdminPelceriList); }
+  if (name === 'podesavanja') { updateSettings(); loadServerAkti().then(renderAdminAktiList); loadServerPelceri().then(renderAdminPelceriList); loadServerUsers().then(() => adminRenderUsersList()); loadTrackedUsers(); }
   if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)); }
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
@@ -3647,6 +3647,26 @@ function getImenikUsers() {
   })).filter(u => u.username && u.password);
 }
 
+let serverUsers = [];
+let serverUsersLoaded = false;
+
+async function loadServerUsers() {
+  if (serverUsersLoaded) return;
+  try {
+    const res = await fetch(KM_API_BASE + '/getUsers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await res.json();
+    if (data.success && data.users) {
+      serverUsers = data.users.map(u => ({ username: u.username, password: u.password, displayName: u.displayName || u.username, role: u.role || 'user', source: 'server', _serverId: u.id }));
+    }
+    serverUsersLoaded = true;
+  } catch(e) {
+    console.error('loadServerUsers error:', e);
+    serverUsersLoaded = true;
+  }
+}
+
+loadServerUsers();
+
 function getKMUsers() {
   let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || 'null');
   if (!users) {
@@ -3659,7 +3679,19 @@ function getKMUsers() {
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
   const imenikUsers = getImenikUsers();
-  return [...users, ...imenikUsers];
+  // Server users take priority for password changes
+  const result = [...users, ...imenikUsers];
+  // Override with server users (they have the latest passwords)
+  serverUsers.forEach(su => {
+    const idx = result.findIndex(r => r.username.toLowerCase() === su.username.toLowerCase());
+    if (idx >= 0) {
+      result[idx].password = su.password;
+      result[idx].role = su.role;
+    } else {
+      result.push(su);
+    }
+  });
+  return result;
 }
 
 function getCurrentUser() {
@@ -3688,7 +3720,7 @@ function showLoginForm() {
   document.getElementById('login-username').focus();
 }
 
-function doRegister() {
+async function doRegister() {
   const u = (document.getElementById('reg-username').value || '').trim();
   const p = document.getElementById('reg-password').value || '';
   const p2 = document.getElementById('reg-password2').value || '';
@@ -3703,8 +3735,18 @@ function doRegister() {
     errEl.textContent = 'Ime.Prezime već postoji!'; errEl.style.display = 'block'; return;
   }
 
+  // Save to localStorage AND server
   users.push({ username: u, password: p, role: 'user', created: Date.now() });
   localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  
+  // Save to server (fire and forget)
+  fetch(KM_API_BASE + '/saveUser', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: u, password: p, displayName: u, role: 'user' })
+  }).catch(e => console.error('Server save user error:', e));
+  
+  serverUsers.push({ username: u, password: p, displayName: u, role: 'user', source: 'server' });
   errEl.style.display = 'none';
 
   // Auto-login
@@ -17281,7 +17323,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v137';
+const KM_VERSION = 'v138';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17471,6 +17513,17 @@ function changePassword() {
     users.push({ username: imUser.username, password: newPwd, displayName: imUser.displayName, role: 'user', source: 'local', created: Date.now() });
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
+  // Also save to server for persistence
+  const displayName = (users[userIdx] && users[userIdx].displayName) || currentUsername;
+  fetch(KM_API_BASE + '/saveUser', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: currentUsername, password: newPwd, displayName: displayName, role: 'user' })
+  }).catch(e => console.error('Server save password error:', e));
+  // Update local serverUsers cache
+  let suIdx = serverUsers.findIndex(s => s.username.toLowerCase() === currentUsername.toLowerCase());
+  if (suIdx >= 0) serverUsers[suIdx].password = newPwd;
+  else serverUsers.push({ username: currentUsername, password: newPwd, displayName: displayName, role: 'user', source: 'server' });
   closePwdModal();
   showToast('✅ Lozinka uspešno promenjena!');
 }
