@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v143';
+  vText.textContent = 'v144';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v143</div>
+    <div class="side-menu-footer">KMapp · Beograd · v144</div>
   </div>
 </div>
 
@@ -16231,7 +16231,6 @@ function closeImenikModal() {
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
-    <button onclick="toggleTracking()" id="btn-track" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🟢 Prati</button>
   </div>
 
   <!-- Pretraga -->
@@ -16247,15 +16246,6 @@ function closeImenikModal() {
   <div id="map-container" style="min-height:400px;position:relative;">
     <div id="leaflet-map" style="width:100%;height:450px;border:none;z-index:1;"></div>
     <!-- Tracking info overlay -->
-    <div id="track-info" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:rgba(255,255,255,0.95);border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.78rem;z-index:1000;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <span id="track-status" style="color:#27ae60;font-weight:700;">🟢 Praćenje aktivno</span>
-          <span id="track-stats" style="color:var(--muted);margin-left:8px;"></span>
-        </div>
-        <button onclick="toggleTracking()" style="background:#e74c3c;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;font-weight:700;cursor:pointer;">⏹ STOP</button>
-      </div>
-    </div>
     <!-- Marker info -->
     <div id="map-info" style="display:none;position:absolute;bottom:12px;left:12px;right:12px;background:white;border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.82rem;z-index:20;">
       <div id="map-info-text" style="color:var(--navy);font-weight:600;"></div>
@@ -16274,9 +16264,7 @@ function closeImenikModal() {
       <button onclick="goTo(44.7866,20.4489,&#39;Novi Beograd&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">🏢 N. Beograd</button>
       <button onclick="goTo(44.8019,20.5218,&#39;Zvezdara&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">⭐ Zvezdara</button>
     </div>
-    <div id="admin-clear-track" style="margin-top:8px;display:flex;gap:6px;">
-      <button onclick="clearTrack()" style="flex:1;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid #e74c3c;background:white;color:#e74c3c;cursor:pointer;">🗑️ Obriši putanju</button>
-    </div>
+
   </div>
 </div>
 
@@ -16956,17 +16944,11 @@ var tileSatellite = null;
 var mapMarker = null;
 var mapCircle = null;
 
-// GPS Tracking state
-var trackingActive = false;
-var watchId = null;
-var trackPolyline = null;
-var trackPoints = [];
-var trackStartTime = null;
-var trackMarker = null;
-var trackId = null;
-var syncInterval = null;
-
-var wakeLock = null;
+var mapMarker = null;
+var mapCircle = null;
+var currentLayer = "standard";
+var tileStandard = null;
+var tileSatellite = null;
 function initLeafletMap() {
   if (leafletMap) return;
   leafletMap = L.map('leaflet-map').setView([44.8125, 20.4573], 13);
@@ -16978,10 +16960,6 @@ function initLeafletMap() {
     attribution: '© Esri',
     maxZoom: 19
   });
-  // Load saved track for current user
-  loadSavedTrack();
-  // Auto-resume tracking if it was active before app was closed
-  checkResumeTracking();
   // Fix size after container becomes visible
   setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
 }
@@ -17063,268 +17041,8 @@ function locateMe() {
   );
 }
 
-// ===== GPS TRACKING =====
-function toggleTracking() {
-  if (trackingActive) {
-    stopTracking();
-  } else {
-    startTracking();
-  }
-}
-
-// ===== WAKE LOCK: drzi ekran budnim dok traje pracenje =====
-async function acquireWakeLock() {
-  try {
-    if ("wakeLock" in navigator) {
-      wakeLock = await navigator.wakeLock.request("screen");
-      console.log("Wake Lock acquired");
-      wakeLock.addEventListener("release", function() { console.log("Wake Lock released"); });
-    }
-  } catch(e) { console.log("Wake Lock error:", e.message); }
-}
-
-async function releaseWakeLock() {
-  if (wakeLock) {
-    try { await wakeLock.release(); wakeLock = null; } catch(e) {}
-  }
-}
-
-// Auto-resume kad se vrati u app
-document.addEventListener("visibilitychange", function() {
-  if (!trackingActive) return;
-  if (document.visibilityState === "visible") {
-    if (!leafletMap) initLeafletMap();
-    console.log("App ponovo vidljiva - nastavljam pracenje");
-  }
-});
-
-function startTracking(resume) {
-  if (!navigator.geolocation) {
-    showToast('❌ Geolokacija nije dostupna');
-    return;
-  }
-  if (!leafletMap) initLeafletMap();
-  trackingActive = true;
-  acquireWakeLock();
-  if (!resume) {
-    trackStartTime = Date.now();
-    trackPoints = [];
-    trackId = "track_" + Date.now() + "_" + Math.random().toString(36).substr(2,6);
-  }
-  saveTrackingState();
-  syncTrackToBackend(resume ? "sync" : "start");
-  syncInterval = setInterval(function() { syncTrackToBackend("sync"); }, 10000);
-  
-  // Show tracking UI
-  document.getElementById('track-info').style.display = 'block';
-  document.getElementById('btn-track').style.background = '#27ae60';
-  document.getElementById('btn-track').style.color = 'white';
-  document.getElementById('btn-track').style.borderColor = '#27ae60';
-  
-  // Clear old polyline
-  if (trackPolyline) {
-    leafletMap.removeLayer(trackPolyline);
-    trackPolyline = null;
-  }
-  if (trackMarker) {
-    leafletMap.removeLayer(trackMarker);
-    trackMarker = null;
-  }
-  
-  // Start watching position
-  watchId = navigator.geolocation.watchPosition(
-    function(pos) {
-      var lat = pos.coords.latitude;
-      var lon = pos.coords.longitude;
-      var point = { lat: lat, lon: lon, t: Date.now() };
-      trackPoints.push(point);
-      
-      // Draw/update polyline
-      var latlngs = trackPoints.map(function(p) { return [p.lat, p.lon]; });
-      if (trackPolyline) {
-        trackPolyline.setLatLngs(latlngs);
-      } else {
-        trackPolyline = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(leafletMap);
-      }
-      
-      // Update marker
-      if (trackMarker) leafletMap.removeLayer(trackMarker);
-      trackMarker = L.circleMarker([lat, lon], {
-        radius: 8,
-        color: '#e74c3c',
-        fillColor: '#e74c3c',
-        fillOpacity: 1
-      }).addTo(leafletMap);
-      
-      // Follow the user
-      leafletMap.panTo([lat, lon]);
-      
-      // Update stats
-      updateTrackStats();
-      
-      // Save to localStorage
-      saveTrack();
-    },
-    function(err) {
-      showToast('❌ Greška u praćenju: ' + err.message);
-      stopTracking();
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-  );
-  
-  showToast('🟢 Praćenje kretanja aktivno');
-}
-
-function stopTracking() {
-  trackingActive = false;
-  releaseWakeLock();
-  if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
-  syncTrackToBackend("stop");
-  if (watchId !== null) {
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
-  }
-  document.getElementById('track-info').style.display = 'none';
-  document.getElementById('btn-track').style.background = 'white';
-  document.getElementById('btn-track').style.color = 'var(--text)';
-  document.getElementById('btn-track').style.borderColor = 'var(--border)';
-  
-  // Save final track
-  saveTrack();
-  clearTrackingState();
-  showToast('⏹ Praćenje zaustavljeno. Putanja sačuvana.');
-}
-
-function updateTrackStats() {
-  if (!trackPoints || trackPoints.length < 2) return;
-  // Calculate distance
-  var dist = 0;
-  for (var i = 1; i < trackPoints.length; i++) {
-    dist += haversine(trackPoints[i-1].lat, trackPoints[i-1].lon, trackPoints[i].lat, trackPoints[i].lon);
-  }
-  var elapsed = (Date.now() - trackStartTime) / 1000;
-  var min = Math.floor(elapsed / 60);
-  var sec = Math.floor(elapsed % 60);
-  var distStr = dist < 1000 ? dist.toFixed(0) + 'm' : (dist/1000).toFixed(2) + 'km';
-  var timeStr = min > 0 ? min + 'min ' + sec + 's' : sec + 's';
-  document.getElementById('track-stats').textContent = distStr + ' · ' + timeStr + ' · ' + trackPoints.length + ' tačaka';
-}
-
-function haversine(lat1, lon1, lat2, lon2) {
-  var R = 6371000; // meters
-  var dLat = (lat2 - lat1) * Math.PI / 180;
-  var dLon = (lon2 - lon1) * Math.PI / 180;
-  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-          Math.sin(dLon/2) * Math.sin(dLon/2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
-function syncTrackToBackend(action) {
-  var username = getCurrentUsername();
-  if (!username || !trackId || trackPoints.length === 0) return;
-  try {
-    fetch(KM_API_BASE + '/syncGpsTrack', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: action || 'sync',
-        trackId: trackId,
-        username: username,
-        points: trackPoints,
-        startTime: trackStartTime,
-        endTime: action === 'stop' ? Date.now() : null
-      })
-    }).catch(function(e) { console.error('Track sync error:', e); });
-  } catch(e) { console.error('Track sync error:', e); }
-}
-
-function saveTrackingState() {
-  var username = getCurrentUsername();
-  if (!username || !trackId) return;
-  try {
-    localStorage.setItem('km_tracking_state_' + username, JSON.stringify({
-      trackId: trackId,
-      startTime: trackStartTime,
-      active: true
-    }));
-  } catch(e) {}
-}
-
-function clearTrackingState() {
-  var username = getCurrentUsername();
-  if (!username) return;
-  try {
-    localStorage.removeItem('km_tracking_state_' + username);
-  } catch(e) {}
-}
-
-function checkResumeTracking() {
-  var username = getCurrentUsername();
-  if (!username) return;
-  try {
-    var raw = localStorage.getItem('km_tracking_state_' + username);
-    if (!raw) return;
-    var state = JSON.parse(raw);
-    if (state.active && state.trackId) {
-      trackId = state.trackId;
-      trackStartTime = state.startTime;
-      console.log("Auto-resume tracking:", trackId);
-      startTracking(true);
-      showToast('▶️ Praćenje automatski nastavljeno');
-    }
-  } catch(e) { console.error("Resume tracking error:", e); }
-}
-
-function saveTrack() {
-  var username = getCurrentUsername();
-  if (!username || trackPoints.length === 0) return;
-  var key = 'km_track_' + username;
-  var data = {
-    points: trackPoints,
-    startTime: trackStartTime,
-    date: new Date().toISOString()
-  };
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch(e) {}
-}
-
-function loadSavedTrack() {
-  var username = getCurrentUsername();
-  if (!username) return;
-  var key = 'km_track_' + username;
-  try {
-    var raw = localStorage.getItem(key);
-    if (!raw) return;
-    var data = JSON.parse(raw);
-    if (data.points && data.points.length > 1) {
-      trackPoints = data.points;
-      trackStartTime = data.startTime;
-      var latlngs = trackPoints.map(function(p) { return [p.lat, p.lon]; });
-      trackPolyline = L.polyline(latlngs, { color: '#e74c3c', weight: 4, opacity: 0.8 }).addTo(leafletMap);
-      // Fit bounds to show the track
-      leafletMap.fitBounds(trackPolyline.getBounds(), { padding: [30, 30] });
-      updateTrackStats();
-    }
-  } catch(e) {}
-}
-
-function clearTrack() {
-  var username = getCurrentUsername();
-  if (!username) return;
-  if (trackPolyline) { leafletMap.removeLayer(trackPolyline); trackPolyline = null; }
-  if (trackMarker) { leafletMap.removeLayer(trackMarker); trackMarker = null; }
-  trackPoints = [];
-  trackStartTime = null;
-  localStorage.removeItem('km_track_' + username);
-  showToast('🗑️ Putanja obrisana');
-}
-
-// ===== PWA: registracija Service Workera =====
-
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v143';
+const KM_VERSION = 'v144';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17335,7 +17053,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=143').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=144').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -17632,10 +17350,6 @@ function checkAdminAccess() {
 function checkMapAdminAccess() {
   const role = getCurrentUserRole();
   const isAdmin = (role === 'admin');
-  const btnTrack = document.getElementById('btn-track');
-  const btnClear = document.getElementById('admin-clear-track');
-  if (btnTrack) btnTrack.style.display = isAdmin ? '' : 'none';
-  if (btnClear) btnClear.style.display = isAdmin ? 'flex' : 'none';
 }
 
 function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
