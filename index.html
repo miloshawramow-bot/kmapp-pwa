@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v141';
+  vText.textContent = 'v142';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v141</div>
+    <div class="side-menu-footer">KMapp · Beograd · v142</div>
   </div>
 </div>
 
@@ -2620,22 +2620,34 @@ function switchTab(name) {
   }
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
-  if (name === 'akti') filterAkti();
-  if (name === 'podesavanja') { try { checkAdminAccess(); } catch(e) {} updateSettings(); loadServerAkti().then(renderAdminAktiList).catch(()=>{}); loadServerPelceri().then(renderAdminPelceriList).catch(()=>{}); loadServerUsers().then(() => adminRenderUsersList()).catch(()=>{}); loadTrackedUsers().catch(()=>{}); }
-  if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)); }
-  if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
-  if (name === 'imenik') initImenik();
-  if (name === 'kalendar') renderCalendar();
-  if (name === 'poruke') porukeView('conversations');
-  if (name === 'mapa') { checkMapAdminAccess(); setTimeout(function() { initLeafletMap(); }, 100); }
-  if (name === 'login') {
-    setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
+  try {
+    if (name === 'akti') filterAkti();
+    if (name === 'podesavanja') {
+      try { checkAdminAccess(); } catch(e) { console.error(e); }
+      try { updateSettings(); } catch(e) { console.error(e); }
+      try { renderAdminAktiList(); } catch(e) { console.error(e); }
+      try { (typeof loadServerPelceri === 'function' ? loadServerPelceri() : Promise.resolve()).then(renderAdminPelceriList).catch(()=>{}); } catch(e) { console.error(e); }
+      try { (typeof loadServerUsers === 'function' ? loadServerUsers() : Promise.resolve()).then(() => adminRenderUsersList()).catch(()=>{}); } catch(e) { console.error(e); }
+      try { (typeof loadTrackedUsers === 'function' ? loadTrackedUsers() : Promise.resolve()).catch(()=>{}); } catch(e) { console.error(e); }
+    }
+    if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); }
+    if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
+    if (name === 'imenik') initImenik();
+    if (name === 'kalendar') renderCalendar();
+    if (name === 'poruke') porukeView('conversations');
+    if (name === 'mapa') { checkMapAdminAccess(); setTimeout(function() { initLeafletMap(); }, 100); }
+    if (name === 'login') {
+      setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
+    }
+  } catch(e) {
+    console.error('switchTab content error for ' + name + ':', e);
+  } finally {
+    // Highlight active item in side menu
+    document.querySelectorAll('.side-menu-item').forEach(function(item) {
+      item.classList.remove('side-menu-active');
+    });
+    closeMoreGrid();
   }
-  // Highlight active item in side menu
-  document.querySelectorAll('.side-menu-item').forEach(function(item) {
-    item.classList.remove('side-menu-active');
-  });
-  closeMoreGrid();
 }
 
 function toggleMoreGrid() { toggleSideMenu(); }
@@ -17323,7 +17335,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v141';
+const KM_VERSION = 'v142';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17334,7 +17346,7 @@ if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !==
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw2.js?v=141').then(reg => {
+    navigator.serviceWorker.register('sw2.js?v=142').then(reg => {
       reg.update();
       // Reload when new SW takes over (no session guard - always reload)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
