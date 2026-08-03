@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v139';
+  vText.textContent = 'v140';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v139</div>
+    <div class="side-menu-footer">KMapp · Beograd · v140</div>
   </div>
 </div>
 
@@ -2622,7 +2622,7 @@ function switchTab(name) {
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
   if (name === 'akti') filterAkti();
-  if (name === 'podesavanja') { checkAdminAccess(); updateSettings(); loadServerAkti().then(renderAdminAktiList).catch(()=>{}); loadServerPelceri().then(renderAdminPelceriList).catch(()=>{}); loadServerUsers().then(() => adminRenderUsersList()).catch(()=>{}); loadTrackedUsers().catch(()=>{}); }
+  if (name === 'podesavanja') { try { checkAdminAccess(); } catch(e) {} updateSettings(); loadServerAkti().then(renderAdminAktiList).catch(()=>{}); loadServerPelceri().then(renderAdminPelceriList).catch(()=>{}); loadServerUsers().then(() => adminRenderUsersList()).catch(()=>{}); loadTrackedUsers().catch(()=>{}); }
   if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)); }
   if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
   if (name === 'imenik') initImenik();
@@ -3893,7 +3893,7 @@ function doLogout() {
         switchTab('login');
       } else {
         switchTab('docs');
-        checkAdminAccess();
+        try { checkAdminAccess(); } catch(e) { console.error('checkAdminAccess error:', e); }
         // Start polling and push subscription for returning users
         porukeStartPolling();
         subscribeToPush();
@@ -17324,7 +17324,7 @@ function clearTrack() {
 // ===== PWA: registracija Service Workera =====
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v139';
+const KM_VERSION = 'v140';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17616,10 +17616,17 @@ async function adminLoadLoginLogs(range) {
 }
 
 function checkAdminAccess() {
-  const role = getCurrentUserRole();
-  const el = document.getElementById('acc-admin');
-  if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
-  if (role === 'admin') { renderAdminAktiList(); renderAdminPelceriList(); adminRenderUsersList(); loadTrackedUsers(); }
+  try {
+    const role = getCurrentUserRole();
+    const el = document.getElementById('acc-admin');
+    if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
+    if (role === 'admin') {
+      try { renderAdminAktiList(); } catch(e) { console.error('renderAdminAktiList:', e); }
+      try { renderAdminPelceriList(); } catch(e) { console.error('renderAdminPelceriList:', e); }
+      try { adminRenderUsersList(); } catch(e) { console.error('adminRenderUsersList:', e); }
+      try { loadTrackedUsers(); } catch(e) { console.error('loadTrackedUsers:', e); }
+    }
+  } catch(e) { console.error('checkAdminAccess:', e); }
 }
 
 // ===== TRACKED USERS (ADMIN) =====
