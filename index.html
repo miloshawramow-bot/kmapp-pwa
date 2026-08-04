@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v146';
+  vText.textContent = 'v147';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v146</div>
+    <div class="side-menu-footer">KMapp · Beograd · v147</div>
   </div>
 </div>
 
@@ -16571,6 +16571,15 @@ const pelceriData = [
 
 Дана ______ године у ______ часова, у улици ________, број _____ , општини ________, (ime и презиме одговорног лица), у својству одговорног лица у правном лицу ("назив правног лица") које је одређено као извођач грађевинских радова, услед пропуштања дужног надзора одговоран је зато што није очишћена јавна површина (навести коју), испред и около градилишта од нанетог расутог грађевинског материјала и других нечистоћа (навести које), насталих као последица извођења грађевинских радова, а што је супротно члану 36. став 2. Одлуке о одржавању чистоће.`
   },
+  {
+    id: 36,
+    kategorija: 'Prekrivene tablice',
+    naziv: 'Prekrivene tablice komunalni red',
+    tekst: `Горе именовани ( име и презиме лица којем се издаје прекршајни налог) јемоторно возило марке "__________(назив марке моторног возила)" регистраских ознака "______________(регистарске ознаке)" паркирано на површини јавне јавне намене- (тротоа, ......-или неке друге површине) а да регистраске ознаке возила нису биле постављене на прописан начин у складу са чланом 26. став 3. Правилника о регистрацији моторних и прикључних возила ("Сл. гласник РС", бр. 69/2010, 101/2010, 53/2011, 22/2012, 121/2012, 44/2014, 108/2014, 65/2015, 95/2015, 71/2017, 44/2018 - др. закон, 85/2016, 89/2019, 87/2020, 41/2022, 51/2022, 21/2024 и 13/2025), већ су биле заклоњене- папиром(навести који предмет )на начин да садржај регистраских ознака није био видљив и читљив, што је супротно члану 23. став 1. тачка 4) Одлуке о комуналном реду
+
+Казна у износу од 5000,00 динара
+Казнена одреба члана 64б став 4`
+  },
 ];
 
 let filteredPelceri = [...pelceriData];
@@ -17042,7 +17051,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v146';
+const KM_VERSION = 'v147';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
