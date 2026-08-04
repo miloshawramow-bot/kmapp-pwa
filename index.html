@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v152';
+  vText.textContent = 'v151';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v152</div>
+    <div class="side-menu-footer">KMapp · Beograd · v151</div>
   </div>
 </div>
 
@@ -3689,7 +3689,12 @@ loadServerUsers();
 function getKMUsers() {
   let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || 'null');
   if (!users) {
-    users = [];
+    users = [{ username: 'admin', password: 'admin', role: 'admin', created: Date.now() }];
+    localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
+  }
+  // Ensure test01 user always exists
+  if (!users.find(x => x.username.toLowerCase() === "test01")) {
+    users.push({ username: "test01", password: "test01", role: "user", created: Date.now() });
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
   const imenikUsers = getImenikUsers();
@@ -3719,10 +3724,7 @@ function updateCurrentUserDisplay() {
 }
 
 function isLoggedIn() {
-  // Proveri i localStorage flag i session token validnost
-  if (localStorage.getItem(KM_AUTH_KEY) !== '1') return false;
-  // Session mora biti validan (nije istekao, nije falsifikovan)
-  return validateSession();
+  return localStorage.getItem(KM_AUTH_KEY) === '1';
 }
 
 function showRegisterForm() {
@@ -3744,47 +3746,26 @@ async function doRegister() {
   const errEl = document.getElementById('register-error');
 
   if (u.length < 3) { errEl.textContent = 'Ime.Prezime mora imati min. 3 karaktera!'; errEl.style.display = 'block'; return; }
-  if (p.length < 4) { errEl.textContent = 'Lozinka mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
+  if (p.length < 4) { errEl.textContent = 'Broj telefona mora imati min. 4 karaktera!'; errEl.style.display = 'block'; return; }
   if (p !== p2) { errEl.textContent = 'Šifre se ne poklapaju!'; errEl.style.display = 'block'; return; }
-
-  // SIGURNOST: Registracija samo za zaposlene iz imenika
-  const normUser = s => s.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.+/g, '.');
-  const normU = normUser(u);
-  const imenikUsers = getImenikUsers();
-  const imMatch = imenikUsers.find(x => normUser(x.username) === normU);
-  if (!imMatch) {
-    errEl.textContent = 'Registracija je dozvoljena samo zaposlenima iz imenika!';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  // Ne dozvoli default lozinku (broj telefona) kao novu lozinku
-  if (imMatch.password && (p === imMatch.password || p.replace(/[^0-9+]/g,'') === imMatch.password.replace(/[^0-9+]/g,''))) {
-    errEl.textContent = 'Ne možete koristiti broj telefona kao lozinku! Birajte drugu.';
-    errEl.style.display = 'block';
-    return;
-  }
 
   const users = getKMUsers();
   if (users.find(x => x.username.toLowerCase() === u.toLowerCase())) {
     errEl.textContent = 'Ime.Prezime već postoji!'; errEl.style.display = 'block'; return;
   }
 
-  // Hešuj lozinku pre čuvanja
-  const hashedP = await secureHash(p);
-  
-  // Save to localStorage AND server (hešovana lozinka)
-  users.push({ username: u, password: hashedP, role: 'user', created: Date.now() });
+  // Save to localStorage AND server
+  users.push({ username: u, password: p, role: 'user', created: Date.now() });
   localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   
   // Save to server (fire and forget)
   fetch(KM_API_BASE + '/saveUser', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: u, password: hashedP, displayName: u, role: 'user' })
+    body: JSON.stringify({ username: u, password: p, displayName: u, role: 'user' })
   }).catch(e => console.error('Server save user error:', e));
   
-  serverUsers.push({ username: u, password: hashedP, displayName: u, role: 'user', source: 'server' });
+  serverUsers.push({ username: u, password: p, displayName: u, role: 'user', source: 'server' });
   errEl.style.display = 'none';
 
   // Auto-login
@@ -3841,71 +3822,53 @@ function resetPassword() {
   document.getElementById('forgot-username').value = '';
 }
 
-async function doLogin() {
+function doLogin() {
   const rawU = (document.getElementById('login-username').value || '').trim();
   const p = (document.getElementById('login-password').value || '').trim();
   const errEl = document.getElementById('login-error');
   const normPhone = ph => (ph || '').replace(/[^0-9+]/g, '');
+  // Normalizuj username: "S A" -> "s.a", "SA" -> "s.a", "S.A" -> "s.a"
   const normUser = s => s.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.+/g, '.');
   const u = normUser(rawU);
   
-  // Hešuj unetu lozinku pre poređenja
-  const hashedP = await secureHash(p);
-  
-  // 1. Probaj iz localStorage korisnika (lozinke su hešovane)
+  // 1. Probaj iz svih korisnika (localStorage + imenik)
   const users = getKMUsers();
-  let user = users.find(x => normUser(x.username) === u && x.password === hashedP);
-  
-  // 2. Probaj sa server korisnicima (lozinke hešovane na serveru)
+  let user = users.find(x => normUser(x.username) === u && x.password === p);
   if (!user) {
-    user = serverUsers.find(x => normUser(x.username) === u && x.password === hashedP);
+    user = users.find(x => normUser(x.username) === u && x.password && normPhone(x.password) === normPhone(p));
   }
   
-  // 3. Fallback: imenik — prvo prijavljivanje (plain phone se koristi samo za inicijalno prijavljivanje)
+  // 2. Fallback: direktno iz imenika (uvek radi, bez obzira na localStorage)
   if (!user) {
     const imenikUsers = getImenikUsers();
     const imUser = imenikUsers.find(x => normUser(x.username) === u);
     if (imUser && imUser.password) {
-      const imHash = await secureHash(imUser.password);
-      const inputHash = await secureHash(p);
-      // Dozvoli prijavu sa telefonom kao default lozinkom — ali označi da MORA promeniti
       if (imUser.password === p || normPhone(imUser.password) === normPhone(p)) {
         user = imUser;
-        user._mustChangePassword = true;
       }
     }
   }
   
-  // NEMA hardcoded admin/admin fallbacka
+  // 3. Fallback: admin sa default lozinkom
+  if (!user && u.toLowerCase() === 'admin' && p === 'admin') {
+    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
+  }
 
   if (user) {
     localStorage.setItem(KM_AUTH_KEY, '1');
     localStorage.setItem(KM_CURRENT_USER, user.username);
     localStorage.setItem(KM_DISPLAY_NAME, user.displayName || user.username);
-    
-    // Kreiraj session token (ne može se falsifikovati iz konzole)
-    const sessionToken = await createSessionToken(user.username, hashedP || await secureHash(p));
-    localStorage.setItem(KM_SESSION_KEY, sessionToken);
-    
+    // Set login flag IMMEDIATELY — porukeCheckNew will pick it up
     localStorage.setItem('km_pendingLoginLog', navigator.userAgent.substring(0, 120));
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
     var tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.style.display = 'none';
-    
-    // Ako je prvo prijavljivanje (default lozinka), obavezna promena lozinke
-    if (user._mustChangePassword) {
-      localStorage.setItem('km_must_change_pw', '1');
-      switchTab('docs');
-      if (typeof showToast === 'function') showToast('⚠️ Molimo promenite lozinku u Podešavanja!');
-      setTimeout(() => { if (typeof showToast === 'function') showToast('🔒 Default lozinka nije sigurna — promenite je!'); }, 3000);
-    } else {
-      switchTab('docs');
-      const displayName = user.displayName || user.username;
-      if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
-    }
-    
+    switchTab('docs');
+    const displayName = user.displayName || user.username;
+    if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     updateCurrentUserDisplay();
     checkAdminAccess();
+    // Start message polling and push subscription after login
     porukeStartPolling();
     subscribeToPush();
   } else {
@@ -3917,8 +3880,6 @@ async function doLogin() {
 function doLogout() {
   localStorage.removeItem(KM_AUTH_KEY);
   localStorage.removeItem(KM_CURRENT_USER);
-  localStorage.removeItem(KM_SESSION_KEY);
-  localStorage.removeItem(KM_DISPLAY_NAME);
   showLoginForm();
   switchTab('login');
   if (typeof showToast === 'function') showToast('👋 Odjavljeni ste');
@@ -17419,7 +17380,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v152';
+const KM_VERSION = 'v151';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17581,7 +17542,7 @@ function closePwdModal() {
   document.getElementById('pwd-change-modal').style.display = 'none';
 }
 
-async function changePassword() {
+function changePassword() {
   const oldPwd = document.getElementById('pwd-old').value;
   const newPwd = document.getElementById('pwd-new').value;
   const newPwd2 = document.getElementById('pwd-new2').value;
@@ -17590,48 +17551,36 @@ async function changePassword() {
   if (!currentUsername) { errEl.textContent = 'Greška: niste prijavljeni.'; errEl.style.display = 'block'; return; }
   if (newPwd.length < 4) { errEl.textContent = 'Nova lozinka mora imati min. 4 karaktera.'; errEl.style.display = 'block'; return; }
   if (newPwd !== newPwd2) { errEl.textContent = 'Nove lozinke se ne poklapaju.'; errEl.style.display = 'block'; return; }
-  
-  // Hešuj staru i novu lozinku
-  const oldHash = await secureHash(oldPwd);
-  const newHash = await secureHash(newPwd);
   const normPhone = ph => (ph || '').replace(/[^0-9+]/g, '');
-  
   let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || '[]');
   let userIdx = users.findIndex(x => x.username.toLowerCase() === currentUsername.toLowerCase());
   if (userIdx >= 0) {
-    // Poredi hešovanu lozinku
-    if (users[userIdx].password !== oldHash && users[userIdx].password !== oldPwd && normPhone(users[userIdx].password) !== normPhone(oldPwd)) {
+    if (users[userIdx].password !== oldPwd && normPhone(users[userIdx].password) !== normPhone(oldPwd)) {
       errEl.textContent = 'Trenutna lozinka nije tačna.'; errEl.style.display = 'block'; return;
     }
-    users[userIdx].password = newHash; // Čuvaj hešovanu lozinku
+    users[userIdx].password = newPwd;
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   } else {
     const imenikUsers = getImenikUsers();
     const imUser = imenikUsers.find(x => x.username.toLowerCase() === currentUsername.toLowerCase());
     if (!imUser) { errEl.textContent = 'Korisnik nije pronađen.'; errEl.style.display = 'block'; return; }
-    // Prvo prijavljivanje — dozvoli staru plain lozinku (telefon)
-    if (imUser.password !== oldPwd && normPhone(imUser.password) !== normPhone(oldPwd) && await secureHash(imUser.password) !== oldHash) {
+    if (imUser.password !== oldPwd && normPhone(imUser.password) !== normPhone(oldPwd)) {
       errEl.textContent = 'Trenutna lozinka nije tačna.'; errEl.style.display = 'block'; return;
     }
-    users.push({ username: imUser.username, password: newHash, displayName: imUser.displayName, role: 'user', source: 'local', created: Date.now() });
+    users.push({ username: imUser.username, password: newPwd, displayName: imUser.displayName, role: 'user', source: 'local', created: Date.now() });
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
-  // Obriši flag za obaveznu promenu lozinke
-  localStorage.removeItem('km_must_change_pw');
-  // Also save to server (hešovana lozinka)
+  // Also save to server for persistence
   const displayName = (users[userIdx] && users[userIdx].displayName) || currentUsername;
   fetch(KM_API_BASE + '/saveUser', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: currentUsername, password: newHash, displayName: displayName, role: 'user' })
+    body: JSON.stringify({ username: currentUsername, password: newPwd, displayName: displayName, role: 'user' })
   }).catch(e => console.error('Server save password error:', e));
   // Update local serverUsers cache
   let suIdx = serverUsers.findIndex(s => s.username.toLowerCase() === currentUsername.toLowerCase());
-  if (suIdx >= 0) serverUsers[suIdx].password = newHash;
-  else serverUsers.push({ username: currentUsername, password: newHash, displayName: displayName, role: 'user', source: 'server' });
-  // Ažuriraj session token sa novom hešovanom lozinkom
-  const sessionToken = await createSessionToken(currentUsername, newHash);
-  localStorage.setItem(KM_SESSION_KEY, sessionToken);
+  if (suIdx >= 0) serverUsers[suIdx].password = newPwd;
+  else serverUsers.push({ username: currentUsername, password: newPwd, displayName: displayName, role: 'user', source: 'server' });
   closePwdModal();
   showToast('✅ Lozinka uspešno promenjena!');
 }
@@ -17671,18 +17620,15 @@ async function adminCreateUser() {
   if (!username) { errEl.textContent = 'Unesite korisničko ime.'; errEl.style.display = 'block'; return; }
   if (!password) { errEl.textContent = 'Unesite lozinku.'; errEl.style.display = 'block'; return; }
   
-  // Hešuj lozinku pre slanja na server
-  const hashedP = await secureHash(password);
-  
   try {
     const res = await fetch(KM_API_BASE + '/saveUser', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password: hashedP, displayName: username, role: 'user' })
+      body: JSON.stringify({ username, password, displayName: username, role: 'user' })
     });
     const data = await res.json();
     if (data.success) {
-      serverUsers.push({ username, password: hashedP, displayName: username, role: 'user', source: 'server' });
+      serverUsers.push({ username, password, displayName: username, role: 'user', source: 'server' });
       document.getElementById('admin-user-username').value = '';
       document.getElementById('admin-user-password').value = '';
       errEl.style.display = 'none';
