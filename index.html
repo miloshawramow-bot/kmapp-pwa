@@ -1395,6 +1395,16 @@ initTapSound();
           </span>
         </label>
       </div>
+      <div class="settings-row">
+        <span class="s-icon s-icon-green"><svg fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        <span class="s-label">Ekran uvek aktivan</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="wakelock-toggle" onchange="toggleWakeLock()" style="opacity:0;width:0;height:0;">
+          <span id="wakelock-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
+            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+          </span>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -15917,6 +15927,7 @@ async function shareAkt(via) {
 
 // ===== PODEŠAVANJA =====
 function updateSettings() {
+  try { initWakeLock(); } catch(e) { console.error('WakeLock init:', e); }
   document.getElementById('doc-count').textContent = docs.length + ' doc.';
 }
 
@@ -17583,6 +17594,62 @@ function changePassword() {
   else serverUsers.push({ username: currentUsername, password: newPwd, displayName: displayName, role: 'user', source: 'server' });
   closePwdModal();
   showToast('✅ Lozinka uspešno promenjena!');
+}
+
+
+// ===== WAKE LOCK (Ekran uvek aktivan) =====
+let wakeLock = null;
+async function toggleWakeLock() {
+  const toggle = document.getElementById('wakelock-toggle');
+  const slider = document.getElementById('wakelock-slider');
+  const knob = slider ? slider.querySelector('span') : null;
+  if (toggle.checked) {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        localStorage.setItem('km_wakelock', '1');
+        if (slider) { slider.style.background = 'var(--blue)'; }
+        if (knob) { knob.style.left = '21px'; }
+        // Re-acquire on visibility change (browser releases wake lock when tab is hidden)
+        document.addEventListener('visibilitychange', reacquireWakeLock);
+        console.log('Wake Lock: aktiviran');
+      } else {
+        toggle.checked = false;
+        showToast('⚠️ Vaš pregledač ne podržava Wake Lock');
+      }
+    } catch(e) {
+      toggle.checked = false;
+      console.error('Wake Lock greška:', e);
+    }
+  } else {
+    if (wakeLock) {
+      wakeLock.release();
+      wakeLock = null;
+    }
+    localStorage.removeItem('km_wakelock');
+    if (slider) { slider.style.background = 'var(--border)'; }
+    if (knob) { knob.style.left = '3px'; }
+    document.removeEventListener('visibilitychange', reacquireWakeLock);
+    console.log('Wake Lock: deaktiviran');
+  }
+}
+async function reacquireWakeLock() {
+  if (document.visibilityState === 'visible' && localStorage.getItem('km_wakelock') === '1') {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock: ponovo aktiviran');
+      }
+    } catch(e) { console.error('Wake Lock re-acquire:', e); }
+  }
+}
+function initWakeLock() {
+  const toggle = document.getElementById('wakelock-toggle');
+  if (!toggle) return;
+  if (localStorage.getItem('km_wakelock') === '1') {
+    toggle.checked = true;
+    toggleWakeLock();
+  }
 }
 
 // ===== ADMIN PANEL =====
