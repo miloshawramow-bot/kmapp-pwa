@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v147';
+  vText.textContent = 'v148';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v147</div>
+    <div class="side-menu-footer">KMapp · Beograd · v148</div>
   </div>
 </div>
 
@@ -2620,7 +2620,7 @@ function switchTab(name) {
       try { (typeof loadServerUsers === 'function' ? loadServerUsers() : Promise.resolve()).then(() => adminRenderUsersList()).catch(()=>{}); } catch(e) { console.error(e); }
   
     }
-    if (name === 'pelceri') { loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); }
+    if (name === 'pelceri') { renderPelceri(pelceriData); loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); }
     if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
     if (name === 'imenik') initImenik();
     if (name === 'kalendar') renderCalendar();
@@ -17051,7 +17051,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v147';
+const KM_VERSION = 'v148';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17426,7 +17426,7 @@ let serverPelceriLoaded = false;
 async function loadServerPelceri() {
   if (serverPelceriLoaded) return;
   try {
-    const res = await fetch(KM_API_BASE + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const ctrl = new AbortController(); const timeout = setTimeout(() => ctrl.abort(), 5000); const res = await fetch(KM_API_BASE + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: ctrl.signal }); clearTimeout(timeout);
     const data = await res.json();
     if (data.success && data.pelceri) {
       serverPelceri = data.pelceri;
