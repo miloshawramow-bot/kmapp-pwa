@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v150';
+  vText.textContent = 'v151';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v150</div>
+    <div class="side-menu-footer">KMapp · Beograd · v151</div>
   </div>
 </div>
 
@@ -16822,7 +16822,7 @@ const cestiPrekrsajiData = [
       { naziv: 'Истекло одобрење (ДИРЕКТОР)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 2', kazna: '10.000 динара' },
       { naziv: 'Истекло одобрење (ПРЕДУЗЕТНИК)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 3', kazna: '50.000 динара' },
       { naziv: 'Истекло одобрење (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 4', kazna: '10.000 динара' },
-      { nazив: 'Издавање баште у закуп (ДОО)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 1, тачка 2', kazna: '60.000 динара' },
+      { naziv: 'Издавање баште у закуп (ДОО)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 1, тачка 2', kazna: '60.000 динара' },
       { naziv: 'Издавање баште у закуп (ДИРЕКТОР)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 2', kazna: '10.000 динара' },
       { naziv: 'Издавање баште у закуп (ПРЕДУЗЕТНИК)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 3', kazna: '40.000 динара' },
     ]
@@ -17380,7 +17380,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v150';
+const KM_VERSION = 'v151';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
