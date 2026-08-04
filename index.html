@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v149';
+  vText.textContent = 'v150';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v149</div>
+    <div class="side-menu-footer">KMapp · Beograd · v150</div>
   </div>
 </div>
 
@@ -1688,6 +1688,12 @@ initTapSound();
 <div class="screen" id="screen-pelceri" style="display: none;">
   <div style="padding:10px 12px;">
 
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button id="pelceri-sub-primeri" onclick="switchPelceriSub('primeri')" style="flex:1;border:1.5px solid var(--navy);background:var(--navy);color:white;font-weight:700;font-size:0.78rem;padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">Примери описа</button>
+      <button id="pelceri-sub-cesti" onclick="switchPelceriSub('cesti')" style="flex:1;border:1.5px solid var(--border);background:white;color:var(--text);font-weight:700;font-size:0.78rem;padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">Чести прекршаји</button>
+    </div>
+
+    <div id="pelceri-primeri-section">
     <div style="font-size:0.7rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:4px 2px;">
       Примери чињеничних описа
     </div>
@@ -1699,6 +1705,18 @@ initTapSound();
     </div>
 
     <div id="pelceri-list"></div>
+    </div>
+
+    <div id="pelceri-cesti-section" style="display:none;">
+      <div style="font-size:0.7rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:4px 2px;margin-bottom:8px;">
+        Чести прекршаји — материјалне и казнене одредбе
+      </div>
+      <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;margin-bottom:10px;">
+        <span style="color:var(--muted);">🔍</span>
+        <input type="text" id="cesti-prekrsaji-search" placeholder="Претражи прекршаје..." oninput="filterCestiPrekrsaji()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
+      </div>
+      <div id="cesti-prekrsaji-list"></div>
+    </div>
   </div>
 </div>
 
@@ -2620,7 +2638,7 @@ function switchTab(name) {
       try { (typeof loadServerUsers === 'function' ? loadServerUsers() : Promise.resolve()).then(() => adminRenderUsersList()).catch(()=>{}); } catch(e) { console.error(e); }
   
     }
-    if (name === 'pelceri') { renderPelceri(pelceriData); loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); }
+    if (name === 'pelceri') { renderPelceri(pelceriData); loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); if (!document.getElementById('cesti-prekrsaji-list').innerHTML) renderCestiPrekrsaji(); }
     if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
     if (name === 'imenik') initImenik();
     if (name === 'kalendar') renderCalendar();
@@ -16633,6 +16651,317 @@ function renderPelceri(data) {
   `).join('');
 }
 
+
+// ===== ČESTI PREKRŠAJI DATA =====
+const cestiPrekrsajiData = [
+  {
+    kategorija: 'Одлука о комуналном реду',
+    stavke: [
+      { naziv: 'Паркирање на ЈП – ометање коришћења', materijalna: 'Члан 23, став 1, тачка 2, алинеја 5', kaznena: 'Члан 64в, став 4, тачка 2', kazna: '5.000 динара' },
+      { naziv: 'Трототоар, колски улаз/излаз, улаз у зграду, зона успореног саобраћаја', materijalna: 'Члан 23, став 1, тачка 2, алинеја 1', kaznena: 'Члан 64в, став 4, тачка 2', kazna: '5.000 динара' },
+      { naziv: 'ЈГПП', materijalna: 'Члан 23, став 1, тачка 2, алинеја 4', kaznena: 'Члан 64в, став 3', kazna: '10.000 динара' },
+      { naziv: 'Пешачки прелаз, пеш. зона, бицикл. стаза, жута трака, трамвајске шине', materijalna: 'Члан 23, став 1, тачка 2, алинеја 2', kaznena: 'Члан 64в, став 1, тачка 2', kazna: '25.000 динара' },
+      { naziv: 'Нерегистрована возила', materijalna: 'Члан 23, став 1, тачка 4', kaznena: 'Члан 64б, став 4', kazna: '5.000 динара' },
+      { naziv: 'Јавна зелена површина (паркови, скверови, зелена површина дуж пута)', materijalna: 'Члан 23, став 1, тачка 1', kaznena: 'Члан 64в, став 1, тачка 1', kazna: '25.000 динара' },
+      { naziv: 'Јавна зелена површина (травњаци, дрвореди)', materijalna: 'Члан 23, став 1, тачка 1', kaznena: 'Члан 64в, став 2', kazna: '15.000 динара' },
+      { naziv: 'Јавна зелена површина (зелена површина око стамбених зграда)', materijalna: 'Члан 23, став 1, тачка 1', kaznena: 'Члан 64в, став 4, тачка 1', kazna: '5.000 динара' },
+      { naziv: 'Ван пијачна продаја', materijalna: 'Члан 22, став 1', kaznena: 'Члан 64, став 4', kazna: '15.000 динара' },
+      { naziv: 'Заузеће ЈП', materijalna: 'Члан 22, став 3', kaznena: 'Члан 64б, став 4', kazna: '5.000 динара' },
+      { naziv: 'Улични свирачи, уметнички програм', materijalna: 'Члан 59а, став 1', kaznena: 'Члан 64а, став 4', kazna: '10.000 динара' },
+      { naziv: 'Графити', materijalna: 'Члан 9, став 1', kaznena: 'Члан 64г, став 1', kazna: '10.000 динара' },
+      { naziv: 'Графити – малољетник до 14 год. (казна родитељу)', materijalna: 'Члан 9, став 1', kaznena: 'Члан 64г, став 2', kazna: '10.000 динара' },
+      { naziv: 'Излевање кондеза климе (ДОО)', materijalna: 'Члан 15, став 3', kaznena: 'Члан 64б, став 1, тачка 11', kazna: '50.000 динара' },
+      { naziv: 'Излевање кондеза климе (ДИРЕКТОР)', materijalna: 'Члан 15, став 3', kaznena: 'Члан 64б, став 2', kazna: '5.000 динара' },
+      { naziv: 'Излевање кондеза климе (ПРЕДУЗЕТНИК)', materijalna: 'Члан 15, став 3', kaznena: 'Члан 64б, став 3', kazna: '25.000 динара' },
+      { naziv: 'Излевање кондеза климе (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 15, став 3', kaznena: 'Члан 64б, став 4', kazna: '5.000 динара' },
+      { naziv: 'Стубићи (ДОО)', materijalna: 'Члан 22, став 2', kaznena: 'Члан 64, став 1, тачка 5', kazna: '150.000 динара' },
+      { naziv: 'Стубићи (ДИРЕКТОР)', materijalna: 'Члан 22, став 2', kaznena: 'Члан 64, став 2', kazna: '25.000 динара' },
+      { naziv: 'Стубићи (ПРЕДУЗЕТНИК)', materijalna: 'Члан 22, став 2', kaznena: 'Члан 64, став 3', kazna: '75.000 динара' },
+      { naziv: 'Стубићи (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 22, став 2', kaznena: 'Члан 64, став 4', kazna: '15.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о јавним паркиралиштима',
+    stavke: [
+      { naziv: 'Паркирање на резервисаном месту (особе са инвалидитетом)', materijalna: 'Члан 19, став 1, тачка а', kaznena: 'Члан 23б, став 5', kazna: '5.000 динара' },
+      { naziv: 'Нерегистровано возило на регуларном паркинг месту', materijalna: 'Члан 19, став 1, тачка б', kaznena: 'Члан 23б, став 4', kazna: '5.000 динара' },
+      { naziv: 'Заузимање паркинг места огрђивањем / ометање паркирања', materijalna: 'Члан 19, став 1, тачка г', kaznena: 'Члан 23б, став 5', kazna: '5.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о општим правилима кућног реда',
+    stavke: [
+      { naziv: 'Бука из стана (ДОО)', materijalna: 'Члан 5', kaznena: 'Члан 39, став 2', kazna: '50.000 динара' },
+      { naziv: 'Бука из стана (ДИРЕКТОР)', materijalna: 'Члан 5', kaznena: 'Члан 39, став 2', kazna: '5.000 динара' },
+      { naziv: 'Бука из стана (ПРЕДУЗЕТНИК)', materijalna: 'Члан 5', kaznena: 'Члан 39, став 2', kazna: '25.000 динара' },
+      { naziv: 'Бука из стана (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 5', kaznena: 'Члан 39, став 1, тачка 2', kazna: '5.000 динара' },
+      { naziv: 'Бука од кућних љубимаца, прљање зај. просторија', materijalna: 'Члан 11', kaznena: 'Члан 39, став 1, тачка 8', kazna: '5.000 динара' },
+      { naziv: 'Заузеће заједничких просторија, ходника', materijalna: 'Члан 18, став 3', kaznena: 'Члан 39, став 1, тачка 18', kazna: '5.000 динара' },
+      { naziv: 'Прљање заједничких просторија', materijalna: 'Члан 18, став 4', kaznena: 'Члан 39, став 1, тачка 18', kazna: '5.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о држању домаћих животиња и кућних љубимаца',
+    stavke: [
+      { naziv: 'Пси и мачке на тераси/лођи стана без надзора', materijalna: 'Члан 13, став 2', kaznena: 'Члан 34, став 1, тачка 11', kazna: '20.000 динара' },
+      { naziv: 'Пси без поводника на ЈП (коловоз, тротоар, пеш. зона)', materijalna: 'Члан 19, став 1', kaznena: 'Члан 36, став 1, тачка 2', kazna: '10.000 динара' },
+      { naziv: 'Пси без поводника у парку и зеленим површинама', materijalna: 'Члан 19, став 1', kaznena: 'Члан 36, став 1, тачка 2', kazna: '10.000 динара' },
+      { naziv: 'Пси без поводника у близини дечијег игралишта', materijalna: 'Члан 20, став 3', kaznena: 'Члан 36, став 1, тачка 6', kazna: '10.000 динара' },
+      { naziv: 'Опасан пас без поводника и корпе на њушци', materijalna: 'Члан 19а, став 1', kaznena: 'Члан 36, став 1, тачка 3', kazna: '10.000 динара' },
+      { naziv: 'Прљање ЈП од стране паса и мачака', materijalna: 'Члан 23, став 1', kaznena: 'Члан 36, став 1, тачка 9', kazna: '10.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о радном времену угоститељских објеката',
+    stavke: [
+      { naziv: 'Бука из УО (ДОО)', materijalna: 'Члан 4, став 4', kaznena: 'Члан 19, став 1, алинеја 1', kazna: '150.000 динара' },
+      { naziv: 'Бука из УО (ДИРЕКТОР)', materijalna: 'Члан 4, став 4', kaznena: 'Члан 19, став 2', kazna: '25.000 динара' },
+      { naziv: 'Бука из УО (ПРЕДУЗЕТНИК)', materijalna: 'Члан 4, став 4', kaznena: 'Члан 19, став 3', kazna: '75.000 динара' },
+      { naziv: 'Стамбене зграде – музика после мах. доз. времена (ДОО)', materijalna: 'Члан 8, став 2', kaznena: 'Члан 19, став 1, алинеја 2', kazna: '150.000 динара' },
+      { naziv: 'Стамбене зграде – музика после мах. доз. времена (ДИРЕКТОР)', materijalna: 'Члан 8, став 2', kaznena: 'Члан 19, став 2', kazna: '25.000 динара' },
+      { naziv: 'Стамбене зграде – музика после мах. доз. времена (ПРЕДУЗЕТНИК)', materijalna: 'Члан 8, став 2', kaznena: 'Члан 19, став 3', kazna: '75.000 динара' },
+      { naziv: 'Зетска, Цетињска – музика после мах. доз. времена (ДОО)', materijalna: 'Члан 8а, став 3', kaznena: 'Члан 19, став 1, алинеја 3', kazna: '150.000 динара' },
+      { naziv: 'Зетска, Цетињска – музика (ДИРЕКТОР)', materijalna: 'Члан 8а, став 3', kaznena: 'Члан 19, став 2', kazna: '25.000 динара' },
+      { naziv: 'Зетска, Цетињска – музика (ПРЕДУЗЕТНИК)', materijalna: 'Члан 8а, став 3', kaznena: 'Члан 19, став 3', kazna: '75.000 динара' },
+      { naziv: 'Скадарлија – није акустична музика (ДОО)', materijalna: 'Члан 8а, став 4', kaznena: 'Члан 19, став 1, алинеја 3', kazna: '150.000 динара' },
+      { naziv: 'Скадарлија – није акустична музика (ДИРЕКТОР)', materijalna: 'Члан 8а, став 4', kaznena: 'Члан 19, став 2', kazna: '25.000 динара' },
+      { naziv: 'Скадарлија – није акустична музика (ПРЕДУЗЕТНИК)', materijalna: 'Члан 8а, став 4', kaznena: 'Члан 19, став 3', kazna: '75.000 динара' },
+      { naziv: 'Утицај музике из УО (ДОО)', materijalna: 'Члан 12, став 2', kaznena: 'Члан 19, став 1, алинеја 4', kazna: '150.000 динара' },
+      { naziv: 'Утицај музике из УО (ДИРЕКТОР)', materijalna: 'Члан 12, став 2', kaznena: 'Члан 19, став 2', kazna: '25.000 динара' },
+      { naziv: 'Утицај музике из УО (ПРЕДУЗЕТНИК)', materijalna: 'Члан 12, став 2', kaznena: 'Члан 19, став 3', kazna: '75.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о радном времену УО – ГО Младеновац',
+    stavke: [
+      { naziv: 'Музика после мах. доз. времена (ДОО)', materijalna: 'Члан 10', kaznena: 'Члан 13, став 1, алинеја 3', kazna: '150.000 динара' },
+      { naziv: 'Музика после мах. доз. времена (ДИРЕКТОР)', materijalna: 'Члан 10', kaznena: 'Члан 13, став 2', kazna: '25.000 динара' },
+      { naziv: 'Музика после мах. доз. времена (ПРЕДУЗЕТНИК)', materijalna: 'Члан 10', kaznena: 'Члан 13, став 3', kazna: '75.000 динара' },
+      { naziv: 'Бука из УО (ДОО)', materijalna: 'Члан 5, став 3 и 4', kaznena: 'Члан 13, став 1, алинеја 1', kazna: '150.000 динара' },
+      { naziv: 'Бука из УО (ДИРЕКТОР)', materijalna: 'Члан 5, став 3 и 4', kaznena: 'Члан 13, став 2', kazna: '25.000 динара' },
+      { naziv: 'Бука из УО (ПРЕДУЗЕТНИК)', materijalna: 'Члан 5, став 3 и 4', kaznena: 'Члан 13, став 3', kazna: '75.000 динара' },
+      { naziv: 'Прекорачење радног времена УО (ДОО)', materijalna: 'Члан 8, став 2', kaznena: 'Члан 13, став 1, алинеја 2', kazna: '150.000 динара' },
+      { naziv: 'Прекорачење радног времена УО (ДИРЕКТОР)', materijalna: 'Члан 8, став 2', kaznena: 'Члан 13, став 2', kazna: '25.000 динара' },
+      { naziv: 'Прекорачење радног времена УО (ПРЕДУЗЕТНИК)', materijalna: 'Члан 8, став 2', kaznena: 'Члан 13, став 3', kazna: '75.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о такси превозу',
+    stavke: [
+      { naziv: 'Паркирање ван такси стајалишта (ПРЕДУЗЕТНИК)', materijalna: 'Члан 26, став 1', kaznena: 'Члан 43, став 4', kazna: '20.000 динара' },
+      { naziv: 'Паркирање ван такси стајалишта – хотел, железничка/бус станица, аеродром', materijalna: 'Члан 26, став 2', kaznena: 'Члан 42, став 1, тачка 12', kazna: '40.000 динара' },
+      { naziv: 'Возило без потврде о класификацији и погодности', materijalna: 'Члан 30, став 3', kaznena: 'Члан 42, став 1, тачка 13', kazna: '40.000 динара' },
+      { naziv: 'Паркирано такси возило на стајалишту, возач није у возилу', materijalna: 'Члан 20, став 4', kaznena: 'Члан 43, став 4', kazna: '20.000 динара' },
+      { naziv: 'Без полисе осигурања путника', materijalna: 'Члан 9, став 1, тачка 2', kaznena: 'Члан 42, став 1, тачка 4', kazna: '40.000 динара' },
+      { naziv: 'Без ТХ таблица', materijalna: 'Члан 9, став 1, тачка 1', kaznena: 'Члан 42, став 1, тачка 3', kazna: '40.000 динара' },
+      { naziv: 'Неисправван, небаждарен таксиметар', materijalna: 'Члан 9, став 1, тачка 3', kaznena: 'Члан 42, став 1, тачка 5', kazna: '40.000 динара' },
+      { naziv: 'Без вјетробранске налепнице', materijalna: 'Члан 9, став 1, тачка 5', kaznena: 'Члан 43, став 4', kazna: '20.000 динара' },
+      { naziv: 'Без важећег ценовника', materijalna: 'Члан 9, став 1, тачка 4', kaznena: 'Члан 43, став 4', kazna: '20.000 динара' },
+      { naziv: 'Нечитка кровна ознака', materijalna: 'Члан 17, став 7', kaznena: 'Члан 42, став 1, тачка 7', kazna: '40.000 динара' },
+      { naziv: 'Непоседовање такси дозиволе, потврде и докумената', materijalna: 'Члан 22', kaznena: 'Члан 43, став 4', kazna: '20.000 динара' },
+      { naziv: 'Неприкладна одећа и обућа', materijalna: 'Члан 29, тачка 4', kaznena: 'Члан 43, став 4', kazna: '20.000 динара' },
+      { naziv: 'Ометање ком. милиционара приликом поступања', materijalna: 'Члан 38, став 1', kaznena: 'Члан 42, став 1, тачка 17', kazna: '40.000 динара' },
+      { naziv: 'Таксиста одбија наређење да да документа на увид', materijalna: 'Члан 38, став 2', kaznena: 'Члан 42, став 1, тачка 17', kazna: '40.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о одржавању чистоће',
+    stavke: [
+      { naziv: 'Паљење смећа у контейнеру, бацање жара (ДОО)', materijalna: 'Члан 14, став 1', kaznena: 'Члан 52а, став 1, тачка 1', kazna: '100.000 динара' },
+      { naziv: 'Паљење смећа у контейнеру (ДИРЕКТОР)', materijalna: 'Члан 14, став 1', kaznena: 'Члан 52а, став 2', kazna: '10.000 динара' },
+      { naziv: 'Паљење смећа у контейнеру (ПРЕДУЗЕТНИК)', materijalna: 'Члан 14, став 1', kaznena: 'Члан 52а, став 3', kazna: '50.000 динара' },
+      { naziv: 'Паљење смећа у контейнеру (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 14, став 1', kaznena: 'Члан 52б, став 1, тачка 1', kazna: '10.000 динара' },
+      { naziv: 'Прљаво возило од блата, излази са складишта/градилишта (ДОО)', materijalna: 'Члан 33', kaznena: 'Члан 51, став 1, тачка 7', kazna: '150.000 динара' },
+      { naziv: 'Прљаво возило (ДИРЕКТОР)', materijalna: 'Члан 33', kaznena: 'Члан 51, став 2', kazna: '25.000 динара' },
+      { naziv: 'Прљаво возило (ПРЕДУЗЕТНИК)', materijalna: 'Члан 33', kaznena: 'Члан 51, став 4', kazna: '75.000 динара' },
+      { naziv: 'Прљаво возило (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 33', kaznena: 'Члан 51, став 3', kazna: '25.000 динара' },
+      { naziv: 'Неуклањање отпатака после сече дрвећа, кошења травњака (ДОО)', materijalna: 'Члан 35', kaznena: 'Члан 51, став 1, тачка 8', kazna: '150.000 динара' },
+      { naziv: 'Неуклањање отпатака (ДИРЕКТОР)', materijalna: 'Члан 35', kaznena: 'Члан 51, став 2', kazna: '25.000 динара' },
+      { naziv: 'Неуклањање отпатака (ПРЕДУЗЕТНИК)', materijalna: 'Члан 35', kaznena: 'Члан 51, став 4', kazna: '75.000 динара' },
+      { naziv: 'Неуклањање отпатака (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 35', kaznena: 'Члан 51, став 3', kazna: '25.000 динара' },
+      { naziv: 'Превоз огревног/градитељског материјала који се расипа (ДОО)', materijalna: 'Члан 37', kaznena: 'Члан 51, став 1, тачка 9', kazna: '150.000 динара' },
+      { naziv: 'Превоз расипног материјала (ДИРЕКТОР)', materijalna: 'Члан 37', kaznena: 'Члан 51, став 2', kazna: '25.000 динара' },
+      { naziv: 'Превоз расипног материјала (ПРЕДУЗЕТНИК)', materijalna: 'Члан 37', kaznena: 'Члан 51, став 4', kazna: '75.000 динара' },
+      { naziv: 'Превоз расипног материјала (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 37', kaznena: 'Члан 51, став 3', kazna: '25.000 динара' },
+      { naziv: 'Не чишћење ЈП око градилишта, неуклањање шута (ДОО)', materijalna: 'Члан 36', kaznena: 'Члан 52а, став 1, тачка 5', kazna: '100.000 динара' },
+      { naziv: 'Не чишћење ЈП око градилишта (ДИРЕКТОР)', materijalna: 'Члан 36', kaznena: 'Члан 52а, став 2', kazna: '10.000 динара' },
+      { naziv: 'Не чишћење ЈП око градилишта (ПРЕДУЗЕТНИК)', materijalna: 'Члан 36', kaznena: 'Члан 52а, став 3', kazna: '50.000 динара' },
+      { naziv: 'Не чишћење ЈП око градилишта (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 36', kaznena: 'Члан 52б, став 1, тачка 5', kazna: '10.000 динара' },
+      { naziv: 'Излевање отпадних вода на ЈП, бацање смећа (ДОО)', materijalna: 'Члан 34', kaznena: 'Члан 52а, став 1, тачка 4', kazna: '100.000 динара' },
+      { naziv: 'Излевање отпадних вода (ДИРЕКТОР)', materijalna: 'Члан 34', kaznena: 'Члан 52а, став 2', kazna: '10.000 динара' },
+      { naziv: 'Излевање отпадних вода (ПРЕДУЗЕТНИК)', materijalna: 'Члан 34', kaznena: 'Члан 52а, став 3', kazna: '50.000 динара' },
+      { naziv: 'Излевање отпадних вода (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 34', kaznena: 'Члан 52б, став 1, тачка 4', kazna: '10.000 динара' },
+      { naziv: 'Папирићи, опуци, плување по ЈП', materijalna: 'Члан 34, став 1, тачка 1', kaznena: 'Члан 52б, став 1, тачка 4', kazna: '10.000 динара' },
+      { naziv: 'Брње по контейнерима и вадење отпадака', materijalna: 'Члан 34, став 1, тачка 11', kaznena: 'Члан 52б, став 1, тачка 4', kazna: '10.000 динара' },
+      { naziv: 'Померање контейнера са места', materijalna: 'Члан 11, став 4 и члан 12, став 5,6,7', kaznena: 'Члан 52, став 3', kazna: '10.000 динара' },
+      { naziv: 'Одлагање амб. отпада поред контейнера (ДОО)', materijalna: 'Члан 11а, став 3', kaznena: 'Члан 51, став 1, тачка 41', kazna: '150.000 динара' },
+      { naziv: 'Одлагање амб. отпада поред контейнера (ДИРЕКТОР)', materijalna: 'Члан 11а, став 3', kaznena: 'Члан 51, став 2', kazna: '25.000 динара' },
+      { naziv: 'Одлагање амб. отпада поред контейнера (ПРЕДУЗЕТНИК)', materijalna: 'Члан 11а, став 3', kaznena: 'Члан 51, став 4', kazna: '75.000 динара' },
+      { naziv: 'Одлагање амб. отпада поред контейнера (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 11а, став 3', kaznena: 'Члан 51, став 3', kazna: '25.000 динара' },
+      { naziv: 'Паљење ватре на ЈП', materijalna: 'Члан 34, став 1, тачка 13', kaznena: 'Члан 52б, став 1, тачка 4', kazna: '10.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о јавном линијском превозу путника',
+    stavke: [
+      { naziv: 'Возило: лети клима изнад 25°, зими грејање испод 10° (ДОО/ПРЕДУЗЕТНИК)', materijalna: 'Члан 30, став 3', kaznena: 'Члан 52, став 1, тачка 3', kazna: '150.000 динара' },
+      { naziv: 'Возило: климатизација (ДИРЕКТОР)', materijalna: 'Члан 30, став 3', kaznena: 'Члан 52, став 2', kazna: '20.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о постављању баште угоститељског објекта',
+    stavke: [
+      { naziv: 'Башта без одобрења (ДОО)', materijalna: 'Члан 4', kaznena: 'Члан 55, став 1, тачка 1', kazna: '100.000 динара' },
+      { naziv: 'Башта без одобрења (ДИРЕКТОР)', materijalna: 'Члан 4', kaznena: 'Члан 55, став 2', kazna: '10.000 динара' },
+      { naziv: 'Башта без одобрења (ПРЕДУЗЕТНИК)', materijalna: 'Члан 4', kaznena: 'Члан 55, став 3', kazna: '50.000 динара' },
+      { naziv: 'Башта без одобрења (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 4', kaznena: 'Члан 55, став 4', kazna: '10.000 динара' },
+      { naziv: 'Башта супротно одобрењу (ДОО)', materijalna: 'Члан 48, став 1, тачка 1', kaznena: 'Члан 55а, став 1, тачка 1', kazna: '60.000 динара' },
+      { naziv: 'Башта супротно одобрењу (ДИРЕКТОР)', materijalna: 'Члан 48, став 1, тачка 1', kaznena: 'Члан 55а, став 2', kazna: '10.000 динара' },
+      { naziv: 'Башта супротно одобрењу (ПРЕДУЗЕТНИК)', materijalna: 'Члан 48, став 1, тачка 1', kaznena: 'Члан 55а, став 3', kazna: '40.000 динара' },
+      { naziv: 'Истекло одобрење, башта није уклоњена (ДОО)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 1, тачка 2', kazna: '100.000 динара' },
+      { naziv: 'Истекло одобрење (ДИРЕКТОР)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 2', kazna: '10.000 динара' },
+      { naziv: 'Истекло одобрење (ПРЕДУЗЕТНИК)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 3', kazna: '50.000 динара' },
+      { naziv: 'Истекло одобрење (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 48, став 1, тачка 4', kaznena: 'Члан 55, став 4', kazna: '10.000 динара' },
+      { nazив: 'Издавање баште у закуп (ДОО)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 1, тачка 2', kazna: '60.000 динара' },
+      { naziv: 'Издавање баште у закуп (ДИРЕКТОР)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 2', kazna: '10.000 динара' },
+      { naziv: 'Издавање баште у закуп (ПРЕДУЗЕТНИК)', materijalna: 'Члан 49', kaznena: 'Члан 55а, став 3', kazna: '40.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Одлука о оглашавању',
+    stavke: [
+      { naziv: 'Реклама без дозволе на фасадама, излозима (ДОО)', materijalna: 'Члан 49', kaznena: 'Члан 59, став 1, алинеја 2', kazna: '100.000 динара' },
+      { naziv: 'Реклама без дозволе (ДИРЕКТОР)', materijalna: 'Члан 49', kaznena: 'Члан 59, став 3', kazna: '10.000 динара' },
+      { naziv: 'Реклама без дозволе (ПРЕДУЗЕТНИК)', materijalna: 'Члан 49', kaznena: 'Члан 59, став 2', kazna: '60.000 динара' },
+      { naziv: 'Реклама без дозволе (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 49', kaznena: 'Члан 59, став 3', kazna: '10.000 динара' },
+      { naziv: 'Реклама супротно дозволи (ДОО)', materijalna: 'Члан 49', kaznena: 'Члан 60, став 1, алинеја 1', kazna: '50.000 динара' },
+      { naziv: 'Реклама супротно дозволи (ДИРЕКТОР)', materijalna: 'Члан 49', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Реклама супротно дозволи (ПРЕДУЗЕТНИК)', materijalna: 'Члан 49', kaznena: 'Члан 60, став 2', kazna: '30.000 динара' },
+      { naziv: 'Реклама супротно дозволи (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 49', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Посебан објекат на месту које није утврђено планом (ДОО)', materijalna: 'Члан 16', kaznena: 'Члан 59, став 1, алинеја 1', kazna: '100.000 динара' },
+      { naziv: 'Посебан објекат (ДИРЕКТОР)', materijalna: 'Члан 16', kaznena: 'Члан 59, став 3', kazna: '10.000 динара' },
+      { naziv: 'Посебан објекат (ПРЕДУЗЕТНИК)', materijalna: 'Члан 16', kaznena: 'Члан 59, став 2', kazna: '60.000 динара' },
+      { naziv: 'Посебан објекат (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 16', kaznena: 'Члан 59, став 3', kazna: '10.000 динара' },
+      { naziv: 'Оглашавање на средству без дозволе (ДОО)', materijalna: 'Члан 56, став 1, тачка 6', kaznena: 'Члан 59, став 1, алинеја 4', kazna: '100.000 динара' },
+      { naziv: 'Оглашавање на средству без дозволе (ДИРЕКТОР)', materijalna: 'Члан 56, став 1, тачка 6', kaznena: 'Члан 59, став 3', kazna: '10.000 динара' },
+      { naziv: 'Оглашавање на средству без дозволе (ПРЕДУЗЕТНИК)', materijalna: 'Члан 56, став 1, тачка 6', kaznena: 'Члан 59, став 2', kazna: '60.000 динара' },
+      { naziv: 'Оглашавање на средству без дозволе (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 56, став 1, тачка 6', kaznena: 'Члан 59, став 3', kazna: '10.000 динара' },
+      { naziv: 'Звучно оглашавање на отвореном (ДОО)', materijalna: 'Члан 56, став 1, тачка 3', kaznena: 'Члан 60, став 1, алинеја 2', kazna: '50.000 динара' },
+      { naziv: 'Звучно оглашавање (ДИРЕКТОР)', materijalna: 'Члан 56, став 1, тачка 3', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Звучно оглашавање (ПРЕДУЗЕТНИК)', materijalna: 'Члан 56, став 1, тачка 3', kaznena: 'Члан 60, став 2', kazna: '30.000 динара' },
+      { naziv: 'Звучно оглашавање (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 56, став 1, тачка 3', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Светлосно оглашавање које омета (ДОО)', materijalna: 'Члан 56, став 1, тачка 4', kaznena: 'Члан 60, став 1, алинеја 2', kazna: '50.000 динара' },
+      { naziv: 'Светлосно оглашавање (ДИРЕКТОР)', materijalna: 'Члан 56, став 1, тачка 4', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Светлосно оглашавање (ПРЕДУЗЕТНИК)', materijalna: 'Члан 56, став 1, тачка 4', kaznena: 'Члан 60, став 2', kazna: '30.000 динара' },
+      { naziv: 'Светлосно оглашавање (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 56, став 1, тачка 4', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Реклама на саобраћајним знацима, градском мобилијару (ДОО)', materijalna: 'Члан 56, став 1, тачка 5', kaznena: 'Члан 60, став 1, алинеја 2', kazna: '50.000 динара' },
+      { naziv: 'Реклама на саобраћајним знацима (ДИРЕКТОР)', materijalna: 'Члан 56, став 1, тачка 5', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+      { naziv: 'Реклама на саобраћајним знацима (ПРЕДУЗЕТНИК)', materijalna: 'Члан 56, став 1, тачка 5', kaznena: 'Члан 60, став 2', kazna: '30.000 динара' },
+      { naziv: 'Реклама на саобраћајним знацима (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 56, став 1, тачка 5', kaznena: 'Члан 60, став 3', kazna: '10.000 динара' },
+    ]
+  },
+  {
+    kategorija: 'Закон о комуналној милицији',
+    stavke: [
+      { naziv: 'Ометање ком. милиционара у обављању послова (ДОО)', materijalna: 'Члан 51, став 1, тачка 1', kaznena: 'Члан 51, став 1, тачка 1', kazna: '100.000 динара' },
+      { naziv: 'Ометање (ДИРЕКТОР)', materijalna: 'Члан 51, став 1, тачка 1', kaznena: 'Члан 51, став 1, тачка 3', kazna: '20.000 динара' },
+      { naziv: 'Ометање (ПРЕДУЗЕТНИК)', materijalna: 'Члан 51, став 1, тачка 1', kaznena: 'Члан 51, став 1, тачка 2', kazna: '30.000 динара' },
+      { naziv: 'Ометање (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 51, став 1, тачка 1', kaznena: 'Члан 51, став 1, тачка 4', kazna: '20.000 динара' },
+      { naziv: 'Одбијање наређења ком. милиционара (ДОО)', materijalna: 'Члан 51, став 2, тачка 1', kaznena: 'Члан 51, став 2, тачка 1', kazna: '50.000 динара' },
+      { naziv: 'Одбијање наређења (ДИРЕКТОР)', materijalna: 'Члан 51, став 2, тачка 1', kaznena: 'Члан 51, став 2, тачка 3', kazna: '10.000 динара' },
+      { naziv: 'Одбијање наређења (ПРЕДУЗЕТНИК)', materijalna: 'Члан 51, став 2, тачка 1', kaznena: 'Члан 51, став 2, тачка 2', kazna: '25.000 динара' },
+      { naziv: 'Одбијање наређења (ФИЗИЧКО ЛИЦЕ)', materijalna: 'Члан 51, став 2, тачка 1', kaznena: 'Члан 51, став 2, тачка 4', kazna: '10.000 динара' },
+    ]
+  },
+];
+
+// ===== ČESTI PREKRŠAJI RENDER =====
+let cestiPrekrsajiFilter = '';
+
+function renderCestiPrekrsaji() {
+  const container = document.getElementById('cesti-prekrsaji-list');
+  if (!container) return;
+  let html = '';
+  cestiPrekrsajiData.forEach((kat, ki) => {
+    const stavke = kat.stavke.filter(s =>
+      !cestiPrekrsajiFilter ||
+      s.naziv.toLowerCase().includes(cestiPrekrsajiFilter) ||
+      s.materijalna.toLowerCase().includes(cestiPrekrsajiFilter) ||
+      s.kaznena.toLowerCase().includes(cestiPrekrsajiFilter) ||
+      s.kazna.toLowerCase().includes(cestiPrekrsajiFilter) ||
+      kat.kategorija.toLowerCase().includes(cestiPrekrsajiFilter)
+    );
+    if (stavke.length === 0) return;
+    html += '<div style="margin-bottom:12px;">';
+    html += '<div style="font-size:0.72rem;font-weight:800;color:var(--gold);padding:8px 4px 6px;letter-spacing:0.5px;border-bottom:2px solid var(--gold);margin-bottom:8px;">' + kat.kategorija + '</div>';
+    stavke.forEach(s => {
+      html += '<div onclick="openCestiPrekrsaj(' + ki + ',\''+s.naziv.replace(/'/g,"\\'")+'\')" style="background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .15s;">';
+      html += '<div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:6px;line-height:1.35;">' + s.naziv + '</div>';
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+      html += '<span style="font-size:0.72rem;background:#e8eef5;color:var(--navy);padding:3px 8px;border-radius:6px;font-weight:600;">📋 ' + s.materijalna + '</span>';
+      html += '<span style="font-size:0.72rem;background:#fdf3e0;color:#8a6d1a;padding:3px 8px;border-radius:6px;font-weight:600;">⚖️ ' + s.kaznena + '</span>';
+      html += '<span style="font-size:0.72rem;background:var(--navy);color:white;padding:3px 8px;border-radius:6px;font-weight:700;">💰 ' + s.kazna + '</span>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  if (!html) html = '<div class="empty-state">Нема резултата за претрагу.</div>';
+  container.innerHTML = html;
+}
+
+function openCestiPrekrsaj(ki, naziv) {
+  const kat = cestiPrekrsajiData[ki];
+  const s = kat.stavke.find(x => x.naziv === naziv);
+  if (!s) return;
+  document.getElementById('modal-title').textContent = s.naziv;
+  let body = '';
+  body += '<div style="margin-bottom:14px;">';
+  body += '<div style="font-size:0.72rem;font-weight:800;color:var(--gold);margin-bottom:6px;letter-spacing:0.5px;">ОДЛУКА / ЗАКОН</div>';
+  body += '<div style="font-size:0.85rem;color:var(--text);">' + kat.kategorija + '</div>';
+  body += '</div>';
+  body += '<div style="margin-bottom:14px;">';
+  body += '<div style="font-size:0.72rem;font-weight:800;color:var(--navy);margin-bottom:6px;letter-spacing:0.5px;">📋 МАТЕРИЈАЛНА ОДРЕДБА</div>';
+  body += '<div style="font-size:0.88rem;color:var(--text);background:#e8eef5;padding:8px 12px;border-radius:8px;font-weight:600;">' + s.materijalna + '</div>';
+  body += '</div>';
+  body += '<div style="margin-bottom:14px;">';
+  body += '<div style="font-size:0.72rem;font-weight:800;color:var(--navy);margin-bottom:6px;letter-spacing:0.5px;">⚖️ КАЗНЕНА ОДРЕДБА</div>';
+  body += '<div style="font-size:0.88rem;color:var(--text);background:#fdf3e0;padding:8px 12px;border-radius:8px;font-weight:600;">' + s.kaznena + '</div>';
+  body += '</div>';
+  body += '<div style="margin-bottom:14px;">';
+  body += '<div style="font-size:0.72rem;font-weight:800;color:var(--navy);margin-bottom:6px;letter-spacing:0.5px;">💰 ИЗНОС КАЗНЕ</div>';
+  body += '<div style="font-size:1.1rem;color:white;background:var(--navy);padding:10px 14px;border-radius:8px;font-weight:700;text-align:center;">' + s.kazna + '</div>';
+  body += '</div>';
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function filterCestiPrekrsaji() {
+  const q = document.getElementById('cesti-prekrsaji-search').value.toLowerCase();
+  cestiPrekrsajiFilter = q;
+  renderCestiPrekrsaji();
+}
+
+let pelceriSubTab = 'primeri';
+
+function switchPelceriSub(tab) {
+  pelceriSubTab = tab;
+  const btnPrimeri = document.getElementById('pelceri-sub-primeri');
+  const btnCesti = document.getElementById('pelceri-sub-cesti');
+  const secPrimeri = document.getElementById('pelceri-primeri-section');
+  const secCesti = document.getElementById('pelceri-cesti-section');
+  if (tab === 'primeri') {
+    btnPrimeri.style.background = 'var(--navy)'; btnPrimeri.style.color = 'white'; btnPrimeri.style.borderColor = 'var(--navy)';
+    btnCesti.style.background = 'white'; btnCesti.style.color = 'var(--text)'; btnCesti.style.borderColor = 'var(--border)';
+    secPrimeri.style.display = 'block'; secCesti.style.display = 'none';
+  } else {
+    btnCesti.style.background = 'var(--navy)'; btnCesti.style.color = 'white'; btnCesti.style.borderColor = 'var(--navy)';
+    btnPrimeri.style.background = 'white'; btnPrimeri.style.color = 'var(--text)'; btnPrimeri.style.borderColor = 'var(--border)';
+    secPrimeri.style.display = 'none'; secCesti.style.display = 'block';
+    if (!document.getElementById('cesti-prekrsaji-list').innerHTML) renderCestiPrekrsaji();
+  }
+}
+
 function filterPelceri() {
   const q = document.getElementById('pelceri-search').value.toLowerCase();
   filteredPelceri = pelceriData.filter(p =>
@@ -17051,7 +17380,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v149';
+const KM_VERSION = 'v150';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
