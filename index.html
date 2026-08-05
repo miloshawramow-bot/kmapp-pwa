@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v162';
+  vText.textContent = 'v163';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v162</div>
+    <div class="side-menu-footer">KMapp · Beograd · v163</div>
   </div>
 </div>
 
@@ -17614,7 +17614,28 @@ function locateMe() {
     showToast('❌ Geolokacija nije dostupna na ovom uređaju');
     return;
   }
-  showToast('📍 Tražim lokaciju...');
+  
+  // First check actual permission state
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+      console.log('[KMapp] Geolocation permission state:', result.state);
+      if (result.state === 'denied') {
+        showLocationError({ code: 1, message: 'Permission denied' });
+        return;
+      }
+      // granted or prompt — try to get position
+      tryGetLocation();
+    }).catch(function() { tryGetLocation(); }); // fallback if permissions API fails
+  } else {
+    tryGetLocation();
+  }
+
+  function tryGetLocation() {
+    showToast('📍 Tražim lokaciju...');
+    navigator.geolocation.getCurrentPosition(showLocation, function(err) {
+      handleLocationError(err, false);
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+  }
   
   function showLocation(pos) {
     var lat = pos.coords.latitude;
@@ -17641,25 +17662,27 @@ function locateMe() {
     showToast('✅ Lokacija pronađena!');
   }
   
-  function handleError(err, isRetry) {
-    if (err.code === 1) {
-      // PERMISSION_DENIED — ovo je blokada, retry neće pomoći
-      showToast('❌ Pristup lokaciji je blokiran. U Chrome: 🔒 ikona u adresnoj traci → Dozvole → Lokacija → Dozvoli.', 5000);
-    } else if (err.code === 3 && !isRetry) {
-      // TIMEOUT — probaj ponovo sa GPS
-      showToast('📍 Pokušavam sa GPS...');
-      navigator.geolocation.getCurrentPosition(showLocation, function(e) { handleError(e, true); },
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
-    } else {
-      var msg = '❌ Lokacija nedostupna. Uključi GPS i probaj ponovo.';
-      if (err.code === 2) msg = '❌ Pozicija nedostupna. Proveri da li je GPS uključen.';
-      showToast(msg, 4000);
-    }
+  function showLocationError(err) {
+    handleLocationError(err, true);
   }
   
-  // Prvo probaj brzu lokaciju (WiFi/cell tower), pa ako ne uspe — GPS
-  navigator.geolocation.getCurrentPosition(showLocation, function(err) { handleError(err, false); },
-    { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
+  function handleLocationError(err, isRetry) {
+    console.log('[KMapp] Geolocation error:', err.code, err.message);
+    if (err.code === 1) {
+      // PERMISSION_DENIED
+      showToast('❌ Lokacija blokirana. Otvori u Chrome: chrome://settings/content/location i dodaj sajt u "Dozvoljeno".');
+    } else if (err.code === 3 && !isRetry) {
+      // TIMEOUT — retry with GPS
+      showToast('📍 Pokušavam sa GPS...');
+      navigator.geolocation.getCurrentPosition(showLocation, function(e) { handleLocationError(e, true); },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    } else if (err.code === 2) {
+      // POSITION_UNAVAILABLE
+      showToast('❌ Pozicija nedostupna. Uključi GPS/Location u sistemskim podešavanjima telefona.');
+    } else {
+      showToast('❌ Lokacija ne radi. Probaj da pretražiš adresu u polju iznad.');
+    }
+  }
 }
 
 // Hard reset via URL: ?reset — clears everything and reloads fresh
@@ -17676,7 +17699,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v162';
+const KM_VERSION = 'v163';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
