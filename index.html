@@ -192,6 +192,129 @@
     filter: drop-shadow(0 0 4px rgba(200,168,75,0.5));
   }
 
+
+  /* ===== DASHBOARD ===== */
+  #screen-dashboard {
+    background: linear-gradient(180deg, #0d2240 0%, #102d52 40%, #0d2240 100%);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 80px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dash-clock {
+    font-size: 3.5rem;
+    font-weight: 200;
+    color: rgba(255,255,255,0.95);
+    letter-spacing: 2px;
+    margin-top: 20px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .dash-date {
+    font-size: 0.85rem;
+    color: rgba(200,168,75,0.85);
+    margin-top: 4px;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+  .dash-weather-card {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dash-weather-current {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .dash-weather-icon { font-size: 2.2rem; line-height: 1; }
+  .dash-weather-temp { font-size: 2rem; font-weight: 300; color: #fff; }
+  .dash-weather-desc { font-size: 0.8rem; color: rgba(160,188,216,0.9); }
+  .dash-weather-city { font-size: 0.72rem; color: rgba(200,168,75,0.8); margin-left: auto; }
+  .dash-weather-meta { font-size: 0.7rem; color: rgba(160,188,216,0.6); }
+  .dash-forecast-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .dash-forecast-day {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 52px;
+    padding: 6px 4px;
+    border-radius: 8px;
+  }
+  .dash-forecast-dayname { font-size: 0.65rem; color: rgba(160,188,216,0.7); font-weight: 600; }
+  .dash-forecast-icon { font-size: 1.1rem; }
+  .dash-forecast-temps { font-size: 0.7rem; color: #fff; font-weight: 500; }
+  .dash-forecast-temps .lo { color: rgba(160,188,216,0.5); font-weight: 300; }
+  .dash-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 380px;
+    margin-top: 8px;
+  }
+  .dash-quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .dash-quick-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
+  .dash-quick-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(200,168,75,0.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dash-quick-icon svg { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 2; }
+  .dash-quick-label { font-size: 0.62rem; color: rgba(160,188,216,0.85); font-weight: 600; letter-spacing: 0.3px; }
+  .dash-mail-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    z-index: 5;
+  }
+  .dash-mail-btn svg { width: 20px; height: 20px; stroke: rgba(200,168,75,0.8); fill: none; stroke-width: 2; }
+  .dash-mail-badge {
+    position: absolute; top: -2px; right: -2px;
+    background: #e53935; color: white;
+    font-size: 0.55rem; min-width: 14px; height: 14px;
+    border-radius: 50%; display: none;
+    align-items: center; justify-content: center;
+    font-weight: 700; padding: 0 3px;
+  }
+
   /* More grid overlay */
   .more-overlay {
     position: fixed;
@@ -919,7 +1042,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v154';
+  vText.textContent = 'v155';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -932,7 +1055,7 @@
       if (!hasActive) {
         var authed = (localStorage.getItem('km_auth_v1') === '1');
         var ls = document.getElementById('screen-login');
-        var ds = document.getElementById('screen-docs');
+        var ds = document.getElementById('screen-dashboard');
         if (authed && ds) {
           ds.classList.add('active'); ds.style.display = 'flex';
         } else if (ls) {
@@ -1083,19 +1206,11 @@ initTapSound();
     </div>
     <div class="side-menu-scroll">
       <div class="side-menu-section-title">Navigacija</div>
-    <div class="side-menu-item" onclick="switchTab('docs'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
-      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg></div>
+    <div class="side-menu-item" onclick="switchTab('dashboard'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></div>
       <div class="side-menu-label">
-        <span class="side-menu-title">Dokumenti</span>
-        <span class="side-menu-desc">Obrasci i dokumenti</span>
-      </div>
-      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
-    <div class="side-menu-item" onclick="switchTab('poruke'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
-      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-      <div class="side-menu-label">
-        <span class="side-menu-title">Poruke</span>
-        <span class="side-menu-desc">Komunikacija</span>
+        <span class="side-menu-title">Početna</span>
+        <span class="side-menu-desc">Glavni ekran</span>
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
@@ -1155,57 +1270,71 @@ initTapSound();
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('imenik'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
-      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div class="side-menu-label">
-        <span class="side-menu-title">Imenik</span>
-        <span class="side-menu-desc">Kontakti</span>
-      </div>
-      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="side-menu-item" onclick="switchTab('kalendar'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
-      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/></svg></div>
-      <div class="side-menu-label">
-        <span class="side-menu-title">Kalendar</span>
-        <span class="side-menu-desc">Zakazivanje</span>
-      </div>
-      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
-    <div class="side-menu-item" onclick="switchTab('podesavanja'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
-      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
-      <div class="side-menu-label">
-        <span class="side-menu-title">Podešavanja</span>
-        <span class="side-menu-desc">Profil i nalog</span>
-      </div>
-      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
-    </div>
-    <div class="side-menu-footer">KMapp · Beograd · v154</div>
+    <div class="side-menu-footer">KMapp · Beograd · v155</div>
   </div>
 </div>
 
 
 <nav>
-  <button class="active" onclick="switchTab('docs')" id="tab-docs">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>Dokumenti
+  <button class="active" onclick="switchTab('dashboard')" id="tab-dashboard">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></span>Početna
   </button>
   <button onclick="switchTab('poruke')" id="tab-poruke" style="position:relative;">
     <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Poruke
     <span id="poruke-badge" style="position:absolute;top:-2px;right:-2px;background:#e53935;color:white;font-size:0.6rem;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 3px;z-index:1;"></span>
   </button>
-  <button onclick="switchTab('mapa')" id="tab-mapa">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Mapa
-  </button>
-  <button onclick="switchTab('ai')" id="tab-ai">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><path d="M5 8l-2.5 5a3 3 0 0 0 5 0z"/><path d="M19 8l-2.5 5a3 3 0 0 0 5 0z"/><path d="M4 21h16"/><circle cx="12" cy="4" r="1.5"/></svg></span>Asistent
+  <button onclick="switchTab('imenik')" id="tab-imenik">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Imenik
   </button>
   <button onclick="switchTab('podesavanja')" id="tab-podesavanja">
-    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>Info
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>Podešavanja
   </button>
-
 </nav>
 
 <!-- More grid overlay -->
+<!-- ===== DASHBOARD / POCETNI EKRAN ===== -->
+<div class="screen" id="screen-dashboard" style="display: none;">
+  <div class="dash-mail-btn" onclick="window.open('https://mail.beograd.gov.rs','_blank')">
+    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+    <span class="dash-mail-badge" id="dash-mail-badge"></span>
+  </div>
+  <div class="dash-clock" id="dash-clock">--:--</div>
+  <div class="dash-date" id="dash-date">--</div>
+  <div class="dash-weather-card" id="dash-weather-card">
+    <div class="dash-weather-current">
+      <span class="dash-weather-icon" id="dash-w-icon">🌡️</span>
+      <div>
+        <div class="dash-weather-temp" id="dash-w-temp">--°C</div>
+        <div class="dash-weather-desc" id="dash-w-desc">Ućitavam...</div>
+        <div class="dash-weather-meta" id="dash-w-meta">Vlažnost: --% · Vetar: -- km/h</div>
+      </div>
+      <span class="dash-weather-city" id="dash-w-city">🌍 Beograd</span>
+    </div>
+    <div class="dash-forecast-row" id="dash-forecast">
+      <div style="color:rgba(160,188,216,0.4);text-align:center;padding:8px;font-size:0.7rem;width:100%;">Ućitavam prognozu...</div>
+    </div>
+  </div>
+  <div class="dash-quick-actions">
+    <div class="dash-quick-btn" onclick="switchTab('docs')">
+      <div class="dash-quick-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg></div>
+      <span class="dash-quick-label">Dokumenti</span>
+    </div>
+    <div class="dash-quick-btn" onclick="switchTab('mapa')">
+      <div class="dash-quick-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <span class="dash-quick-label">Mapa</span>
+    </div>
+    <div class="dash-quick-btn" onclick="switchTab('ai')">
+      <div class="dash-quick-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 8H4m16 0h-4M12 4V2m0 12v-2"/><rect x="8" y="14" width="8" height="6" rx="2"/></svg></div>
+      <span class="dash-quick-label">Asistent</span>
+    </div>
+    <div class="dash-quick-btn" onclick="switchTab('kamera')">
+      <div class="dash-quick-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      <span class="dash-quick-label">Kamera</span>
+    </div>
+  </div>
+</div>
+
 <!-- ===== DOKUMENTI ===== -->
 <!-- ===== LOGIN / PRIJAVA ===== -->
 <div class="screen" id="screen-login" style="display: none;">
@@ -2356,7 +2485,7 @@ initTapSound();
     allScreens.forEach(function(s) {
       if (authed && s.id !== 'screen-login') {
         // Show the docs screen for returning users
-        if (s.id === 'screen-docs') {
+        if (s.id === 'screen-dashboard') {
           s.classList.add('active');
           s.style.display = 'flex';
         } else {
@@ -2386,6 +2515,78 @@ initTapSound();
 <script>
 // ===== WEATHER (Open-Meteo API - free, no key needed) =====
 var weatherData = null;
+
+
+// ===== DASHBOARD CLOCK + WEATHER =====
+var dashClockInterval = null;
+function startDashboardClock() {
+  if (dashClockInterval) clearInterval(dashClockInterval);
+  function tick() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2, '0');
+    var m = String(now.getMinutes()).padStart(2, '0');
+    var clockEl = document.getElementById('dash-clock');
+    if (clockEl) clockEl.textContent = h + ':' + m;
+    var days = ['Nedelja','Ponedeljak','Utorak','Sreda','Cetvrtak','Petak','Subota'];
+    var months = ['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'];
+    var dateEl = document.getElementById('dash-date');
+    if (dateEl) dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + '. ' + now.getFullYear() + '.';
+  }
+  tick();
+  dashClockInterval = setInterval(tick, 1000);
+}
+
+function loadDashboardWeather() {
+  var WC_ICONS = {0:'\u2600\ufe0f',1:'\u26c5\ufe0f',2:'\u26c5',3:'\u2601\ufe0f',45:'\u{1f32b}\ufe0f',48:'\u{1f32b}\ufe0f',51:'\u{1f326}\ufe0f',53:'\u{1f326}\ufe0f',55:'\u{1f327}\ufe0f',61:'\u{1f327}\ufe0f',63:'\u{1f327}\ufe0f',65:'\u{1f327}\ufe0f',71:'\u{1f328}\ufe0f',73:'\u{1f328}\ufe0f',75:'\u2744\ufe0f',80:'\u{1f326}\ufe0f',81:'\u{1f327}\ufe0f',82:'\u26c8\ufe0f',85:'\u{1f328}\ufe0f',86:'\u2744\ufe0f',95:'\u26c8\ufe0f',96:'\u26c8\ufe0f',99:'\u26c8\ufe0f'};
+  var WC_DESC = {0:'Vedro',1:'Pretezno vedro',2:'Delimicno oblacno',3:'Oblacno',45:'Magla',48:'Magla',51:'Slaba rosulja',53:'Rosulja',55:'Jaka rosulja',61:'Slab dazd',63:'Kisa',65:'Jak dazd',71:'Slab sneg',73:'Sneg',75:'Jak sneg',80:'Pljuskovi',81:'Jaki pljuskovi',82:'Olujni pljuskovi',85:'Sneznji pljuskovi',86:'Jaki sneznji pljuskovi',95:'Grmljavina',96:'Oluja',99:'Jaka oluja'};
+  var DAYS = ['Ned','Pon','Uto','Sre','Cet','Pet','Sub'];
+
+  function renderWeather(d, city) {
+    var cur = d.current;
+    var code = cur.weather_code;
+    var iconEl = document.getElementById('dash-w-icon');
+    var tempEl = document.getElementById('dash-w-temp');
+    var descEl = document.getElementById('dash-w-desc');
+    var metaEl = document.getElementById('dash-w-meta');
+    var cityEl = document.getElementById('dash-w-city');
+    if (iconEl) iconEl.textContent = WC_ICONS[code] || '\u{1f321}\ufe0f';
+    if (tempEl) tempEl.textContent = Math.round(cur.temperature_2m) + '\u00b0C';
+    if (descEl) descEl.textContent = WC_DESC[code] || 'Nepoznato';
+    if (metaEl) metaEl.textContent = 'Vlaznost: ' + cur.relative_humidity_2m + '% \u00b7 Vetar: ' + Math.round(cur.wind_speed_10m) + ' km/h';
+    if (cityEl) cityEl.textContent = '\u{1f30d} ' + (city || 'Beograd');
+    var fc = d.daily;
+    var html = '';
+    for (var i = 0; i < fc.time.length; i++) {
+      var dt = new Date(fc.time[i]);
+      var dayName = i === 0 ? 'Danas' : (i === 1 ? 'Sutra' : DAYS[dt.getDay()]);
+      var fc_icon = WC_ICONS[fc.weather_code[i]] || '\u{1f321}\ufe0f';
+      html += '<div class="dash-forecast-day"><span class="dash-forecast-dayname">' + dayName + '</span><span class="dash-forecast-icon">' + fc_icon + '</span><span class="dash-forecast-temps">' + Math.round(fc.temperature_2m_max[i]) + '\u00b0 <span class="lo">' + Math.round(fc.temperature_2m_min[i]) + '\u00b0</span></span></div>';
+    }
+    var fcEl = document.getElementById('dash-forecast');
+    if (fcEl) fcEl.innerHTML = html;
+  }
+
+  function fallback() {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=44.8167&longitude=20.4667&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
+    fetch(url).then(function(r){return r.json();}).then(function(d){ renderWeather(d, 'Beograd'); }).catch(function(){});
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude.toFixed(4);
+      var lon = pos.coords.longitude.toFixed(4);
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        renderWeather(d, null);
+        fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json').then(function(r){return r.json();}).then(function(g){
+          var city = g.address.city || g.address.town || g.address.village || 'Beograd';
+          var cityEl = document.getElementById('dash-w-city');
+          if (cityEl) cityEl.textContent = '\u{1f30d} ' + city;
+        }).catch(function(){});
+      }).catch(function(){ fallback(); });
+    }, function(){ fallback(); }, {timeout: 5000});
+  } else { fallback(); }
+}
 
 // ===== DEBOUNCE UTILITY =====
 function kmDebounce(fn, ms) {
@@ -2666,6 +2867,10 @@ function switchTab(name) {
     if (name === 'mapa') { checkMapAdminAccess(); setTimeout(function() { initLeafletMap(); }, 100); }
     if (name === 'login') {
       setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
+    }
+    if (name === 'dashboard') {
+      startDashboardClock();
+      loadDashboardWeather();
     }
   } catch(e) {
     console.error('switchTab content error for ' + name + ':', e);
@@ -3858,7 +4063,7 @@ async function doRegister() {
   document.getElementById('reg-password').value = '';
   document.getElementById('reg-password2').value = '';
   var tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.style.display = 'none';
-  switchTab('docs');
+  switchTab('dashboard');
   showToast('✅ Nalog kreiran! Dobrodošli, ' + u);
 }
 
@@ -3946,7 +4151,7 @@ function doLogin() {
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
     var tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.style.display = 'none';
-    switchTab('docs');
+    switchTab('dashboard');
     const displayName = user.displayName || user.username;
     if (typeof showToast === 'function') showToast('\u2705 Dobrodo' + '\u0161' + 'li, ' + displayName);
     updateCurrentUserDisplay();
@@ -3994,7 +4199,7 @@ function doLogout() {
       if (!isLoggedIn()) {
         switchTab('login');
       } else {
-        switchTab('docs');
+        switchTab('dashboard');
         try { checkAdminAccess(); } catch(e) { console.error('checkAdminAccess error:', e); }
         // Start polling and push subscription for returning users
         porukeStartPolling();
@@ -17464,7 +17669,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v154';
+const KM_VERSION = 'v155';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
