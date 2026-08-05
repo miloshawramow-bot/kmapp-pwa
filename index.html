@@ -1042,7 +1042,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v157';
+  vText.textContent = 'v158';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1268,7 +1268,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v157</div>
+    <div class="side-menu-footer">KMapp · Beograd · v158</div>
   </div>
 </div>
 
@@ -1292,12 +1292,25 @@ initTapSound();
 <!-- More grid overlay -->
 <!-- ===== DASHBOARD / POCETNI EKRAN ===== -->
 <div class="screen" id="screen-dashboard" style="display: none;">
-  <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
-    <div style="width:88px;height:88px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.25);margin-bottom:18px;">
-      <img src="icons/icon-192.png" style="width:78px;height:78px;border-radius:50%;object-fit:cover;">
+  <div class="dash-mail-btn" onclick="window.open('https://mail.beograd.gov.rs','_blank')">
+    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+    <span class="dash-mail-badge" id="dash-mail-badge"></span>
+  </div>
+  <div class="dash-clock" id="dash-clock">--:--</div>
+  <div class="dash-date" id="dash-date">--</div>
+  <div class="dash-weather-card" id="dash-weather-card">
+    <div class="dash-weather-current">
+      <span class="dash-weather-icon" id="dash-w-icon">🌡️</span>
+      <div>
+        <div class="dash-weather-temp" id="dash-w-temp">--°C</div>
+        <div class="dash-weather-desc" id="dash-w-desc">Ućitavam...</div>
+        <div class="dash-weather-meta" id="dash-w-meta">Vlažnost: --% · Vetar: -- km/h</div>
+      </div>
+      <span class="dash-weather-city" id="dash-w-city">🌍 Beograd</span>
     </div>
-    <div id="dash-greeting" style="color:#fff;font-size:1.15rem;font-weight:700;margin-bottom:4px;">Dobrodošli</div>
-    <div style="color:rgba(160,188,216,0.75);font-size:0.8rem;">Koristite meni ili donju navigaciju za pristup funkcijama aplikacije.</div>
+    <div class="dash-forecast-row" id="dash-forecast">
+      <div style="color:rgba(160,188,216,0.4);text-align:center;padding:8px;font-size:0.7rem;width:100%;">Ućitavam prognozu...</div>
+    </div>
   </div>
 </div>
 
@@ -2484,11 +2497,75 @@ var weatherData = null;
 
 
 // ===== DASHBOARD CLOCK + WEATHER =====
-// startDashboardClock removed — dashboard no longer has a clock
-function startDashboardClock() { /* no-op */ }
+var dashClockInterval = null;
+function startDashboardClock() {
+  if (dashClockInterval) clearInterval(dashClockInterval);
+  function tick() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2, '0');
+    var m = String(now.getMinutes()).padStart(2, '0');
+    var clockEl = document.getElementById('dash-clock');
+    if (clockEl) clockEl.textContent = h + ':' + m;
+    var days = ['Nedelja','Ponedeljak','Utorak','Sreda','Cetvrtak','Petak','Subota'];
+    var months = ['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'];
+    var dateEl = document.getElementById('dash-date');
+    if (dateEl) dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + '. ' + now.getFullYear() + '.';
+  }
+  tick();
+  dashClockInterval = setInterval(tick, 1000);
+}
 
-// loadDashboardWeather removed — dashboard no longer has weather widget
-function loadDashboardWeather() { /* no-op */ }
+function loadDashboardWeather() {
+  var WC_ICONS = {0:'\u2600\ufe0f',1:'\u26c5\ufe0f',2:'\u26c5',3:'\u2601\ufe0f',45:'\u{1f32b}\ufe0f',48:'\u{1f32b}\ufe0f',51:'\u{1f326}\ufe0f',53:'\u{1f326}\ufe0f',55:'\u{1f327}\ufe0f',61:'\u{1f327}\ufe0f',63:'\u{1f327}\ufe0f',65:'\u{1f327}\ufe0f',71:'\u{1f328}\ufe0f',73:'\u{1f328}\ufe0f',75:'\u2744\ufe0f',80:'\u{1f326}\ufe0f',81:'\u{1f327}\ufe0f',82:'\u26c8\ufe0f',85:'\u{1f328}\ufe0f',86:'\u2744\ufe0f',95:'\u26c8\ufe0f',96:'\u26c8\ufe0f',99:'\u26c8\ufe0f'};
+  var WC_DESC = {0:'Vedro',1:'Pretezno vedro',2:'Delimicno oblacno',3:'Oblacno',45:'Magla',48:'Magla',51:'Slaba rosulja',53:'Rosulja',55:'Jaka rosulja',61:'Slab dazd',63:'Kisa',65:'Jak dazd',71:'Slab sneg',73:'Sneg',75:'Jak sneg',80:'Pljuskovi',81:'Jaki pljuskovi',82:'Olujni pljuskovi',85:'Sneznji pljuskovi',86:'Jaki sneznji pljuskovi',95:'Grmljavina',96:'Oluja',99:'Jaka oluja'};
+  var DAYS = ['Ned','Pon','Uto','Sre','Cet','Pet','Sub'];
+
+  function renderWeather(d, city) {
+    var cur = d.current;
+    var code = cur.weather_code;
+    var iconEl = document.getElementById('dash-w-icon');
+    var tempEl = document.getElementById('dash-w-temp');
+    var descEl = document.getElementById('dash-w-desc');
+    var metaEl = document.getElementById('dash-w-meta');
+    var cityEl = document.getElementById('dash-w-city');
+    if (iconEl) iconEl.textContent = WC_ICONS[code] || '\u{1f321}\ufe0f';
+    if (tempEl) tempEl.textContent = Math.round(cur.temperature_2m) + '\u00b0C';
+    if (descEl) descEl.textContent = WC_DESC[code] || 'Nepoznato';
+    if (metaEl) metaEl.textContent = 'Vlaznost: ' + cur.relative_humidity_2m + '% \u00b7 Vetar: ' + Math.round(cur.wind_speed_10m) + ' km/h';
+    if (cityEl) cityEl.textContent = '\u{1f30d} ' + (city || 'Beograd');
+    var fc = d.daily;
+    var html = '';
+    for (var i = 0; i < fc.time.length; i++) {
+      var dt = new Date(fc.time[i]);
+      var dayName = i === 0 ? 'Danas' : (i === 1 ? 'Sutra' : DAYS[dt.getDay()]);
+      var fc_icon = WC_ICONS[fc.weather_code[i]] || '\u{1f321}\ufe0f';
+      html += '<div class="dash-forecast-day"><span class="dash-forecast-dayname">' + dayName + '</span><span class="dash-forecast-icon">' + fc_icon + '</span><span class="dash-forecast-temps">' + Math.round(fc.temperature_2m_max[i]) + '\u00b0 <span class="lo">' + Math.round(fc.temperature_2m_min[i]) + '\u00b0</span></span></div>';
+    }
+    var fcEl = document.getElementById('dash-forecast');
+    if (fcEl) fcEl.innerHTML = html;
+  }
+
+  function fallback() {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=44.8167&longitude=20.4667&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
+    fetch(url).then(function(r){return r.json();}).then(function(d){ renderWeather(d, 'Beograd'); }).catch(function(){});
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude.toFixed(4);
+      var lon = pos.coords.longitude.toFixed(4);
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        renderWeather(d, null);
+        fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json').then(function(r){return r.json();}).then(function(g){
+          var city = g.address.city || g.address.town || g.address.village || 'Beograd';
+          var cityEl = document.getElementById('dash-w-city');
+          if (cityEl) cityEl.textContent = '\u{1f30d} ' + city;
+        }).catch(function(){});
+      }).catch(function(){ fallback(); });
+    }, function(){ fallback(); }, {timeout: 5000});
+  } else { fallback(); }
+}
 
 // ===== DEBOUNCE UTILITY =====
 function kmDebounce(fn, ms) {
@@ -2766,8 +2843,8 @@ function switchTab(name) {
       // header clock removed
     }
     if (name === 'dashboard') {
-      var gEl = document.getElementById('dash-greeting');
-      if (gEl) gEl.textContent = 'Dobrodošli, ' + (getDisplayName() || 'korisniče') + '!';
+      startDashboardClock();
+      loadDashboardWeather();
     }
   } catch(e) {
     console.error('switchTab content error for ' + name + ':', e);
@@ -17572,7 +17649,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v157';
+const KM_VERSION = 'v158';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
