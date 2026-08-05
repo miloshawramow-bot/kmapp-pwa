@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v161';
+  vText.textContent = 'v162';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v161</div>
+    <div class="side-menu-footer">KMapp · Beograd · v162</div>
   </div>
 </div>
 
@@ -17662,8 +17662,21 @@ function locateMe() {
     { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
 }
 
+// Hard reset via URL: ?reset — clears everything and reloads fresh
+if (new URLSearchParams(window.location.search).get('reset') !== null) {
+  console.log('[KMapp] Hard reset triggered via ?reset');
+  caches.keys().then(function(names) { return Promise.all(names.map(function(n) { return caches.delete(n); })); });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); });
+  }
+  localStorage.removeItem('km_version');
+  sessionStorage.clear();
+  // Redirect to clean URL without ?reset
+  setTimeout(function() { window.location.href = window.location.pathname; }, 500);
+}
+
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v161';
+const KM_VERSION = 'v162';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
