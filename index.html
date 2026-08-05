@@ -145,14 +145,13 @@
   
   /* TABS */
   nav {
-    display: none !important;
+    display: flex;
     position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: 480px;
-    display: none;
     background: var(--navy2);
     border-top: 2px solid var(--gold);
     justify-content: space-around;
@@ -357,12 +356,13 @@
   }
 
   /* SCREENS */
-  .screen { display: none; flex-direction: column; flex: 1 1 0; min-height: 0; overflow-y: auto; animation: fadeIn 0.2s ease; -webkit-overflow-scrolling: touch; }
+  .screen { display: none; flex-direction: column; flex: 1 1 0; min-height: 0; overflow-y: auto; animation: fadeIn 0.2s ease; -webkit-overflow-scrolling: touch; padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .screen.active { display: flex; }
 
   /* ===== DOKUMENTI ===== */
-  #screen-docs { padding: 0; }
+  #screen-docs { padding: 0 0 calc(56px + env(safe-area-inset-bottom, 0px)); }
+  #screen-login { padding-bottom: 0; }
   #screen-docs #view-list { background: transparent; }
   #screen-docs .saved-list { background: transparent; }
   #screen-docs .doc-card {
@@ -495,7 +495,7 @@
   }
 
   /* ===== PRAVNI AKTI ===== */
-  #screen-akti { padding: 0; }
+  #screen-akti { padding: 0 0 calc(56px + env(safe-area-inset-bottom, 0px)); }
 
   .search-bar {
     padding: 12px;
@@ -580,7 +580,7 @@
   .sh-gmail { background: #ea4335; }
 
   /* ===== PODEŠAVANJA ===== */
-  #screen-podesavanja { padding: 10px 10px calc(40px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
+  #screen-podesavanja { padding: 10px 10px calc(56px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
 
   .settings-section {
     background: var(--card-bg, #fff);
@@ -1042,7 +1042,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v155';
+  vText.textContent = 'v156';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1177,6 +1177,7 @@ initTapSound();
     <h1>KMapp</h1>
     <p>@milos.avramov</p>
   </div>
+  <div style="display:none !important;">
   <div id="clock-widget" onclick="switchTab('kalendar')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;flex-shrink:0;margin-left:auto;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,0.1);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Kalendar">
     <span id="clock-time" style="font-size:0.8rem;font-weight:700;color:#fff;line-height:1;font-variant-numeric:tabular-nums;">--:--</span>
     <span id="clock-date" style="font-size:0.52rem;color:rgba(255,255,255,0.7);line-height:1;margin-top:2px;">--</span>
@@ -1188,7 +1189,8 @@ initTapSound();
     </div>
     <div id="weather-loc" style="font-size:0.5rem;color:rgba(255,255,255,0.7);line-height:1;margin-top:1px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</div>
   </div>
-  <button onclick="openGlobalSearch()" style="display:flex;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;flex-shrink:0;" title="Pretraga">🔍</button>
+  </div>
+  <button onclick="openGlobalSearch()" style="display:flex;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;flex-shrink:0;margin-left:auto;" title="Pretraga">🔍</button>
             <button id="mail-icon-btn" onclick="window.open('https://mail.beograd.gov.rs/owa/auth/logon.aspx?url=https%3a%2f%2fmail.beograd.gov.rs%2fowa%2f&reason=0', '_blank')" style="display: flex; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="Mail - beograd.gov.rs">✉️</button>
   <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
 </header>
@@ -1271,7 +1273,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v155</div>
+    <div class="side-menu-footer">KMapp · Beograd · v156</div>
   </div>
 </div>
 
@@ -2867,6 +2869,10 @@ function switchTab(name) {
     if (name === 'mapa') { checkMapAdminAccess(); setTimeout(function() { initLeafletMap(); }, 100); }
     if (name === 'login') {
       setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
+      var navHide = document.querySelector('nav'); if (navHide) navHide.style.display = 'none';
+    } else {
+      var navShow = document.querySelector('nav'); if (navShow) navShow.style.display = 'flex';
+      if (isLoggedIn()) { updateClock(); }
     }
     if (name === 'dashboard') {
       startDashboardClock();
@@ -4187,6 +4193,12 @@ function doLogout() {
   }, { passive: false });
 })();
 
+// Hide nav initially if not logged in
+(function() {
+  if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
+    var n = document.querySelector('nav'); if (n) n.style.display = 'none';
+  }
+})();
 (function initAuthGate() {
   // Safety: hide loader after 8s no matter what
   setTimeout(function() {
@@ -17669,7 +17681,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v155';
+const KM_VERSION = 'v156';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18266,7 +18278,7 @@ async function adminDeletePelcer(id) {
       <p style="font-size:0.78rem;color:var(--muted);margin:0;">Postavite pitanje o zakonima i odlukama.</p>
     </div>
   </div>
-  <div style="padding:10px 12px calc(62px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+  <div style="padding:10px 12px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
     <input id="ai-input" type="text" placeholder="Postavite pitanje..." style="flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 14px;font-size:0.88rem;outline:none;background:var(--bg);color:var(--text);" onkeydown="if(event.key==='Enter')aiSend()">
     <button onclick="aiSend()" style="background:linear-gradient(135deg, var(--navy), var(--blue));color:white;border:none;border-radius:50%;width:42px;height:42px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">➤</button>
   </div>
