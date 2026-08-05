@@ -919,7 +919,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v151';
+  vText.textContent = 'v153';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1180,7 +1180,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v151</div>
+    <div class="side-menu-footer">KMapp · Beograd · v153</div>
   </div>
 </div>
 
@@ -1711,7 +1711,7 @@ initTapSound();
     <!-- Pretraga -->
     <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
-      <input type="text" id="pelceri-search" placeholder="Претражи пелцере..." oninput="filterPelceri()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
+      <input type="text" id="pelceri-search" placeholder="Претражи пелцере..." oninput="kmDebounce(filterPelceri, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
     </div>
 
     <div id="pelceri-list"></div>
@@ -1723,7 +1723,7 @@ initTapSound();
       </div>
       <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;margin-bottom:10px;">
         <span style="color:var(--muted);">🔍</span>
-        <input type="text" id="cesti-prekrsaji-search" placeholder="Претражи прекршаје..." oninput="filterCestiPrekrsaji()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
+        <input type="text" id="cesti-prekrsaji-search" placeholder="Претражи прекршаје..." oninput="kmDebounce(filterCestiPrekrsaji, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
       </div>
       <div id="cesti-prekrsaji-list"></div>
     </div>
@@ -1741,7 +1741,7 @@ initTapSound();
     <!-- Pretraga -->
     <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
-      <input type="text" id="search-input" placeholder="Npr. nepropisno parkiranje, buka, tezge..." oninput="filterAkti()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
+      <input type="text" id="search-input" placeholder="Npr. nepropisno parkiranje, buka, tezge..." oninput="kmDebounce(filterAkti, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
     </div>
 
     <!-- Opseg pretrage -->
@@ -1815,7 +1815,7 @@ initTapSound();
   <div style="background:var(--white);padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
     <div style="display:flex;align-items:center;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
-      <input type="text" id="imenik-search" placeholder="Pretraži po imenu ili broju..." oninput="filterImenik()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
+      <input type="text" id="imenik-search" placeholder="Pretraži po imenu ili broju..." oninput="kmDebounce(filterImenik, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
       <span id="imenik-count" style="font-size:0.7rem;color:var(--muted);white-space:nowrap;">681</span>
     </div>
   </div>
@@ -2386,6 +2386,16 @@ initTapSound();
 <script>
 // ===== WEATHER (Open-Meteo API - free, no key needed) =====
 var weatherData = null;
+
+// ===== DEBOUNCE UTILITY =====
+function kmDebounce(fn, ms) {
+  var t = null;
+  return function() {
+    var ctx = this, args = arguments;
+    clearTimeout(t);
+    t = setTimeout(function() { fn.apply(ctx, args); }, ms || 300);
+  };
+}
 var weatherLoc = null;
 
 function wmoCodeToEmoji(code) {
@@ -2659,6 +2669,17 @@ function switchTab(name) {
     }
   } catch(e) {
     console.error('switchTab content error for ' + name + ':', e);
+    // Error boundary — prikaži fallback poruku na ekranu
+    var screen = document.getElementById('screen-' + name);
+    if (screen && !screen.querySelector('.km-error-boundary')) {
+      var errDiv = document.createElement('div');
+      errDiv.className = 'km-error-boundary';
+      errDiv.style.cssText = 'padding:40px 20px;text-align:center;color:var(--muted);';
+      errDiv.innerHTML = '<div style="font-size:2rem;margin-bottom:12px;">⚠️</div>' +
+        '<p style="font-size:0.9rem;margin-bottom:16px;">Došlo je do greške pri učitavanju.</p>' +
+        '<button onclick="switchTab(\'' + name + '\')" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:10px 20px;font-size:0.85rem;font-weight:600;cursor:pointer;">Pokušaj ponovo</button>';
+      screen.appendChild(errDiv);
+    }
   } finally {
     // Highlight active item in side menu
     document.querySelectorAll('.side-menu-item').forEach(function(item) {
@@ -2701,6 +2722,58 @@ function closeSideMenu() {
 const KM_API_BASE = 'https://solas-799a3993.base44.app/functions';
 const VAPID_PUBLIC_KEY = 'BMtr4Ap8lezXKUgEy3o3EKSzcl4WIUXgffpbfyVWE6YQH7AvfO_eCY-f1MiaBfJhuTnw_ZkqVbGTVAps3PxqujQ';
 let porukeCurrentView = 'conversations';
+
+// ===== GRACEFUL DEGRADATION =====
+let kmBackendOnline = true;
+let kmBackendCheckedAt = 0;
+
+async function kmHealthCheck() {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 3000);
+    const res = await fetchWithFallback(KM_API_BASE + '/getPelceri', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+      signal: ctrl.signal
+    });
+    clearTimeout(t);
+    kmBackendOnline = res.ok;
+    kmBackendCheckedAt = Date.now();
+  } catch(e) {
+    kmBackendOnline = false;
+    kmBackendCheckedAt = Date.now();
+    console.warn('[KMapp] Backend offline — offline režim aktiviran');
+    const toast = document.getElementById('toast');
+    if (toast && typeof showToast === 'function') {
+      showToast('📡 Offline režim — podaci su lokalno sačuvani');
+    }
+  }
+}
+
+async function fetchWithFallback(url, options) {
+  try {
+    if (!options) options = {};
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), (options.timeout || 8000));
+    options.signal = ctrl.signal;
+    const res = await fetch(url, options);
+    clearTimeout(t);
+    kmBackendOnline = true;
+    return res;
+  } catch(e) {
+    kmBackendOnline = false;
+    if (e.name === 'AbortError') {
+      console.warn('[KMapp] Backend timeout:', url);
+    } else {
+      console.warn('[KMapp] Backend greška:', url, e.message);
+    }
+    throw e;
+  }
+}
+
+// Pokreni health check 2s nakon load
+setTimeout(kmHealthCheck, 2000);
 let porukeInbox = [];
 let porukeSent = [];
 let porukePollTimer = null;
@@ -2717,7 +2790,7 @@ async function porukeFetchInbox() {
   const username = getCurrentUsername();
   if (!username) return [];
   try {
-    const res = await fetch(KM_API_BASE + '/getInbox', {
+    const res = await fetchWithFallback(KM_API_BASE + '/getInbox', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username })
@@ -2734,7 +2807,7 @@ async function porukeFetchSent() {
   const username = getCurrentUsername();
   if (!username) return [];
   try {
-    const res = await fetch(KM_API_BASE + '/getSent', {
+    const res = await fetchWithFallback(KM_API_BASE + '/getSent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username })
@@ -2758,7 +2831,7 @@ async function porukeCheckNew() {
       reqBody.logLogin = true;
       reqBody.device = _pendingLog;
     }
-    const res = await fetch(KM_API_BASE + '/checkNew', {
+    const res = await fetchWithFallback(KM_API_BASE + '/checkNew', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reqBody)
@@ -2786,7 +2859,7 @@ async function porukeCheckNew() {
         // System notification with sender info
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
-            const inboxRes = await fetch(KM_API_BASE + '/getInbox', {
+            const inboxRes = await fetchWithFallback(KM_API_BASE + '/getInbox', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ username })
@@ -2854,7 +2927,7 @@ async function subscribeToPush() {
       expirationTime: sub.expirationTime,
       keys: { p256dh: '', auth: '' }
     };
-    const res = await fetch(KM_API_BASE + '/savePushSubscription', {
+    const res = await fetchWithFallback(KM_API_BASE + '/savePushSubscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, subscription: subData })
@@ -3017,7 +3090,7 @@ async function porukeDeleteMessage(msgId) {
   if (!confirm('Obrisati ovu poruku?')) return;
   // Call backend to soft-delete
   try {
-    await fetch(KM_API_BASE + '/deleteMessage', {
+    await fetchWithFallback(KM_API_BASE + '/deleteMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messageId: msgId })
@@ -3155,7 +3228,7 @@ function porukeOpenThread(partner, displayName) {
   // Mark received messages as read
   const unreadFromPartner = allMsgs.filter(m => m.sender === partner && !m.read);
   unreadFromPartner.forEach(m => {
-    fetch(KM_API_BASE + '/markAsRead', {
+    fetchWithFallback(KM_API_BASE + '/markAsRead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messageId: m.id })
@@ -3205,7 +3278,7 @@ async function porukeThreadSendWithAttachment(partner, displayName, attachmentTe
     if (found) recipientName = found.ime || found.name || partner;
   }
   try {
-    const res = await fetch(KM_API_BASE + '/sendMessage', {
+    const res = await fetchWithFallback(KM_API_BASE + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender, recipient: partner, text: attachmentText, senderName, recipientName })
@@ -3240,7 +3313,7 @@ async function porukeThreadReply(partner, displayName) {
   input.disabled = true;
   
   try {
-    const res = await fetch(KM_API_BASE + '/sendMessage', {
+    const res = await fetchWithFallback(KM_API_BASE + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender, recipient: partner, text, senderName, recipientName })
@@ -3544,7 +3617,7 @@ async function porukeSend() {
         }
       });
     }
-    const res = await fetch(KM_API_BASE + '/sendMessage', {
+    const res = await fetchWithFallback(KM_API_BASE + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender, recipient, text: fullText, senderName, recipientName })
@@ -3615,7 +3688,7 @@ function porukeOpenMessage(msgId, type) {
     '</div>';
   
   if (isReceived && !msg.read) {
-    fetch(KM_API_BASE + '/markAsRead', {
+    fetchWithFallback(KM_API_BASE + '/markAsRead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messageId: msgId })
@@ -3682,7 +3755,7 @@ let serverUsersLoaded = false;
 async function loadServerUsers() {
   if (serverUsersLoaded) return;
   try {
-    const res = await fetch(KM_API_BASE + '/getUsers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const res = await fetchWithFallback(KM_API_BASE + '/getUsers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const data = await res.json();
     if (data.success && data.users) {
       serverUsers = data.users.map(u => ({ username: u.username, password: u.password, displayName: u.displayName || u.username, role: u.role || 'user', source: 'server', _serverId: u.id }));
@@ -3769,7 +3842,7 @@ async function doRegister() {
   localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   
   // Save to server (fire and forget)
-  fetch(KM_API_BASE + '/saveUser', {
+  fetchWithFallback(KM_API_BASE + '/saveUser', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: u, password: p, displayName: u, role: 'user' })
@@ -17391,7 +17464,7 @@ function locateMe() {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v151';
+const KM_VERSION = 'v153';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17404,7 +17477,25 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw2.js?v=' + KM_VERSION.replace('v','')).then(reg => {
       reg.update();
-      // Reload when new SW takes over (no session guard - always reload)
+      // Notify user when new SW is waiting to activate
+      reg.addEventListener('updatefound', () => {
+        var newSW = reg.installing;
+        if (newSW) {
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version ready — show toast with reload button
+              if (typeof showToast === 'function') {
+                showToast('🔄 Nova verzija dostupna — osvežavam...');
+              }
+              setTimeout(() => {
+                newSW.postMessage('SKIP_WAITING');
+                location.reload();
+              }, 1500);
+            }
+          });
+        }
+      });
+      // Reload when new SW takes over
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         location.reload();
       });
@@ -17583,7 +17674,7 @@ function changePassword() {
   }
   // Also save to server for persistence
   const displayName = (users[userIdx] && users[userIdx].displayName) || currentUsername;
-  fetch(KM_API_BASE + '/saveUser', {
+  fetchWithFallback(KM_API_BASE + '/saveUser', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: currentUsername, password: newPwd, displayName: displayName, role: 'user' })
@@ -17688,7 +17779,7 @@ async function adminCreateUser() {
   if (!password) { errEl.textContent = 'Unesite lozinku.'; errEl.style.display = 'block'; return; }
   
   try {
-    const res = await fetch(KM_API_BASE + '/saveUser', {
+    const res = await fetchWithFallback(KM_API_BASE + '/saveUser', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, displayName: username, role: 'user' })
@@ -17716,7 +17807,7 @@ async function adminLoadLoginLogs(range) {
   if (!el) return;
   el.innerHTML = '<div style="color:var(--muted);">Učitavanje...</div>';
   try {
-    const res = await fetch(KM_API_BASE + '/getLoginLogs', {
+    const res = await fetchWithFallback(KM_API_BASE + '/getLoginLogs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ range: range || 'today' })
@@ -17822,7 +17913,7 @@ let serverPelceriLoaded = false;
 async function loadServerPelceri() {
   if (serverPelceriLoaded) return;
   try {
-    const ctrl = new AbortController(); const timeout = setTimeout(() => ctrl.abort(), 5000); const res = await fetch(KM_API_BASE + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: ctrl.signal }); clearTimeout(timeout);
+    const res = await fetchWithFallback(KM_API_BASE + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', timeout: 5000 });
     const data = await res.json();
     if (data.success && data.pelceri) {
       serverPelceri = data.pelceri;
@@ -17867,7 +17958,7 @@ async function adminSavePelcer() {
   if (saveBtn) { saveBtn.textContent = 'Čuvanje...'; saveBtn.disabled = true; }
   
   try {
-    const res = await fetch(KM_API_BASE + '/savePelcer', {
+    const res = await fetchWithFallback(KM_API_BASE + '/savePelcer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kategorija, naziv, tekst })
@@ -17911,7 +18002,7 @@ function renderAdminPelceriList() {
 async function adminDeletePelcer(id) {
   if (!confirm('Obrisati ovaj pelcer sa servera?')) return;
   try {
-    const res = await fetch(KM_API_BASE + '/deletePelcer', {
+    const res = await fetchWithFallback(KM_API_BASE + '/deletePelcer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id })
