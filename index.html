@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v159';
+  vText.textContent = 'v160';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v159</div>
+    <div class="side-menu-footer">KMapp · Beograd · v160</div>
   </div>
 </div>
 
@@ -1275,7 +1275,7 @@ initTapSound();
 <div class="screen" id="screen-dashboard" style="display: none; align-items: center; padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px));">
   <div class="dash-clock" id="dash-clock">--:--</div>
   <div class="dash-date" id="dash-date">--</div>
-  <div class="dash-weather-card" id="dash-weather-card">
+  <div class="dash-weather-card" id="dash-weather-card" onclick="openWeatherForecast()" style="cursor:pointer;">
     <div class="dash-weather-current">
       <span class="dash-weather-icon" id="dash-w-icon">🌡️</span>
       <div>
@@ -2811,7 +2811,12 @@ function switchTab(name) {
     if (name === 'imenik') initImenik();
     if (name === 'kalendar') renderCalendar();
     if (name === 'poruke') porukeView('conversations');
-    if (name === 'mapa') { checkMapAdminAccess(); setTimeout(function() { initLeafletMap(); }, 100); }
+    if (name === 'mapa') {
+      checkMapAdminAccess();
+      setTimeout(function() { initLeafletMap(); }, 100);
+      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 400);
+      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 800);
+    }
     if (name === 'login') {
       setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
       var navHide = document.querySelector('nav'); if (navHide) navHide.style.display = 'none';
@@ -16495,6 +16500,7 @@ function closeImenikModal() {
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
+    <button onclick="if(leafletMap){leafletMap.setView([44.8125,20.4573],13);if(mapMarker){leafletMap.removeLayer(mapMarker);mapMarker=null;}if(mapCircle){leafletMap.removeLayer(mapCircle);mapCircle=null;}var i=document.getElementById('map-info');if(i)i.style.display='none';}" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🔄 Reset</button>
   </div>
 
   <!-- Pretraga -->
@@ -16507,8 +16513,8 @@ function closeImenikModal() {
   </div>
 
   <!-- Mapa - Leaflet -->
-  <div id="map-container" style="min-height:400px;position:relative;">
-    <div id="leaflet-map" style="width:100%;height:450px;border:none;z-index:1;"></div>
+  <div id="map-container" style="min-height:300px;flex:1;position:relative;display:flex;flex-direction:column;">
+    <div id="leaflet-map" style="width:100%;flex:1;min-height:300px;border:none;z-index:1;"></div>
     <!-- Tracking info overlay -->
     <!-- Marker info -->
     <div id="map-info" style="display:none;position:absolute;bottom:12px;left:12px;right:12px;background:white;border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.82rem;z-index:20;">
@@ -17535,17 +17541,20 @@ var tileStandard = null;
 var tileSatellite = null;
 function initLeafletMap() {
   if (leafletMap) return;
-  leafletMap = L.map('leaflet-map').setView([44.8125, 20.4573], 13);
+  var mapEl = document.getElementById('leaflet-map');
+  if (!mapEl) return;
+  leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: true }).setView([44.8125, 20.4573], 13);
+  L.control.scale({ metric: true, imperial: false }).addTo(leafletMap);
   tileStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19
+    attribution: '© OpenStreetMap', maxZoom: 19
   }).addTo(leafletMap);
   tileSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '© Esri',
-    maxZoom: 19
+    attribution: '© Esri', maxZoom: 19
   });
-  // Fix size after container becomes visible
-  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 300);
+  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 600);
+  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 1000);
 }
 
 function setMapLayer(layer) {
@@ -17601,7 +17610,7 @@ async function searchAddress() {
 
 function locateMe() {
   if (!navigator.geolocation) {
-    showToast('❌ Geolokacija nije dostupna');
+    showToast('❌ Geolokacija nije dostupna na ovom uređaju');
     return;
   }
   showToast('📍 Tražim lokaciju...');
@@ -17610,7 +17619,11 @@ function locateMe() {
       var lat = pos.coords.latitude;
       var lon = pos.coords.longitude;
       if (!leafletMap) initLeafletMap();
-      goTo(lat, lon, 'Moja lokacija (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')');
+      if (!leafletMap) { showToast('❌ Mapa nije inicijalizovana'); return; }
+      leafletMap.setView([lat, lon], 16);
+      if (mapMarker) leafletMap.removeLayer(mapMarker);
+      mapMarker = L.marker([lat, lon]).addTo(leafletMap);
+      mapMarker.bindPopup('📍 Moja lokacija<br>' + lat.toFixed(5) + ', ' + lon.toFixed(5)).openPopup();
       if (mapCircle) leafletMap.removeLayer(mapCircle);
       mapCircle = L.circle([lat, lon], {
         radius: pos.coords.accuracy,
@@ -17618,15 +17631,27 @@ function locateMe() {
         fillColor: '#27ae60',
         fillOpacity: 0.1
       }).addTo(leafletMap);
+      var info = document.getElementById('map-info');
+      if (info) {
+        document.getElementById('map-info-text').textContent = '📍 Moja lokacija (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
+        info.style.display = 'block';
+      }
+      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 100);
       showToast('✅ Lokacija pronađena!');
     },
-    function() { showToast('❌ Nije moguće dobiti lokaciju'); },
-    { enableHighAccuracy: true, timeout: 10000 }
+    function(err) {
+      var msg = '❌ Nije moguće dobiti lokaciju';
+      if (err.code === 1) msg = '❌ Pristup lokaciji odbijen. Dozvoli pristup u podešavanjima.';
+      else if (err.code === 2) msg = '❌ Pozicija nedostupna';
+      else if (err.code === 3) msg = '❌ Vreme za lokaciju je isteklo';
+      showToast(msg);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
   );
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v159';
+const KM_VERSION = 'v160';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
