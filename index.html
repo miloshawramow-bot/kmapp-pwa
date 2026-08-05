@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v163';
+  vText.textContent = 'v164';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v163</div>
+    <div class="side-menu-footer">KMapp · Beograd · v164</div>
   </div>
 </div>
 
@@ -1963,7 +1963,7 @@ initTapSound();
         </div>
         <span id="acc-zute-arrow" style="font-size:1rem;color:#5a4a00;transition:transform 0.3s;">▼</span>
       </div>
-      <div id="acc-zute" style="display:none;padding:14px 16px;display:none;flex-direction:column;gap:12px;">
+      <div id="acc-zute" style="display:none;padding:14px 16px;flex-direction:column;gap:12px;">
 
         <div>
           <div style="font-size:0.68rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#c8a84b;border-bottom:2px solid #f5c518;padding-bottom:5px;margin-bottom:8px;">
@@ -2772,9 +2772,18 @@ const ugradeniDocs = [
 
 // ===== ACCORDION =====
 function toggleAccordion(id) {
-  const panel = document.getElementById(id);
+  var panel = document.getElementById(id);
   if (!panel) return;
-  panel.classList.toggle('open');
+  var arrow = document.getElementById(id + '-arrow');
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    panel.style.display = 'flex';
+    panel.classList.add('open');
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  } else {
+    panel.style.display = 'none';
+    panel.classList.remove('open');
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  }
 }
 // Alias so onclick="toggleAcc(...)" works
 const toggleAcc = toggleAccordion;
@@ -17699,7 +17708,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v163';
+const KM_VERSION = 'v164';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
