@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v160';
+  vText.textContent = 'v161';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v160</div>
+    <div class="side-menu-footer">KMapp · Beograd · v161</div>
   </div>
 </div>
 
@@ -2531,6 +2531,7 @@ function loadDashboardWeather() {
     navigator.geolocation.getCurrentPosition(function(pos) {
       var lat = pos.coords.latitude.toFixed(4);
       var lon = pos.coords.longitude.toFixed(4);
+      // success — proceed with weather fetch
       var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5';
       fetch(url).then(function(r){return r.json();}).then(function(d){
         renderWeather(d, null);
@@ -17614,44 +17615,55 @@ function locateMe() {
     return;
   }
   showToast('📍 Tražim lokaciju...');
-  navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      var lat = pos.coords.latitude;
-      var lon = pos.coords.longitude;
-      if (!leafletMap) initLeafletMap();
-      if (!leafletMap) { showToast('❌ Mapa nije inicijalizovana'); return; }
-      leafletMap.setView([lat, lon], 16);
-      if (mapMarker) leafletMap.removeLayer(mapMarker);
-      mapMarker = L.marker([lat, lon]).addTo(leafletMap);
-      mapMarker.bindPopup('📍 Moja lokacija<br>' + lat.toFixed(5) + ', ' + lon.toFixed(5)).openPopup();
-      if (mapCircle) leafletMap.removeLayer(mapCircle);
-      mapCircle = L.circle([lat, lon], {
-        radius: pos.coords.accuracy,
-        color: '#27ae60',
-        fillColor: '#27ae60',
-        fillOpacity: 0.1
-      }).addTo(leafletMap);
-      var info = document.getElementById('map-info');
-      if (info) {
-        document.getElementById('map-info-text').textContent = '📍 Moja lokacija (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
-        info.style.display = 'block';
-      }
-      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 100);
-      showToast('✅ Lokacija pronađena!');
-    },
-    function(err) {
-      var msg = '❌ Nije moguće dobiti lokaciju';
-      if (err.code === 1) msg = '❌ Pristup lokaciji odbijen. Dozvoli pristup u podešavanjima.';
-      else if (err.code === 2) msg = '❌ Pozicija nedostupna';
-      else if (err.code === 3) msg = '❌ Vreme za lokaciju je isteklo';
-      showToast(msg);
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-  );
+  
+  function showLocation(pos) {
+    var lat = pos.coords.latitude;
+    var lon = pos.coords.longitude;
+    if (!leafletMap) initLeafletMap();
+    if (!leafletMap) { showToast('❌ Mapa nije inicijalizovana'); return; }
+    leafletMap.setView([lat, lon], 16);
+    if (mapMarker) leafletMap.removeLayer(mapMarker);
+    mapMarker = L.marker([lat, lon]).addTo(leafletMap);
+    mapMarker.bindPopup('📍 Moja lokacija<br>' + lat.toFixed(5) + ', ' + lon.toFixed(5)).openPopup();
+    if (mapCircle) leafletMap.removeLayer(mapCircle);
+    mapCircle = L.circle([lat, lon], {
+      radius: pos.coords.accuracy,
+      color: '#27ae60',
+      fillColor: '#27ae60',
+      fillOpacity: 0.1
+    }).addTo(leafletMap);
+    var info = document.getElementById('map-info');
+    if (info) {
+      document.getElementById('map-info-text').textContent = '📍 Moja lokacija (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
+      info.style.display = 'block';
+    }
+    setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+    showToast('✅ Lokacija pronađena!');
+  }
+  
+  function handleError(err, isRetry) {
+    if (err.code === 1) {
+      // PERMISSION_DENIED — ovo je blokada, retry neće pomoći
+      showToast('❌ Pristup lokaciji je blokiran. U Chrome: 🔒 ikona u adresnoj traci → Dozvole → Lokacija → Dozvoli.', 5000);
+    } else if (err.code === 3 && !isRetry) {
+      // TIMEOUT — probaj ponovo sa GPS
+      showToast('📍 Pokušavam sa GPS...');
+      navigator.geolocation.getCurrentPosition(showLocation, function(e) { handleError(e, true); },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    } else {
+      var msg = '❌ Lokacija nedostupna. Uključi GPS i probaj ponovo.';
+      if (err.code === 2) msg = '❌ Pozicija nedostupna. Proveri da li je GPS uključen.';
+      showToast(msg, 4000);
+    }
+  }
+  
+  // Prvo probaj brzu lokaciju (WiFi/cell tower), pa ako ne uspe — GPS
+  navigator.geolocation.getCurrentPosition(showLocation, function(err) { handleError(err, false); },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v160';
+const KM_VERSION = 'v161';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
