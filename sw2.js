@@ -1,5 +1,5 @@
 // KMapp Service Worker v57 — network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v170';
+const CACHE = 'kmapp-v171';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -90,7 +90,7 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200],
     tag: 'kmapp-push',
     renotify: true,
-    data: { url: data.url || 'https://miloshawramow-bot.github.io/kmapp-pwa/' }
+    data: { url: data.url || 'https://kmapp-n37.pages.dev/' }
   };
   event.waitUntil(
     self.registration.showNotification(data.title || 'KMapp - Nova poruka', options)
@@ -99,7 +99,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || 'https://miloshawramow-bot.github.io/kmapp-pwa/';
+  const targetUrl = (event.notification.data && event.notification.data.url) || 'https://kmapp-n37.pages.dev/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {

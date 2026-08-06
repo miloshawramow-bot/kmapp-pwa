@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v167';
+  vText.textContent = 'v171';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v167</div>
+    <div class="side-menu-footer">KMapp · Beograd · v171</div>
   </div>
 </div>
 
@@ -3073,18 +3073,24 @@ async function porukeCheckNew() {
 function porukeStartPolling() {
   if (porukePollTimer) return;
   if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
+    Notification.requestPermission().then(function(perm) {
+      if (perm === 'granted') subscribeToPush();
+    });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    subscribeToPush();
   }
   porukeCheckNew();
   porukePollTimer = setInterval(porukeCheckNew, 15000);
-  // Subscribe to push notifications
-  subscribeToPush();
 }
 
 // ===== PUSH NOTIFICATIONS =====
 async function subscribeToPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.log('Push not supported on this device');
+    return;
+  }
+  if (!('Notification' in window) || Notification.permission !== 'granted') {
+    console.log('Push permission not granted - skipping silently');
     return;
   }
   try {
@@ -3123,7 +3129,7 @@ async function subscribeToPush() {
     }
   } catch(e) {
     console.log('Push subscription error:', e.message || e);
-    showToast('⚠️ Push greška: ' + (e.message || e));
+    // Silently fail - don't scare users with technical push errors
   }
 }
 
