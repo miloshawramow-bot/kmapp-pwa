@@ -1304,10 +1304,10 @@ initTapSound();
 
 <!-- ===== DOKUMENTI ===== -->
 <!-- ===== LOGIN / PRIJAVA ===== -->
-<div class="screen" id="screen-login" style="display: none;">
-  <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 60px;background:
+<div class="screen" id="screen-login" style="display: none;background:
     linear-gradient(135deg, rgba(13, 34, 64, 0.55) 0%, rgba(26, 74, 138, 0.40) 100%),
     url('assets/beograd-bg.png') center/cover;">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 60px;">
 
     <!-- Logo grb Beograda -->
     <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);margin-bottom:16px;">
@@ -17827,7 +17827,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v169';
+const KM_VERSION = 'v170';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
