@@ -1272,7 +1272,7 @@ initTapSound();
 
 <!-- More grid overlay -->
 <!-- ===== DASHBOARD / POCETNI EKRAN ===== -->
-<div class="screen" id="screen-dashboard" style="display: none; align-items: center; padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px));">
+<div class="screen" id="screen-dashboard" style="display: none; align-items: center; padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, rgba(13, 34, 64, 0.75) 0%, rgba(26, 74, 138, 0.55) 100%), url('assets/beograd-bg.png') center/cover;">
   <div class="dash-clock" id="dash-clock">--:--</div>
   <div class="dash-date" id="dash-date">--</div>
   <div class="dash-weather-card" id="dash-weather-card" onclick="openWeatherForecast()" style="cursor:pointer;">
@@ -17703,7 +17703,7 @@ var STREET_COORDS = {
 function showStreetOnMap(streetName) {
   if (!streetName) return;
   showToast('📍 Tražim: ' + streetName + '...');
-  switchTab('map');
+  switchTab('mapa');
   var c = STREET_COORDS[streetName];
   if (c) {
     goTo(c.lat, c.lon, streetName);
@@ -17827,7 +17827,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v170';
+const KM_VERSION = 'v171';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));

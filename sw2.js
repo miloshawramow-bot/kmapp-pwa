@@ -1,5 +1,5 @@
 // KMapp Service Worker v57 — network-first for HTML, cache-first for assets, push notifications
-const CACHE = 'kmapp-v167';
+const CACHE = 'kmapp-v170';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,8 @@ const STATIC_ASSETS = [
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/favicon-16.png',
-  './icons/beograd-grb.png'
+  './icons/beograd-grb.png',
+  './assets/beograd-bg.png'
 ];
 
 self.addEventListener('install', (event) => {
