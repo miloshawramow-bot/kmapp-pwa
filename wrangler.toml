@@ -6,3 +6,6 @@ pages_build_output_dir = "."
 binding = "DB"
 database_name = "kmapp"
 database_id = "4dcd7a55-9aa6-4dd9-8cd5-8c5a47c99b8b"
+
+[ai]
+binding = "AI"
