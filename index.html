@@ -96,9 +96,15 @@
   }
 
 
+  html {
+    background: linear-gradient(135deg, rgba(13, 34, 64, 0.65) 0%, rgba(26, 74, 138, 0.50) 100%), url('assets/beograd-bg.png') center/cover;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: var(--light);
+    background: transparent;
     color: var(--text);
     height: 100vh;
     height: 100dvh;
@@ -17888,7 +17894,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v176';
+const KM_VERSION = 'v177';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
