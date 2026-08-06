@@ -17630,41 +17630,111 @@ async function searchAddress() {
   }
 }
 
-async function showStreetOnMap(streetName) {
+// Hardcoded street coordinates for Informator (avoids Nominatim CORS issues)
+var STREET_COORDS = {
+  '1.300 kaplara': {lat: 44.743038, lon: 20.4953147},
+  'Andrićev venac (od k. br. 6 do Kralja Milana)': {lat: 44.8096248, lon: 20.4633559},
+  'Balkanska': {lat: 44.8098936, lon: 20.4592417},
+  'Bebelova': {lat: 44.7595246, lon: 20.4836092},
+  'Beogradska': {lat: 44.6711275, lon: 20.3959627},
+  'Brankov most i Brankova': {lat: 44.8148171, lon: 20.4467637},
+  'Braće Jugovića': {lat: 44.8174132, lon: 20.4616659},
+  'Bulevar Mihajla Pupina': {lat: 44.814696, lon: 20.4353323},
+  'Bulevar Nikole Tesle': {lat: 44.8325202, lon: 20.4177309},
+  'Bulevar despota Stefana': {lat: 44.8166666, lon: 20.4625887},
+  'Bulevar oslobođenja': {lat: 44.7843142, lon: 20.4663639},
+  'Bulevar vojvode Mišića': {lat: 44.7936053, lon: 20.4302401},
+  'Cara Lazara (od Vuka Karadžića do Rajićeve)': {lat: 44.8183427, lon: 20.4543053},
+  'Delijska': {lat: 44.8178739, lon: 20.4555034},
+  'Gospodar Jevremova (od k. br. 56 do Skadarske)': {lat: 44.818267, lon: 20.4639572},
+  'Gospodska': {lat: 44.8457847, lon: 20.4142832},
+  'Hajduk Veljkov venac': {lat: 44.8061677, lon: 20.4581087},
+  'Ivan Begova (od Gračaničke do Cara Lazara)': {lat: 44.8175701, lon: 20.4533473},
+  'Karađorđeva – Lazarevac (od Branka Radičevića i Kralja Petra I do Dimitrija Tucovića i Dušana Nedeljkovića)': {lat: 44.811223, lon: 20.4545639},
+  'Karađorđeva – prolaz od Travničke br. 2 do Karađorđeve br. 46 (Savski venac)': {lat: 44.811223, lon: 20.4545639},
+  'Kej oslobođenja (od Karamatine do kraja uzvodno) – Zemun': {lat: 44.843, lon: 20.409},
+  'Kirovljeva': {lat: 44.7885392, lon: 20.4191819},
+  'Kneza Mihaila': {lat: 44.8179461, lon: 20.4568551},
+  'Kolarčeva': {lat: 44.8158016, lon: 20.4607938},
+  'Kosmajski prolaz': {lat: 44.8157963, lon: 20.4579481},
+  'Kralja Milana': {lat: 44.8075418, lon: 20.4639649},
+  'Kralja Petra Prvog (od Kosančićevog venca do Kneza Sime Markovića i od Gračaničke do k. br. 22)': {lat: 44.8222449, lon: 20.4582799},
+  'Kraljice Marije': {lat: 44.8037936, lon: 20.4804453},
+  'Kraljice Natalije': {lat: 44.8081104, lon: 20.4619989},
+  'Laze Pačua': {lat: 44.8170204, lon: 20.4594061},
+  'Magistratski trg': {lat: 44.844775, lon: 20.4132456},
+  'Marka Leka': {lat: 44.8172081, lon: 20.459175},
+  'Maršala Birjuzova (od Kosmajskog prolaza do Sremske)': {lat: 44.8160949, lon: 20.4544617},
+  'Masarikov trg (od javnog parkirališta do Gospodske)': {lat: 44.8442876, lon: 20.4150122},
+  'Milentija Popovića': {lat: 44.8120612, lon: 20.4349293},
+  'Nikole Spasića': {lat: 44.8183706, lon: 20.4545372},
+  'Njegoševa (od Kralja Milana do Svetozara Markovića)': {lat: 44.8057905, lon: 20.4654138},
+  'Nušićeva (od Terazija do Dečanske)': {lat: 44.8138241, lon: 20.4614818},
+  'Obilićev venac (od Carice Milice do Trga republike)': {lat: 44.8160713, lon: 20.4574861},
+  'Paštrovićeva': {lat: 44.7847766, lon: 20.4260308},
+  'Požeska': {lat: 44.7788881, lon: 20.4156397},
+  'Radnička': {lat: 44.7918749, lon: 20.4256145},
+  'Rajićeva (od Knez Mihailove do Gračaničke)': {lat: 44.8192218, lon: 20.4533153},
+  'Reljina': {lat: 44.8135072, lon: 20.4584846},
+  'Sarajevska': {lat: 44.8054378, lon: 20.4571985},
+  'Simina (od Skadarske do Emilijana Josimovića)': {lat: 44.8190666, lon: 20.4605839},
+  'Sindjelićeva': {lat: 44.8020742, lon: 20.4784443},
+  'Skadarska (od Bul. despota Stefana do Strahinjića bana)': {lat: 44.8180993, lon: 20.4647579},
+  'Srebrenička': {lat: 44.8163607, lon: 20.4519434},
+  'Sremska': {lat: 44.8144981, lon: 20.4595102},
+  'Svetogorska': {lat: 44.8126789, lon: 20.470241},
+  'Terazije': {lat: 44.8132071, lon: 20.4604708},
+  'Topličin venac (od Carice Milice do Obilićevog venca)': {lat: 44.8166574, lon: 20.454377},
+  'Trg republike (od Vase Čarapića do Obilićevog venca)': {lat: 44.8162216, lon: 20.4602953},
+  'Uskočka': {lat: 44.8180992, lon: 20.4552636},
+  'Uskočko sokače': {lat: 44.8189068, lon: 20.4560557},
+  'Vasina ulica': {lat: 44.8182095, lon: 20.4584327},
+  'Veliki trg (od Gospodske do Zmaj Jovine)': {lat: 44.8458554, lon: 20.4134871},
+  'Vijadukt za Banovo brdo': {lat: 44.8163487, lon: 20.3972576},
+  'Visoka': {lat: 44.8486345, lon: 20.4101387},
+  'Vojislava Ilića': {lat: 44.7829078, lon: 20.5014743},
+  'Vuka Karadžića (od Studentskog trga do Cara Lazara)': {lat: 44.8184651, lon: 20.4569927},
+  'Zadarska': {lat: 44.8165992, lon: 20.452113},
+  'Zetska': {lat: 44.8170808, lon: 20.4649597},
+  'Zmaj Jovina (od Obilićevog venca do Vase Čarapića)': {lat: 44.8171419, lon: 20.4576693},
+  'Čika Ljubina': {lat: 44.817311, lon: 20.4585374},
+  'Đure Jakšića': {lat: 44.8177749, lon: 20.4644258},
+};
+
+function showStreetOnMap(streetName) {
   if (!streetName) return;
   showToast('📍 Tražim: ' + streetName + '...');
   switchTab('map');
-  try {
-    // Clean up street name for better Nominatim results
-    var cleanName = streetName
-      .replace(/\s+ulica$/i, '')    // remove trailing "ulica"
-      .replace(/\s+i\s+.+$/i, '');  // remove " i ..." (e.g. "Brankov most i Brankova" → "Brankov most")
-    var query = encodeURIComponent(cleanName + ' Beograd');
-    var resp = await fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1');
-    var results = await resp.json();
-    if (results.length > 0) {
-      var r = results[0];
-      var lat = parseFloat(r.lat);
-      var lon = parseFloat(r.lon);
-      goTo(lat, lon, streetName);
-      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
-      showToast('✅ ' + streetName + ' pronađena na mapi!');
-    } else {
-      // Try original name as fallback
-      var query2 = encodeURIComponent(streetName + ' Beograd');
-      var resp2 = await fetch('https://nominatim.openstreetmap.org/search?q=' + query2 + '&format=json&limit=1');
-      var results2 = await resp2.json();
-      if (results2.length > 0) {
-        var r2 = results2[0];
-        goTo(parseFloat(r2.lat), parseFloat(r2.lon), streetName);
-        setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
-        showToast('✅ ' + streetName + ' pronađena na mapi!');
-      } else {
-        showToast('❌ ' + streetName + ' nije pronađena');
-      }
+  var c = STREET_COORDS[streetName];
+  if (c) {
+    goTo(c.lat, c.lon, streetName);
+    setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+    showToast('✅ ' + streetName + ' pronađena na mapi!');
+  } else {
+    // Fallback: try Nominatim for streets not in the hardcoded list
+    try {
+      var cleanName = streetName
+        .replace(/\s+ulica$/i, '')
+        .replace(/\s+i\s+.+$/i, '');
+      var query = encodeURIComponent(cleanName + ' Beograd');
+      fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1')
+        .then(function(r) { return r.json(); })
+        .then(function(results) {
+          if (results.length > 0) {
+            var r = results[0];
+            goTo(parseFloat(r.lat), parseFloat(r.lon), streetName);
+            setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+            showToast('✅ ' + streetName + ' pronađena na mapi!');
+          } else {
+            showToast('❌ ' + streetName + ' nije pronađena');
+          }
+        })
+        .catch(function() {
+          showToast('❌ ' + streetName + ' nije pronađena');
+        });
+    } catch(e) {
+      showToast('❌ ' + streetName + ' nije pronađena');
     }
-  } catch(e) {
-    showToast('❌ Greška u pretrazi ulice');
   }
 }
 
@@ -17758,7 +17828,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v167';
+const KM_VERSION = 'v168';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
