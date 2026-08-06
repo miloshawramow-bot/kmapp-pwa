@@ -1,0 +1,152 @@
+[
+  {
+    "id": "6a71c84f9ba8bec7e1ae8bc9",
+    "sender": "audit.test",
+    "senderName": "Audit",
+    "recipient": "audit.target",
+    "recipientName": "Target",
+    "text": "audit msg",
+    "read": 0,
+    "created_date": "2026-08-04 11:09:03"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c12",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Milos.Avramov",
+    "recipientName": "Miloš Avramov",
+    "text": "✅ KMapp v150 je stabilan!\n\nPrethodna verzija je imala grešku u Service Workeru koja je mogla da lomi aplikaciju. Sada je popravljeno.\n\nAko ste imali problema sa otvaranjem aplikacije:\n1. Zatvorite KMapp potpuno\n2. Ponovo je otvorite\n3. Aplikacija će se automatski ažurirati\n\nAko i dalje ne radi, idite u Chrome → Podešavanja → Privatnost → Obriši keš i ponovo otvorite.",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c13",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "admin",
+    "recipientName": "admin",
+    "text": "✅ KMapp v150 je stabilan!\n\nPrethodna verzija je imala grešku u Service Workeru koja je mogla da lomi aplikaciju. Sada je popravljeno.",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c14",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "S.A",
+    "recipientName": "S.A",
+    "text": "✅ KMapp v150 je stabilan!\n\nPrethodna verzija je imala grešku u Service Workeru koja je mogla da lomi aplikaciju. Sada je popravljeno.",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c15",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Aleksa.Orlovic",
+    "recipientName": "Aleksa Orlović",
+    "text": "✅ KMapp v150 je stabilan!",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c16",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Biljana.Sokolovic",
+    "recipientName": "Biljana Sokolović",
+    "text": "✅ KMapp v150 je stabilan!",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c17",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Milan.Milosevic",
+    "recipientName": "Milan Milošević",
+    "text": "✅ KMapp v150 je stabilan!",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f363e7d5b96d13e132c18",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Aleksandar.Djuric",
+    "recipientName": "Aleksandar Đurić",
+    "text": "✅ KMapp v150 je stabilan!",
+    "read": 1,
+    "created_date": "2026-08-02 12:21:18"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e6458fc",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Milos.Avramov",
+    "recipientName": "Miloš Avramov",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e6458fd",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "admin",
+    "recipientName": "admin",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e6458fe",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "S.A",
+    "recipientName": "S.A",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e6458ff",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Aleksa.Orlovic",
+    "recipientName": "Aleksa Orlović",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e645900",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Biljana.Sokolovic",
+    "recipientName": "Biljana Sokolović",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e645901",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Milan.Milosevic",
+    "recipientName": "Milan Milošević",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  },
+  {
+    "id": "6a6f33f4d9cfb6365e645902",
+    "sender": "system",
+    "senderName": "KMapp Sistem",
+    "recipient": "Aleksandar.Djuric",
+    "recipientName": "Aleksandar Đurić",
+    "text": "🔔 KMapp ažuriran na v150!",
+    "read": 1,
+    "created_date": "2026-08-02 12:11:32"
+  }
+]

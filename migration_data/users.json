@@ -1,0 +1,21 @@
+[
+  {
+    "id": "6a6e2d81c66ba123392ff3d2",
+    "username": "s.a",
+    "password": "1234",
+    "displayName": "S.A",
+    "role": "user"
+  },
+  {
+    "username": "admin",
+    "password": "admin",
+    "displayName": "Admin",
+    "role": "admin"
+  },
+  {
+    "username": "test01",
+    "password": "test01",
+    "displayName": "Test01",
+    "role": "user"
+  }
+]
