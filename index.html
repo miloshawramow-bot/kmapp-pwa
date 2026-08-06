@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v172';
+  vText.textContent = 'v173';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v172</div>
+    <div class="side-menu-footer">KMapp · Beograd · v173</div>
   </div>
 </div>
 
@@ -2901,7 +2901,11 @@ function closeSideMenu() {
 }
 
 // ===== PORUKE / CHAT =====
-const KM_API_BASE = 'https://solas-799a3993.base44.app/functions';
+// Primary: Cloudflare D1 API (no credit limit), Fallback: Base44 backend
+const KM_API_BASE_CF = '/api';
+const KM_API_BASE_B44 = 'https://solas-799a3993.base44.app/functions';
+const KM_API_BASE = KM_API_BASE_CF;  // Default to Cloudflare
+let kmUseCloudflareAPI = true;
 const VAPID_PUBLIC_KEY = 'BMtr4Ap8lezXKUgEy3o3EKSzcl4WIUXgffpbfyVWE6YQH7AvfO_eCY-f1MiaBfJhuTnw_ZkqVbGTVAps3PxqujQ';
 let porukeCurrentView = 'conversations';
 
@@ -2913,7 +2917,7 @@ async function kmHealthCheck() {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 3000);
-    const res = await fetchWithFallback(KM_API_BASE + '/getPelceri', {
+    const res = await fetchWithFallback(KM_API_BASE_CF + '/getPelceri', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: '{}',
@@ -2934,15 +2938,48 @@ async function kmHealthCheck() {
 }
 
 async function fetchWithFallback(url, options) {
+  if (!options) options = {};
+  
+  // Convert Base44 URLs to Cloudflare API URLs
+  let cfUrl = url;
+  if (url.startsWith(KM_API_BASE_B44)) {
+    cfUrl = KM_API_BASE_CF + url.substring(KM_API_BASE_B44.length);
+  }
+  
+  // Try Cloudflare D1 API first
   try {
-    if (!options) options = {};
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), (options.timeout || 8000));
-    options.signal = ctrl.signal;
-    const res = await fetch(url, options);
-    clearTimeout(t);
+    const ctrl1 = new AbortController();
+    const t1 = setTimeout(() => ctrl1.abort(), (options.timeout || 8000));
+    const opts1 = { ...options, signal: ctrl1.signal };
+    const res1 = await fetch(cfUrl, opts1);
+    clearTimeout(t1);
+    if (res1.ok) {
+      const data = await res1.json();
+      if (data.success !== false) {
+        kmBackendOnline = true;
+        kmUseCloudflareAPI = true;
+        return res1;
+      }
+    }
+    // If D1 returns error (not configured), fall through to Base44
+  } catch(e) {
+    console.warn('[KMapp] Cloudflare API failed, trying Base44:', e.message);
+  }
+  
+  // Fallback: Base44 backend
+  let b44Url = url;
+  if (url.startsWith(KM_API_BASE_CF)) {
+    b44Url = KM_API_BASE_B44 + url.substring(KM_API_BASE_CF.length);
+  }
+  try {
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), (options.timeout || 8000));
+    const opts2 = { ...options, signal: ctrl2.signal };
+    const res2 = await fetch(b44Url, opts2);
+    clearTimeout(t2);
     kmBackendOnline = true;
-    return res;
+    kmUseCloudflareAPI = false;
+    return res2;
   } catch(e) {
     kmBackendOnline = false;
     if (e.name === 'AbortError') {
@@ -17849,7 +17886,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v172';
+const KM_VERSION = 'v173';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18334,7 +18371,7 @@ let serverPelceriLoaded = false;
 async function loadServerPelceri() {
   if (serverPelceriLoaded) return;
   try {
-    const res = await fetchWithFallback(KM_API_BASE + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', timeout: 5000 });
+    const res = await fetchWithFallback(KM_API_BASE_CF + '/getPelceri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', timeout: 5000 });
     const data = await res.json();
     if (data.success && data.pelceri) {
       serverPelceri = data.pelceri;
