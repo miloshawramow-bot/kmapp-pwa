@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v164';
+  vText.textContent = 'v165';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v164</div>
+    <div class="side-menu-footer">KMapp · Beograd · v165</div>
   </div>
 </div>
 
@@ -17708,7 +17708,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v164';
+const KM_VERSION = 'v165';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18079,21 +18079,36 @@ function checkMapAdminAccess() {
   const isAdmin = (role === 'admin');
 }
 
-function getCustomAkti() { return JSON.parse(localStorage.getItem(KM_CUSTOM_AKTI_KEY) || '[]'); }
-function saveCustomAkti(a) { localStorage.setItem(KM_CUSTOM_AKTI_KEY, JSON.stringify(a)); }
+// ===== ADMIN AKTI (SERVER-BACKED) =====
+let serverAkti = [];
+let serverAktiLoaded = false;
 
-function getNextAktId() {
-  let maxId = 0;
-  aktiData.forEach(a => { if (a.id > maxId) maxId = a.id; });
-  getCustomAkti().forEach(a => { if (a.id > maxId) maxId = a.id; });
-  return maxId + 1;
+async function loadServerAkti() {
+  if (serverAktiLoaded) return;
+  try {
+    const res = await fetchWithFallback(KM_API_BASE + '/getAkti', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', timeout: 5000
+    });
+    const data = await res.json();
+    if (data.success && data.akti) {
+      serverAkti = data.akti;
+      data.akti.forEach(a => {
+        if (!aktiData.find(x => x.naziv === a.naziv && x.tip === a.tip)) {
+          aktiData.push({ id: 'srv_' + a.id, tip: a.tip, naziv: a.naziv, broj: a.broj, sadrzaj: a.sadrzaj, _serverId: a.id });
+        }
+      });
+    }
+    serverAktiLoaded = true;
+  } catch(e) {
+    console.error('loadServerAkti error:', e);
+    serverAktiLoaded = true;
+  }
 }
 
-function loadCustomAkti() {
-  getCustomAkti().forEach(a => { if (!aktiData.find(x => x.id === a.id)) aktiData.push(a); });
-}
+// Load server akti on startup
+loadServerAkti();
 
-function adminSaveAkt() {
+async function adminSaveAkt() {
   const tip = document.getElementById('admin-akt-tip').value;
   const naziv = document.getElementById('admin-akt-naziv').value.trim();
   const broj = document.getElementById('admin-akt-broj').value.trim();
@@ -18101,40 +18116,74 @@ function adminSaveAkt() {
   const errEl = document.getElementById('admin-akt-error');
   if (!naziv) { errEl.textContent = 'Unesite naziv akta.'; errEl.style.display = 'block'; return; }
   if (!sadrzaj) { errEl.textContent = 'Unesite sadržaj akta.'; errEl.style.display = 'block'; return; }
-  const custom = getCustomAkti();
-  const id = getNextAktId();
-  custom.push({ id, tip, naziv, broj, sadrzaj });
-  saveCustomAkti(custom);
-  aktiData.push({ id, tip, naziv, broj, sadrzaj });
-  document.getElementById('admin-akt-naziv').value = '';
-  document.getElementById('admin-akt-broj').value = '';
-  document.getElementById('admin-akt-sadrzaj').value = '';
-  errEl.style.display = 'none';
-  renderAdminAktiList();
-  showToast('✅ Akt sačuvan: ' + naziv);
+  
+  const saveBtn = document.querySelector('button[onclick="adminSaveAkt()"]');
+  if (saveBtn) { saveBtn.textContent = 'Čuvanje...'; saveBtn.disabled = true; }
+  
+  try {
+    const res = await fetchWithFallback(KM_API_BASE + '/saveAkt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tip, naziv, broj, sadrzaj })
+    });
+    const data = await res.json();
+    if (data.success && data.akt) {
+      const srvId = data.akt.id;
+      aktiData.push({ id: 'srv_' + srvId, tip, naziv, broj, sadrzaj, _serverId: srvId });
+      serverAkti.push(data.akt);
+      document.getElementById('admin-akt-naziv').value = '';
+      document.getElementById('admin-akt-broj').value = '';
+      document.getElementById('admin-akt-sadrzaj').value = '';
+      errEl.style.display = 'none';
+      renderAdminAktiList();
+      showToast('✅ Akt sačuvan na serveru: ' + naziv);
+    } else {
+      errEl.textContent = 'Greška: ' + (data.error || 'Nepoznata');
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Greška pri čuvanju: ' + (e.message || e);
+    errEl.style.display = 'block';
+  } finally {
+    if (saveBtn) { saveBtn.textContent = '💾 Sačuvaj akt'; saveBtn.disabled = false; }
+  }
 }
 
 function renderAdminAktiList() {
   const el = document.getElementById('admin-akti-list');
-  const custom = getCustomAkti();
+  if (!el) return;
+  const custom = aktiData.filter(a => a._serverId);
   if (!custom.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodanih akata.</div>'; return; }
   const tipLabel = { zakon: 'Zakon', odluka: 'Odluka' };
   const tipColor = { zakon: '#1a4a8a', odluka: '#8e44ad' };
   el.innerHTML = custom.map(a => '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:white;">' +
     '<span style="background:' + tipColor[a.tip] + ';color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;">' + tipLabel[a.tip] + '</span>' +
-    '<div style="flex:1;"><div style="font-size:0.8rem;font-weight:600;color:var(--navy);">' + a.naziv + '</div><div style="font-size:0.7rem;color:var(--muted);">' + (a.broj||'') + '</div></div>' +
-    '<button onclick="adminDeleteAkt(' + a.id + ')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;">Obriši</button></div>'
+    '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + a.naziv + '</div><div style="font-size:0.7rem;color:var(--muted);">' + (a.broj||'') + '</div></div>' +
+    '<button onclick="adminDeleteAkt(\'' + a._serverId + '\')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;flex-shrink:0;">Obriši</button></div>'
   ).join('');
 }
 
-function adminDeleteAkt(id) {
-  if (!confirm('Obrisati ovaj akt?')) return;
-  let custom = getCustomAkti().filter(a => a.id !== id);
-  saveCustomAkti(custom);
-  const idx = aktiData.findIndex(a => a.id === id);
-  if (idx >= 0) aktiData.splice(idx, 1);
-  renderAdminAktiList();
-  showToast('🗑️ Akt obrisan.');
+async function adminDeleteAkt(id) {
+  if (!confirm('Obrisati ovaj akt sa servera?')) return;
+  try {
+    const res = await fetchWithFallback(KM_API_BASE + '/deleteAkt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const idx = aktiData.findIndex(a => a._serverId === id);
+      if (idx >= 0) aktiData.splice(idx, 1);
+      serverAkti = serverAkti.filter(a => a.id !== id);
+      renderAdminAktiList();
+      showToast('🗑️ Akt obrisan sa servera.');
+    } else {
+      showToast('⚠️ Greška: ' + (data.error || 'Brisanje nije uspelo'));
+    }
+  } catch(e) {
+    showToast('⚠️ Greška pri brisanju: ' + (e.message || e));
+  }
 }
 
 // ===== ADMIN PELCERI (SERVER-BACKED) =====
