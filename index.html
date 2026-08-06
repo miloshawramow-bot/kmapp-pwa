@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v165';
+  vText.textContent = 'v166';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v165</div>
+    <div class="side-menu-footer">KMapp · Beograd · v166</div>
   </div>
 </div>
 
@@ -1972,23 +1972,23 @@ initTapSound();
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <thead><tr style="background:#fffbe6;"><th style="padding:7px 10px;text-align:left;color:#5a4a00;font-weight:700;border-bottom:1px solid #f0d060;">Ulica / Potez</th></tr></thead>
             <tbody>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Vasina ulica</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Bulevar Mihajla Pupina</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Brankov most i Brankova</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Kraljice Natalije</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Radnička</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Bulevar vojvode Mišića</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Vijadukt za Banovo brdo</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Kirovljeva</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Paštrovićeva</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Visoka</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Kralja Milana</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Terazije</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Kolarčeva</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Svetogorska</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Braće Jugovića</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Kraljice Marije</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Bulevar oslobođenja</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Vasina ulica')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Vasina ulica 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bulevar Mihajla Pupina')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bulevar Mihajla Pupina 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Brankov most i Brankova')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Brankov most i Brankova 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kraljice Natalije')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Kraljice Natalije 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Radnička')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Radnička 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bulevar vojvode Mišića')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bulevar vojvode Mišića 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Vijadukt za Banovo brdo')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Vijadukt za Banovo brdo 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kirovljeva')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Kirovljeva 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Paštrovićeva')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Paštrovićeva 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Visoka')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Visoka 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kralja Milana')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Kralja Milana 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Terazije')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Terazije 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kolarčeva')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Kolarčeva 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Svetogorska')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Svetogorska 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Braće Jugovića')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Braće Jugovića 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kraljice Marije')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Kraljice Marije 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bulevar oslobođenja')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bulevar oslobođenja 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -1999,13 +1999,13 @@ initTapSound();
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <tbody>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Bulevar despota Stefana</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Sindjelićeva</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Bulevar Nikole Tesle</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Vojislava Ilića</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Sarajevska</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Hajduk Veljkov venac</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Balkanska</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bulevar despota Stefana')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bulevar despota Stefana 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Sindjelićeva')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Sindjelićeva 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bulevar Nikole Tesle')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bulevar Nikole Tesle 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Vojislava Ilića')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Vojislava Ilića 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Sarajevska')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Sarajevska 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Hajduk Veljkov venac')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Hajduk Veljkov venac 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Balkanska')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Balkanska 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -2016,11 +2016,11 @@ initTapSound();
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <tbody>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Bebelova</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Milentija Popovića</td></tr>
-              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Bulevar oslobođenja</td></tr>
-              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;">Požeska</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Beogradska</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bebelova')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bebelova 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Milentija Popovića')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Milentija Popovića 📍</td></tr>
+              <tr style="border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Bulevar oslobođenja')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Bulevar oslobođenja 📍</td></tr>
+              <tr style="background:#fffdf0;border-bottom:1px solid #f5f0e0;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Požeska')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Požeska 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Beogradska')" onmouseover="this.style.backgroundColor='#fffbe6'" onmouseout="this.style.backgroundColor=''">Beogradska 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -2047,28 +2047,28 @@ initTapSound();
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <thead><tr style="background:#eef3fb;"><th style="padding:7px 10px;text-align:left;color:#0d2240;font-weight:700;border-bottom:1px solid #d0dcea;">Ulica / Potez</th></tr></thead>
             <tbody>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Kneza Mihaila</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Sremska</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Maršala Birjuzova (od Kosmajskog prolaza do Sremske)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Kosmajski prolaz</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Obilićev venac (od Carice Milice do Trga republike)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Trg republike (od Vase Čarapića do Obilićevog venca)</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Čika Ljubina</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Laze Pačua</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Marka Leka</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Zmaj Jovina (od Obilićevog venca do Vase Čarapića)</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Vuka Karadžića (od Studentskog trga do Cara Lazara)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">1.300 kaplara</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Uskočko sokače</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Kralja Petra Prvog (od Kosančićevog venca do Kneza Sime Markovića i od Gračaničke do k. br. 22)</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Rajićeva (od Knez Mihailove do Gračaničke)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Cara Lazara (od Vuka Karadžića do Rajićeve)</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Nikole Spasića</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Uskočka</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Delijska</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Đure Jakšića</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Ivan Begova (od Gračaničke do Cara Lazara)</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Topličin venac (od Carice Milice do Obilićevog venca)</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kneza Mihaila')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Kneza Mihaila 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Sremska')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Sremska 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Maršala Birjuzova (od Kosmajskog prolaza do Sremske)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Maršala Birjuzova (od Kosmajskog prolaza do Sremske) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kosmajski prolaz')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Kosmajski prolaz 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Obilićev venac (od Carice Milice do Trga republike)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Obilićev venac (od Carice Milice do Trga republike) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Trg republike (od Vase Čarapića do Obilićevog venca)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Trg republike (od Vase Čarapića do Obilićevog venca) 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Čika Ljubina')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Čika Ljubina 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Laze Pačua')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Laze Pačua 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Marka Leka')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Marka Leka 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Zmaj Jovina (od Obilićevog venca do Vase Čarapića)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Zmaj Jovina (od Obilićevog venca do Vase Čarapića) 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Vuka Karadžića (od Studentskog trga do Cara Lazara)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Vuka Karadžića (od Studentskog trga do Cara Lazara) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('1.300 kaplara')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">1.300 kaplara 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Uskočko sokače')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Uskočko sokače 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kralja Petra Prvog (od Kosančićevog venca do Kneza Sime Markovića i od Gračaničke do k. br. 22)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Kralja Petra Prvog (od Kosančićevog venca do Kneza Sime Markovića i od Gračaničke do k. br. 22) 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Rajićeva (od Knez Mihailove do Gračaničke)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Rajićeva (od Knez Mihailove do Gračaničke) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Cara Lazara (od Vuka Karadžića do Rajićeve)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Cara Lazara (od Vuka Karadžića do Rajićeve) 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Nikole Spasića')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Nikole Spasića 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Uskočka')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Uskočka 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Delijska')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Delijska 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Đure Jakšića')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Đure Jakšića 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Ivan Begova (od Gračaničke do Cara Lazara)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Ivan Begova (od Gračaničke do Cara Lazara) 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Topličin venac (od Carice Milice do Obilićevog venca)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Topličin venac (od Carice Milice do Obilićevog venca) 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -2079,10 +2079,10 @@ initTapSound();
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <tbody>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Skadarska (od Bul. despota Stefana do Strahinjića bana)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Zetska</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Simina (od Skadarske do Emilijana Josimovića)</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Gospodar Jevremova (od k. br. 56 do Skadarske)</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Skadarska (od Bul. despota Stefana do Strahinjića bana)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Skadarska (od Bul. despota Stefana do Strahinjića bana) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Zetska')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Zetska 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Simina (od Skadarske do Emilijana Josimovića)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Simina (od Skadarske do Emilijana Josimovića) 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Gospodar Jevremova (od k. br. 56 do Skadarske)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Gospodar Jevremova (od k. br. 56 do Skadarske) 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -2093,10 +2093,10 @@ initTapSound();
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <tbody>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Magistratski trg</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Gospodska</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Veliki trg (od Gospodske do Zmaj Jovine)</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Masarikov trg (od javnog parkirališta do Gospodske)</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Magistratski trg')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Magistratski trg 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Gospodska')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Gospodska 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Veliki trg (od Gospodske do Zmaj Jovine)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Veliki trg (od Gospodske do Zmaj Jovine) 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Masarikov trg (od javnog parkirališta do Gospodske)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Masarikov trg (od javnog parkirališta do Gospodske) 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -2107,15 +2107,15 @@ initTapSound();
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <tbody>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Zadarska</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Srebrenička</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Nušićeva (od Terazija do Dečanske)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Andrićev venac (od k. br. 6 do Kralja Milana)</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Reljina</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Njegoševa (od Kralja Milana do Svetozara Markovića)</td></tr>
-              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Karađorđeva – prolaz od Travničke br. 2 do Karađorđeve br. 46 (Savski venac)</td></tr>
-              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;">Kej oslobođenja (od Karamatine do kraja uzvodno) – Zemun</td></tr>
-              <tr><td style="padding:7px 10px;color:#2a3a4a;">Karađorđeva – Lazarevac (od Branka Radičevića i Kralja Petra I do Dimitrija Tucovića i Dušana Nedeljkovića)</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Zadarska')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Zadarska 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Srebrenička')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Srebrenička 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Nušićeva (od Terazija do Dečanske)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Nušićeva (od Terazija do Dečanske) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Andrićev venac (od k. br. 6 do Kralja Milana)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Andrićev venac (od k. br. 6 do Kralja Milana) 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Reljina')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Reljina 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Njegoševa (od Kralja Milana do Svetozara Markovića)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Njegoševa (od Kralja Milana do Svetozara Markovića) 📍</td></tr>
+              <tr style="border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Karađorđeva – prolaz od Travničke br. 2 do Karađorđeve br. 46 (Savski venac)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Karađorđeva – prolaz od Travničke br. 2 do Karađorđeve br. 46 (Savski venac) 📍</td></tr>
+              <tr style="background:#f7f9fc;border-bottom:1px solid #eef3fb;"><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Kej oslobođenja (od Karamatine do kraja uzvodno) – Zemun')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Kej oslobođenja (od Karamatine do kraja uzvodno) – Zemun 📍</td></tr>
+              <tr><td style="padding:7px 10px;color:#2a3a4a;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" onclick="showStreetOnMap('Karađorđeva – Lazarevac (od Branka Radičevića i Kralja Petra I do Dimitrija Tucovića i Dušana Nedeljkovića)')" onmouseover="this.style.backgroundColor='#eef3fb'" onmouseout="this.style.backgroundColor=''">Karađorđeva – Lazarevac (od Branka Radičevića i Kralja Petra I do Dimitrija Tucovića i Dušana Nedeljkovića) 📍</td></tr>
             </tbody>
           </table>
         </div>
@@ -17618,6 +17618,44 @@ async function searchAddress() {
   }
 }
 
+async function showStreetOnMap(streetName) {
+  if (!streetName) return;
+  showToast('📍 Tražim: ' + streetName + '...');
+  switchTab('map');
+  try {
+    // Clean up street name for better Nominatim results
+    var cleanName = streetName
+      .replace(/\s+ulica$/i, '')    // remove trailing "ulica"
+      .replace(/\s+i\s+.+$/i, '');  // remove " i ..." (e.g. "Brankov most i Brankova" → "Brankov most")
+    var query = encodeURIComponent(cleanName + ' Beograd');
+    var resp = await fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1');
+    var results = await resp.json();
+    if (results.length > 0) {
+      var r = results[0];
+      var lat = parseFloat(r.lat);
+      var lon = parseFloat(r.lon);
+      goTo(lat, lon, streetName);
+      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+      showToast('✅ ' + streetName + ' pronađena na mapi!');
+    } else {
+      // Try original name as fallback
+      var query2 = encodeURIComponent(streetName + ' Beograd');
+      var resp2 = await fetch('https://nominatim.openstreetmap.org/search?q=' + query2 + '&format=json&limit=1');
+      var results2 = await resp2.json();
+      if (results2.length > 0) {
+        var r2 = results2[0];
+        goTo(parseFloat(r2.lat), parseFloat(r2.lon), streetName);
+        setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+        showToast('✅ ' + streetName + ' pronađena na mapi!');
+      } else {
+        showToast('❌ ' + streetName + ' nije pronađena');
+      }
+    }
+  } catch(e) {
+    showToast('❌ Greška u pretrazi ulice');
+  }
+}
+
 function locateMe() {
   if (!navigator.geolocation) {
     showToast('❌ Geolokacija nije dostupna na ovom uređaju');
@@ -17708,7 +17746,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v165';
+const KM_VERSION = 'v166';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
