@@ -1023,7 +1023,7 @@
   // Show version on loader
   var vText = document.createElement('div');
   vText.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.5);font-size:10px;font-family:monospace;z-index:100000;';
-  vText.textContent = 'v171';
+  vText.textContent = 'v172';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(vText);
   });
@@ -1249,7 +1249,7 @@ initTapSound();
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     </div>
-    <div class="side-menu-footer">KMapp · Beograd · v171</div>
+    <div class="side-menu-footer">KMapp · Beograd · v172</div>
   </div>
 </div>
 
@@ -3939,18 +3939,34 @@ function getImenikUsers() {
 
 let serverUsers = [];
 let serverUsersLoaded = false;
+const SERVER_USERS_CACHE_KEY = 'km_server_users_cache';
 
 async function loadServerUsers() {
   if (serverUsersLoaded) return;
+  // Try to load cached server users from localStorage first (fallback when backend is down)
+  try {
+    const cached = JSON.parse(localStorage.getItem(SERVER_USERS_CACHE_KEY) || '[]');
+    if (cached.length > 0) {
+      serverUsers = cached;
+      console.log('[KMapp] Loaded', cached.length, 'cached server users from localStorage');
+    }
+  } catch(e) {
+    console.warn('[KMapp] Failed to load cached server users:', e);
+  }
+  // Try to fetch fresh from server
   try {
     const res = await fetchWithFallback(KM_API_BASE + '/getUsers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const data = await res.json();
     if (data.success && data.users) {
       serverUsers = data.users.map(u => ({ username: u.username, password: u.password, displayName: u.displayName || u.username, role: u.role || 'user', source: 'server', _serverId: u.id }));
+      // Cache to localStorage for offline/fallback use
+      localStorage.setItem(SERVER_USERS_CACHE_KEY, JSON.stringify(serverUsers));
+      console.log('[KMapp] Server users fetched and cached:', serverUsers.length);
     }
     serverUsersLoaded = true;
   } catch(e) {
-    console.error('loadServerUsers error:', e);
+    console.error('loadServerUsers error (using cache):', e.message);
+    // Server failed — keep using cached users if available
     serverUsersLoaded = true;
   }
 }
@@ -17833,7 +17849,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v171';
+const KM_VERSION = 'v172';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
