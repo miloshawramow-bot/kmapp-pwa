@@ -1159,7 +1159,7 @@ initTapSound();
     <p>@milos.avramov</p>
   </div>
   <button onclick="openGlobalSearch()" style="display:flex;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;flex-shrink:0;margin-left:auto;" title="Pretraga">🔍</button>
-            <button id="mail-icon-btn" onclick="window.open('https://mail.beograd.gov.rs/owa/auth/logon.aspx?url=https%3a%2f%2fmail.beograd.gov.rs%2fowa%2f&reason=0', '_blank')" style="display: flex; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="Mail - beograd.gov.rs">✉️</button>
+            
   <button id="pwa-install-btn" onclick="installPwa()" style="display: none; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
 </header>
 
@@ -1307,8 +1307,7 @@ initTapSound();
 <div class="screen" id="screen-login" style="display: none;">
   <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 60px;background:
     linear-gradient(135deg, rgba(13, 34, 64, 0.55) 0%, rgba(26, 74, 138, 0.40) 100%),
-    url('https://media.base44.com/images/public/6a69d1df8104de5b799a3993/adcde85f3_generated_image.png') center/cover;
-    background-attachment: fixed;">
+    url('assets/beograd-bg.png') center/cover;">
 
     <!-- Logo grb Beograda -->
     <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);margin-bottom:16px;">
@@ -1382,7 +1381,7 @@ initTapSound();
   </div>
   </div>
   </div>
-<div class="screen" id="screen-docs" style="display: none; background: linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.75) 30%, rgba(13,34,64,0.85) 100%), url(&quot;https://media.base44.com/images/public/6a69d1df8104de5b799a3993/adcde85f3_generated_image.png&quot;) top center/cover fixed;">
+<div class="screen" id="screen-docs" style="display: none; background: linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.75) 30%, rgba(13,34,64,0.85) 100%), url('assets/beograd-bg.png') top center/cover;">
   <div id="view-list">
     <div style="display:flex; gap:8px; margin:12px 12px 0;">
       <button class="new-doc-btn" onclick="newDoc()" style="margin:0; flex:1;">
@@ -17828,7 +17827,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v168';
+const KM_VERSION = 'v169';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
