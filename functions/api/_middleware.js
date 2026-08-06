@@ -1,8 +1,7 @@
-// CORS + error handling middleware for all /api/* routes
-export async function onRequest(context) {
-  const { request, env, next } = context;
+// CORS + D1 check middleware for all /api/* routes
+async function handleRequest(context) {
+  const { request, env } = context;
   
-  // Handle CORS
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -13,23 +12,32 @@ export async function onRequest(context) {
     });
   }
 
-  // Check if D1 is bound
   if (!env.DB) {
     return new Response(JSON.stringify({ 
       success: false, 
       error: 'D1 database not configured. Create a D1 database named "kmapp-db" in Cloudflare dashboard and bind it to this Pages project.' 
     }), {
       status: 503,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
   try {
-    return await next();
+    return await context.next();
   } catch (e) {
     return new Response(JSON.stringify({ success: false, error: e.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }
+
+export const onRequest = handleRequest;
+export const onRequestGet = handleRequest;
+export const onRequestPost = handleRequest;
