@@ -1168,7 +1168,7 @@ initTapSound();
   </div>
   <button onclick="openGlobalSearch()" style="display:flex;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;flex-shrink:0;margin-left:auto;" title="Pretraga">🔍</button>
             
-  <button id="pwa-install-btn" onclick="installPwa()" style="display: none; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
+  <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
 </header>
 
 <!-- ===== SIDE MENU ===== -->
@@ -1461,6 +1461,13 @@ initTapSound();
     <img src="icons/icon-192.png" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block;border:2px solid var(--gold);" alt="KMapp">
     <h2>KMapp</h2>
     <p>Poslovna aplikacija za upravljanje dokumentima i pravnim aktima Grada Beograda</p>
+  </div>
+
+  <!-- 📲 Instalacija -->
+  <div class="settings-row" id="settings-install-btn" onclick="installPwa()" style="cursor:pointer;background:var(--gold);color:var(--navy);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:700;margin-bottom:0;">
+    <div style="width:32px;height:32px;background:rgba(13,34,64,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">⬇️</div>
+    <span style="flex:1;">Instaliraj aplikaciju</span>
+    <span style="font-size:0.7rem;opacity:0.8;">Dodaj na početni ekran</span>
   </div>
 
   <!-- 🔍 Global Search trigger -->
@@ -17896,7 +17903,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v178';
+const KM_VERSION = 'v179';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -17939,36 +17946,88 @@ if ('serviceWorker' in navigator) {
 
 // ===== PWA: dugme za instalaciju =====
 let deferredInstallPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  const btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.style.display = 'flex';
-});
 
-function installPwa() {
-  const btn = document.getElementById('pwa-install-btn');
-  if (deferredInstallPrompt) {
-    // Android/Chrome: show native install prompt
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.finally(() => {
-      deferredInstallPrompt = null;
-      if (btn) btn.style.display = 'none';
-    });
-  } else {
-    // iOS: show instructions
-    showToast('📱 iOS: Safari > Share (⬆️) > Add to Home Screen');
-    setTimeout(() => {
-      alert('Da instalirate KMapp na iPhone:\n\n1. Pritisnite dugme Share (⬆️) u Safari\n2. Izaberite "Add to Home Screen"\n3. Pritisnite "Add"');
-    }, 300);
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+    || window.navigator.standalone === true
+    || document.referrer.startsWith('android-app://');
+}
+
+function showInstallButtonIfNeeded() {
+  var btn = document.getElementById('pwa-install-btn');
+  if (!btn) return;
+  // Hide if already installed as PWA
+  if (isStandalone()) {
+    btn.style.display = 'none';
+    return;
+  }
+  // Show button for ALL users (Android, iOS, desktop)
+  // On click: Android/Chrome uses native prompt; iOS gets instructions
+  btn.style.display = 'flex';
+  // Update icon/text based on platform
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) {
+    btn.innerHTML = '⬇️ Instaliraj';
+    btn.style.fontSize = '0.6rem';
+    btn.style.padding = '6px 10px';
   }
 }
 
-window.addEventListener('appinstalled', () => {
-  const btn = document.getElementById('pwa-install-btn');
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  showInstallButtonIfNeeded();
+});
+
+function installPwa() {
+  var btn = document.getElementById('pwa-install-btn');
+  if (deferredInstallPrompt) {
+    // Android/Chrome: show native install prompt
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(function() {
+      deferredInstallPrompt = null;
+      showInstallButtonIfNeeded();
+    });
+  } else {
+    // iOS or browser without beforeinstallprompt: show platform instructions
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      showToast('📱 Safari > Share (⬆️) > Add to Home Screen');
+      setTimeout(function() {
+        alert('Da instalirate KMapp na iPhone:\n\n1. Pritisnite dugme Share (⬆️) u donjem redu Safari\n2. Izaberite "Add to Home Screen"\n3. Pritisnite "Add"');
+      }, 300);
+    } else {
+      // Desktop / other: instructions to install via browser menu
+      var isChrome = /Chrome/.test(navigator.userAgent) && /Google/.test(navigator.vendor);
+      var isEdge = /Edg/.test(navigator.userAgent);
+      var msg = 'Da instalirate KMapp:\n\n';
+      if (isChrome) msg += 'Chrome: kliknite ikonicu instalacije (⊕) u address baru, ili:\nMenu (⋮) > Install KMapp / Install app';
+      else if (isEdge) msg += 'Edge: Menu (⋯) > Apps > Install this site as an app';
+      else msg += 'Menu > Install / Add to Home Screen';
+      showToast(msg.substring(0, 50));
+      setTimeout(function() { alert(msg); }, 300);
+    }
+  }
+}
+
+window.addEventListener('appinstalled', function() {
+  deferredInstallPrompt = null;
+  var btn = document.getElementById('pwa-install-btn');
   if (btn) btn.style.display = 'none';
   showToast('✅ KMapp je instaliran');
 });
+
+// Show install button on load (covers iOS, desktop, and pre-beforeinstallprompt scenarios)
+document.addEventListener('DOMContentLoaded', function() {
+    showInstallButtonIfNeeded();
+    // Hide settings install button if already installed
+    if (isStandalone()) {
+      var sBtn = document.getElementById('settings-install-btn');
+      if (sBtn) sBtn.style.display = 'none';
+    }
+  });
+// Also try after a delay in case DOMContentLoaded already fired
+setTimeout(showInstallButtonIfNeeded, 2000);
 
 // ===== CLOCK & CALENDAR =====
 let calCurrentDate = new Date();
