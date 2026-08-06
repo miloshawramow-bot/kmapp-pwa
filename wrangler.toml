@@ -4,5 +4,5 @@ pages_build_output_dir = "."
 
 [[d1_databases]]
 binding = "DB"
-database_name = "kmapp-db"
-database_id = "PLACEHOLDER_CREATE_DB_FIRST"
+database_name = "kmapp"
+database_id = "4dcd7a55-9aa6-4dd9-8cd5-8c5a47c99b8b"
