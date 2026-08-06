@@ -4369,103 +4369,7 @@ function shareDoc(via) {
   var fileName = safeName + '_' + ts + '.doc';
   
   // Build Word-compatible HTML
-  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '
-<script>
-// ===== AI PRAVNI ASISTENT =====
-var aiChatHistory = [];
-
-function aiAddMessage(text, isUser) {
-  var area = document.getElementById('ai-chat-area');
-  if (!area) return;
-  
-  // Hide suggestions after first message
-  var sugg = document.getElementById('ai-suggestions');
-  if (sugg) sugg.style.display = 'none';
-  
-  var bubble = document.createElement('div');
-  bubble.style.cssText = isUser 
-    ? 'align-self:flex-end;max-width:80%;background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:0.85rem;line-height:1.4;box-shadow:0 2px 6px rgba(0,0,0,0.1);'
-    : 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-  
-  // Format text - preserve line breaks
-  var formatted = text.replace(/\n/g, '<br>');
-  bubble.innerHTML = formatted;
-  
-  area.appendChild(bubble);
-  area.scrollTop = area.scrollHeight;
-}
-
-function aiAddTyping() {
-  var area = document.getElementById('ai-chat-area');
-  if (!area) return;
-  
-  var bubble = document.createElement('div');
-  bubble.id = 'ai-typing';
-  bubble.style.cssText = 'align-self:flex-start;max-width:60%;background:var(--card);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:12px 16px;display:flex;gap:4px;';
-  bubble.innerHTML = '<span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite;"></span><span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite 0.2s;"></span><span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite 0.4s;"></span>';
-  
-  area.appendChild(bubble);
-  area.scrollTop = area.scrollHeight;
-}
-
-function aiRemoveTyping() {
-  var typing = document.getElementById('ai-typing');
-  if (typing) typing.remove();
-}
-
-function aiAsk(question) {
-  document.getElementById('ai-input').value = question;
-  aiSend();
-}
-
-async function aiSend() {
-  var input = document.getElementById('ai-input');
-  var question = input.value.trim();
-  if (!question) return;
-  
-  input.value = '';
-  aiAddMessage(question, true);
-  aiAddTyping();
-  
-  try {
-    var res = await fetch('/api/aiChat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question })
-    });
-    
-    aiRemoveTyping();
-    
-    if (!res.ok) throw new Error('Server error');
-    var data = await res.json();
-    
-    var reply = data.reply || 'Greška u obradi odgovora.';
-    
-    // Add sources if available
-    if (data.sources && data.sources.length > 0) {
-      reply += '<br><br><div style="font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">📚 Izvori:<br>' + data.sources.map(function(s) { return '• ' + s; }).join('<br>') + '</div>';
-    }
-    
-    // Use innerHTML since we added HTML formatting
-    var area = document.getElementById('ai-chat-area');
-    var bubble = document.createElement('div');
-    bubble.style.cssText = 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-    bubble.innerHTML = reply.replace(/\n/g, '<br>');
-    area.appendChild(bubble);
-    area.scrollTop = area.scrollHeight;
-    
-  } catch (e) {
-    aiRemoveTyping();
-    aiAddMessage('Greška: AI asistent trenutno nije dostupan. Pokušajte ponovo.', false);
-  }
-}
-
-// Add typing animation CSS
-var aiStyle = document.createElement('style');
-aiStyle.textContent = '@keyframes aiBounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}';
-document.head.appendChild(aiStyle);
-</script>
-</body></html>';
+  var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>body{font-family:Times New Roman,serif;font-size:12pt;margin:2cm;}h1{font-size:16pt;font-weight:bold;}p{line-height:1.5;}img{max-width:100%;}</style></head><body><h1>' + title + '</h1>' + editorContent + '</body></html>';
 
   
   var blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
@@ -16304,101 +16208,6 @@ async function shareAkt(via) {
   
   // Build Word-compatible HTML
   const htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>body{font-family:'Times New Roman',serif;font-size:12pt;margin:2cm;}h1{font-size:14pt;font-weight:bold;}p{line-height:1.5;white-space:pre-wrap;}</style></head><body><h1>${title}</h1><p>${(currentAkt.broz || '')}</p><p>${currentAkt.sadrzaj}</p>
-<script>
-// ===== AI PRAVNI ASISTENT =====
-var aiChatHistory = [];
-
-function aiAddMessage(text, isUser) {
-  var area = document.getElementById('ai-chat-area');
-  if (!area) return;
-  
-  // Hide suggestions after first message
-  var sugg = document.getElementById('ai-suggestions');
-  if (sugg) sugg.style.display = 'none';
-  
-  var bubble = document.createElement('div');
-  bubble.style.cssText = isUser 
-    ? 'align-self:flex-end;max-width:80%;background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:0.85rem;line-height:1.4;box-shadow:0 2px 6px rgba(0,0,0,0.1);'
-    : 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-  
-  // Format text - preserve line breaks
-  var formatted = text.replace(/\n/g, '<br>');
-  bubble.innerHTML = formatted;
-  
-  area.appendChild(bubble);
-  area.scrollTop = area.scrollHeight;
-}
-
-function aiAddTyping() {
-  var area = document.getElementById('ai-chat-area');
-  if (!area) return;
-  
-  var bubble = document.createElement('div');
-  bubble.id = 'ai-typing';
-  bubble.style.cssText = 'align-self:flex-start;max-width:60%;background:var(--card);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:12px 16px;display:flex;gap:4px;';
-  bubble.innerHTML = '<span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite;"></span><span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite 0.2s;"></span><span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite 0.4s;"></span>';
-  
-  area.appendChild(bubble);
-  area.scrollTop = area.scrollHeight;
-}
-
-function aiRemoveTyping() {
-  var typing = document.getElementById('ai-typing');
-  if (typing) typing.remove();
-}
-
-function aiAsk(question) {
-  document.getElementById('ai-input').value = question;
-  aiSend();
-}
-
-async function aiSend() {
-  var input = document.getElementById('ai-input');
-  var question = input.value.trim();
-  if (!question) return;
-  
-  input.value = '';
-  aiAddMessage(question, true);
-  aiAddTyping();
-  
-  try {
-    var res = await fetch('/api/aiChat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question })
-    });
-    
-    aiRemoveTyping();
-    
-    if (!res.ok) throw new Error('Server error');
-    var data = await res.json();
-    
-    var reply = data.reply || 'Greška u obradi odgovora.';
-    
-    // Add sources if available
-    if (data.sources && data.sources.length > 0) {
-      reply += '<br><br><div style="font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">📚 Izvori:<br>' + data.sources.map(function(s) { return '• ' + s; }).join('<br>') + '</div>';
-    }
-    
-    // Use innerHTML since we added HTML formatting
-    var area = document.getElementById('ai-chat-area');
-    var bubble = document.createElement('div');
-    bubble.style.cssText = 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-    bubble.innerHTML = reply.replace(/\n/g, '<br>');
-    area.appendChild(bubble);
-    area.scrollTop = area.scrollHeight;
-    
-  } catch (e) {
-    aiRemoveTyping();
-    aiAddMessage('Greška: AI asistent trenutno nije dostupan. Pokušajte ponovo.', false);
-  }
-}
-
-// Add typing animation CSS
-var aiStyle = document.createElement('style');
-aiStyle.textContent = '@keyframes aiBounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}';
-document.head.appendChild(aiStyle);
-</script>
 </body></html>`;
   
   const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
@@ -17550,101 +17359,6 @@ async function shareAkt(via) {
     
     // Build Word-compatible HTML
     const htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>body{font-family:'Times New Roman',serif;font-size:12pt;margin:2cm;}h1{font-size:14pt;font-weight:bold;}p{line-height:1.5;white-space:pre-wrap;}</style></head><body><h1>${title}</h1><p>${text}</p>
-<script>
-// ===== AI PRAVNI ASISTENT =====
-var aiChatHistory = [];
-
-function aiAddMessage(text, isUser) {
-  var area = document.getElementById('ai-chat-area');
-  if (!area) return;
-  
-  // Hide suggestions after first message
-  var sugg = document.getElementById('ai-suggestions');
-  if (sugg) sugg.style.display = 'none';
-  
-  var bubble = document.createElement('div');
-  bubble.style.cssText = isUser 
-    ? 'align-self:flex-end;max-width:80%;background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:0.85rem;line-height:1.4;box-shadow:0 2px 6px rgba(0,0,0,0.1);'
-    : 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-  
-  // Format text - preserve line breaks
-  var formatted = text.replace(/\n/g, '<br>');
-  bubble.innerHTML = formatted;
-  
-  area.appendChild(bubble);
-  area.scrollTop = area.scrollHeight;
-}
-
-function aiAddTyping() {
-  var area = document.getElementById('ai-chat-area');
-  if (!area) return;
-  
-  var bubble = document.createElement('div');
-  bubble.id = 'ai-typing';
-  bubble.style.cssText = 'align-self:flex-start;max-width:60%;background:var(--card);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:12px 16px;display:flex;gap:4px;';
-  bubble.innerHTML = '<span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite;"></span><span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite 0.2s;"></span><span style="width:8px;height:8px;background:var(--muted);border-radius:50%;animation:aiBounce 0.6s infinite 0.4s;"></span>';
-  
-  area.appendChild(bubble);
-  area.scrollTop = area.scrollHeight;
-}
-
-function aiRemoveTyping() {
-  var typing = document.getElementById('ai-typing');
-  if (typing) typing.remove();
-}
-
-function aiAsk(question) {
-  document.getElementById('ai-input').value = question;
-  aiSend();
-}
-
-async function aiSend() {
-  var input = document.getElementById('ai-input');
-  var question = input.value.trim();
-  if (!question) return;
-  
-  input.value = '';
-  aiAddMessage(question, true);
-  aiAddTyping();
-  
-  try {
-    var res = await fetch('/api/aiChat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question })
-    });
-    
-    aiRemoveTyping();
-    
-    if (!res.ok) throw new Error('Server error');
-    var data = await res.json();
-    
-    var reply = data.reply || 'Greška u obradi odgovora.';
-    
-    // Add sources if available
-    if (data.sources && data.sources.length > 0) {
-      reply += '<br><br><div style="font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">📚 Izvori:<br>' + data.sources.map(function(s) { return '• ' + s; }).join('<br>') + '</div>';
-    }
-    
-    // Use innerHTML since we added HTML formatting
-    var area = document.getElementById('ai-chat-area');
-    var bubble = document.createElement('div');
-    bubble.style.cssText = 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-    bubble.innerHTML = reply.replace(/\n/g, '<br>');
-    area.appendChild(bubble);
-    area.scrollTop = area.scrollHeight;
-    
-  } catch (e) {
-    aiRemoveTyping();
-    aiAddMessage('Greška: AI asistent trenutno nije dostupan. Pokušajte ponovo.', false);
-  }
-}
-
-// Add typing animation CSS
-var aiStyle = document.createElement('style');
-aiStyle.textContent = '@keyframes aiBounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}';
-document.head.appendChild(aiStyle);
-</script>
 </body></html>`;
     
     const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
@@ -18174,7 +17888,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v175';
+const KM_VERSION = 'v176';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18840,7 +18554,6 @@ function aiAddMessage(text, isUser) {
   var area = document.getElementById('ai-chat-area');
   if (!area) return;
   
-  // Hide suggestions after first message
   var sugg = document.getElementById('ai-suggestions');
   if (sugg) sugg.style.display = 'none';
   
@@ -18849,7 +18562,6 @@ function aiAddMessage(text, isUser) {
     ? 'align-self:flex-end;max-width:80%;background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:0.85rem;line-height:1.4;box-shadow:0 2px 6px rgba(0,0,0,0.1);'
     : 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
   
-  // Format text - preserve line breaks
   var formatted = text.replace(/\n/g, '<br>');
   bubble.innerHTML = formatted;
   
@@ -18901,14 +18613,12 @@ async function aiSend() {
     if (!res.ok) throw new Error('Server error');
     var data = await res.json();
     
-    var reply = data.reply || 'Greška u obradi odgovora.';
+    var reply = data.reply || 'Greska u obradi odgovora.';
     
-    // Add sources if available
     if (data.sources && data.sources.length > 0) {
-      reply += '<br><br><div style="font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">📚 Izvori:<br>' + data.sources.map(function(s) { return '• ' + s; }).join('<br>') + '</div>';
+      reply += '\n\nIzvori:\n' + data.sources.map(function(s) { return '- ' + s; }).join('\n');
     }
     
-    // Use innerHTML since we added HTML formatting
     var area = document.getElementById('ai-chat-area');
     var bubble = document.createElement('div');
     bubble.style.cssText = 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.85rem;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
@@ -18918,11 +18628,10 @@ async function aiSend() {
     
   } catch (e) {
     aiRemoveTyping();
-    aiAddMessage('Greška: AI asistent trenutno nije dostupan. Pokušajte ponovo.', false);
+    aiAddMessage('Greska: AI asistent trenutno nije dostupan. Pokusajte ponovo.', false);
   }
 }
 
-// Add typing animation CSS
 var aiStyle = document.createElement('style');
 aiStyle.textContent = '@keyframes aiBounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}';
 document.head.appendChild(aiStyle);
