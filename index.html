@@ -1168,8 +1168,14 @@ initTapSound();
   </div>
   <button onclick="openGlobalSearch()" style="display:flex;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;flex-shrink:0;margin-left:auto;" title="Pretraga">🔍</button>
             
-  <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; padding: 6px 10px; white-space:nowrap;">⬇️</button>
+  <button id="pwa-install-btn" onclick="installPwa()" style="display: flex; background: var(--gold); color: var(--navy); border: none; border-radius: 8px; padding: 6px 10px; font-size: 0.65rem; font-weight: 700; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; white-space:nowrap;">⬇️ Instaliraj</button>
 </header>
+
+<!-- Floating install banner (shown inside app for non-standalone users) -->
+<div id="app-install-banner" style="display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);border-radius:12px;padding:10px 16px;font-size:0.8rem;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:9999;align-items:center;gap:10px;white-space:nowrap;">
+  <span onclick="installPwa()" style="cursor:pointer;display:flex;align-items:center;gap:8px;">⬇️ Instaliraj aplikaciju <span style="font-size:0.65rem;opacity:0.7;font-weight:400;">Dodaj na početni ekran</span></span>
+  <span onclick="document.getElementById('app-install-banner').style.display='none'" style="cursor:pointer;font-size:1rem;opacity:0.5;padding:0 4px;">✕</span>
+</div>
 
 <!-- ===== SIDE MENU ===== -->
 <div id="side-menu-overlay" onclick="closeSideMenu()">
@@ -2858,9 +2864,15 @@ function switchTab(name) {
       setTimeout(() => { const el = document.getElementById('login-username'); if (el) el.focus(); }, 50);
       var navHide = document.querySelector('nav'); if (navHide) navHide.style.display = 'none';
       var hdrHide = document.querySelector('header'); if (hdrHide) hdrHide.style.display = 'none';
+      var bnr = document.getElementById('app-install-banner'); if (bnr) bnr.style.display = 'none';
     } else {
       var navShow = document.querySelector('nav'); if (navShow) navShow.style.display = 'flex';
       var hdrShow = document.querySelector('header'); if (hdrShow) hdrShow.style.display = 'flex';
+      // Show install banner if not standalone
+      if (!isStandalone()) {
+        var bnr2 = document.getElementById('app-install-banner');
+        if (bnr2) bnr2.style.display = 'flex';
+      }
     }
     if (name === 'dashboard') {
       startDashboardClock();
@@ -17980,7 +17992,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v182';
+const KM_VERSION = 'v183';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18033,25 +18045,33 @@ function isStandalone() {
 function showInstallButtonIfNeeded() {
   var btn = document.getElementById('pwa-install-btn');
   var loginBtn = document.getElementById('login-install-btn');
+  var banner = document.getElementById('app-install-banner');
   // Hide if already installed as PWA
   if (isStandalone()) {
     if (btn) btn.style.display = 'none';
     if (loginBtn) loginBtn.style.display = 'none';
+    if (banner) banner.style.display = 'none';
     return;
   }
   // Show header button for ALL users (Android, iOS, desktop)
   if (btn) {
     btn.style.display = 'flex';
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS) {
-      btn.innerHTML = '⬇️ Instaliraj';
-      btn.style.fontSize = '0.6rem';
-      btn.style.padding = '6px 10px';
-    }
+    btn.innerHTML = '⬇️ Instaliraj';
   }
   // Show login screen install button
   if (loginBtn) {
     loginBtn.style.display = 'block';
+  }
+  // Show floating banner inside app (after login)
+  // Only show if user is logged in (not on login screen)
+  if (banner) {
+    var loginScreen = document.getElementById('screen-login');
+    var isLoginVisible = loginScreen && loginScreen.style.display !== 'none';
+    if (!isLoginVisible) {
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
   }
 }
 
