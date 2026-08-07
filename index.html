@@ -2186,6 +2186,11 @@ initTapSound();
           <div>• Dozvole izdaje <b>Sekretarijat za saobraćaj</b></div>
         </div>
 
+        <button onclick="showPesackeNaMapi()" style="width:100%;background:linear-gradient(135deg,#0d2240,#1a4a8a);color:white;border:none;border-radius:10px;padding:12px;font-size:0.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(26,74,138,0.3);">
+          🚶 Prikaži sve pešačke zone na mapi
+        </button>
+        <div style="text-align:center;font-size:0.7rem;color:#666;margin-top:-4px;">Kliknite na ulicu za detalje</div>
+
       </div>
     </div>
 
@@ -17904,6 +17909,7 @@ var STREET_COORDS = {
 
 // ===== ŽUTE TRAKE NA MAPI =====
 var zuteTrakeLayer = null;
+var pesackeLayer = null;
 function showZuteTrakeNaMapi() {
   switchTab('mapa');
   setTimeout(function() {
@@ -17969,6 +17975,88 @@ function showZuteTrakeNaMapi() {
     }
     
     showToast('📍 Žute trake prikazane na mapi (' + (found24 + foundRush) + ' ulica)');
+  }, 300);
+}
+
+function showPesackeNaMapi() {
+  switchTab('mapa');
+  setTimeout(function() {
+    if (!leafletMap) initLeafletMap();
+    if (!leafletMap) { showToast('❌ Mapa nije dostupna'); return; }
+    
+    // Remove existing layer if any
+    if (pesackeLayer) { leafletMap.removeLayer(pesackeLayer); }
+    pesackeLayer = L.layerGroup();
+    
+    // All 39 pedestrian zone streets
+    var pesackeStreets = [
+      'Kneza Mihaila','Sremska','Maršala Birjuzova (od Kosmajskog prolaza do Sremske)',
+      'Kosmajski prolaz','Obilićev venac (od Carice Milice do Trga republike)',
+      'Trg republike (od Vase Čarapića do Obilićevog venca)','Čika Ljubina',
+      'Laze Pačua','Marka Leka','Zmaj Jovina (od Obilićevog venca do Vase Čarapića)',
+      'Vuka Karadžića (od Studentskog trga do Cara Lazara)','1.300 kaplara',
+      'Uskočko sokače',
+      'Kralja Petra Prvog (od Kosančićevog venca do Kneza Sime Markovića i od Gračaničke do k. br. 22)',
+      'Rajićeva (od Knez Mihailove do Gračaničke)','Cara Lazara (od Vuka Karadžića do Rajićeve)',
+      'Nikole Spasića','Uskočka','Delijska','Đure Jakšića',
+      'Ivan Begova (od Gračaničke do Cara Lazara)',
+      'Topličin venac (od Carice Milice do Obilićevog venca)',
+      'Skadarska (od Bul. despota Stefana do Strahinjića bana)','Zetska',
+      'Simina (od Skadarske do Emilijana Josimovića)',
+      'Gospodar Jevremova (od k. br. 56 do Skadarske)','Magistratski trg',
+      'Gospodska','Veliki trg (od Gospodske do Zmaj Jovine)',
+      'Masarikov trg (od javnog parkirališta do Gospodske)','Zadarska','Srebrenička',
+      'Nušićeva (od Terazija do Dečanske)','Andrićev venac (od k. br. 6 do Kralja Milana)',
+      'Reljina','Njegoševa (od Kralja Milana do Svetozara Markovića)',
+      'Karađorđeva – prolaz od Travničke br. 2 do Karađorđeve br. 46 (Savski venac)',
+      'Kej oslobođenja (od Karamatine do kraja uzvodno) – Zemun',
+      'Karađorđeva – Lazarevac (od Branka Radičevića i Kralja Petra I do Dimitrija Tucovića i Dušana Nedeljkovića)'
+    ];
+    
+    var allBounds = [];
+    var found = 0;
+    var notFound = [];
+    
+    pesackeStreets.forEach(function(street) {
+      var c = STREET_COORDS[street];
+      if (c) {
+        // Blue marker for pedestrian zones
+        var blueIcon = L.divIcon({
+          html: '<div style="background:#1a4a8a;width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+          iconSize: [18, 18],
+          iconAnchor: [9, 18],
+          popupAnchor: [0, -18]
+        });
+        var marker = L.marker([c.lat, c.lon], {icon: blueIcon}).addTo(pesackeLayer);
+        marker.bindPopup(
+          '<div style="min-width:160px;">' +
+          '<div style="font-weight:800;color:#1a4a8a;font-size:0.9rem;">🚶 ' + street + '</div>' +
+          '<div style="font-size:0.75rem;margin-top:4px;color:#333;">Pešačka zona<br>Zabrana saobraćaja</div>' +
+          '</div>'
+        );
+        allBounds.push([c.lat, c.lon]);
+        found++;
+      } else {
+        notFound.push(street);
+      }
+    });
+    
+    pesackeLayer.addTo(leafletMap);
+    
+    if (allBounds.length > 0) {
+      leafletMap.fitBounds(allBounds, { padding: [40, 40] });
+    }
+    setTimeout(function() { leafletMap.invalidateSize(); }, 200);
+    
+    // Add info panel
+    var info = document.getElementById('map-info');
+    if (info) {
+      document.getElementById('map-info-text').innerHTML = 
+        '🚶 Pešačke zone: ' + found + ' ulica' + (notFound.length > 0 ? ' (' + notFound.length + ' bez koordinata)' : '');
+      info.style.display = 'block';
+    }
+    
+    showToast('🚶 Pešačke zone prikazane na mapi (' + found + ' ulica)');
   }, 300);
 }
 
