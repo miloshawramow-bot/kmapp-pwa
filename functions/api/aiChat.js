@@ -63,7 +63,7 @@ export async function onRequestPost({ request, env }) {
     if (env.AI) {
       try {
         const prompt = buildPrompt(question, context, knowledgeBase);
-        const aiResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+        const aiResult = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
           messages: [
             { role: 'system', content: 'Ti si AI pravni asistent za komunalne inspektore i komunalnu policiju u Beogradu, Srbija. Odgovaraš na srpskom jeziku, jasno i koncizno. Koristi kontekst iz lokalnih propisa ako je dostupan. Ako ne znaš tačan odgovor, preporuči konsultaciju sa pravnikom.' },
             { role: 'user', content: prompt }
@@ -169,6 +169,8 @@ function getSmartFallback(question, akti, pelceri) {
 
 function getLocalKnowledge(question) {
   const q = question.toLowerCase();
+  const qWords = q.split(/[^a-zščćžđ0-9]+/i).filter(Boolean);
+  const hasWord = (prefix) => qWords.some(w => w.startsWith(prefix));
   
   // ===== Ovlašćenja komunalne policije =====
   if (q.includes('ovlašćen') || q.includes('ovlascen') || (q.includes('može') && q.includes('komunal')) || (q.includes('pravo') && q.includes('polic'))) {
@@ -253,7 +255,7 @@ Komunalni policajac prijavljuje:
   }
 
   // ===== Nelegalni objekti / gradnja =====
-  if ((q.includes('nelegal') && (q.includes('objekat') || q.includes('gradnja') || q.includes('izgradnja'))) || q.includes('samoizgradnja') || (q.includes('objekat') && q.includes('gradnja'))) {
+  if ((q.includes('nelegal') && (q.includes('objekat') || hasWord('gradnj') || hasWord('izgradnj'))) || q.includes('samoizgradnja') || (q.includes('objekat') && hasWord('gradnj'))) {
     return `Prijava nelegalnih objekata:
 
 Nelegalna gradnja se prijavljuje nadležnoj građevinskoj inspekciji. Komunalni policajac može:
@@ -331,7 +333,7 @@ Prekršaji se kažnjavaju novčanom kaznom i naređenjem uklanjanja.`;
   }
 
   // ===== Odluke Skupštine grada =====
-  if (q.includes('odluk') || q.includes('skupština') || q.includes('skupstina') || q.includes('gradska')) {
+  if (q.includes('odluk') || q.includes('skupština') || q.includes('skupstina') || hasWord('gradsk')) {
     return `Odluke Skupštine grada Beograda:
 
 Najvažnije komunalne odluke:
@@ -592,7 +594,7 @@ Za saobraćajne prekršaje kontaktirati: MUP - Saobraćajna policija (122)`;
   }
 
   // ===== Gradilišta =====
-  if (q.includes('gradilišt') || q.includes('gradilist') || q.includes('ograd') || q.includes('ograđ') || q.includes('gradnja') || q.includes('izgradnja')) {
+  if (q.includes('gradilišt') || q.includes('gradilist') || hasWord('ograd') || hasWord('gradnj') || hasWord('izgradnj')) {
     return `Gradilišta:
 
 Odluka o uređenju gradilišta grada Beograda:
