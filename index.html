@@ -377,7 +377,7 @@
   #screen-docs .doc-card-date { color: var(--muted); }
 
   .doc-toolbar {
-    background: white;
+    background:var(--card);
     padding: 10px 12px;
     display: flex;
     gap: 6px;
@@ -410,7 +410,7 @@
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--navy);
-    background: white;
+    background:var(--card);
     outline: none;
     font-family: inherit;
   }
@@ -424,7 +424,7 @@
     font-family: Tahoma, sans-serif;
     line-height: 1.7;
     outline: none;
-    background: white;
+    background:var(--card);
     overflow-y: auto;
     color: var(--text);
   }
@@ -434,7 +434,7 @@
   }
 
   .doc-actions {
-    background: white;
+    background:var(--card);
     border-top: 1px solid var(--border);
     padding: 10px 12px;
     display: flex;
@@ -461,7 +461,7 @@
   .saved-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
 
   .doc-card {
-    background: white;
+    background:var(--card);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 12px 14px;
@@ -497,7 +497,7 @@
 
   .search-bar {
     padding: 12px;
-    background: white;
+    background:var(--card);
     border-bottom: 1px solid var(--border);
     position: sticky; top: 0;
   }
@@ -527,7 +527,7 @@
   .akti-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
 
   .akt-card {
-    background: white;
+    background:var(--card);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 13px 14px;
@@ -723,7 +723,7 @@
   #gs-box {
     width: 100%;
     max-width: 480px;
-    background: white;
+    background:var(--card);
     border-radius: 16px 16px 0 0;
     flex: 1;
     display: flex;
@@ -734,7 +734,7 @@
     width: 100%; box-sizing: border-box;
     padding: 16px 18px; border: none;
     border-bottom: 2px solid var(--border);
-    font-size: 1rem; outline: none; background: white;
+    font-size: 1rem; outline: none; background:var(--card);
   }
   #gs-results {
     flex: 1; overflow-y: auto;
@@ -773,7 +773,7 @@
   }
   .modal-bg.open { display: flex; }
   .modal {
-    background: white; border-radius: 18px 18px 0 0;
+    background:var(--card); border-radius: 18px 18px 0 0;
     padding: 20px 16px 32px;
     width: 100%; max-width: 480px;
     max-height: 85vh; overflow-y: auto;
@@ -796,7 +796,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: white;
+    background:var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 13px 14px;
@@ -1756,7 +1756,7 @@ initTapSound();
 </div>
 
 <div class="screen" id="screen-poruke" style="display: none;flex-direction:column;flex:1;">
-  <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:6px;">
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:6px;">
     <button id="poruke-tab-conversations" onclick="porukeView('conversations')" style="flex:1;padding:10px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">💬 Razgovori</button>
     <button id="poruke-tab-inbox" onclick="porukeView('inbox')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📥 Primljene</button>
     <button id="poruke-tab-sent" onclick="porukeView('sent')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📤 Poslate</button>
@@ -1843,7 +1843,7 @@ initTapSound();
     </div>
 
     <!-- Pretraga -->
-    <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
+    <div style="display:flex;align-items:center;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
       <input type="text" id="pelceri-search" placeholder="Претражи пелцере..." oninput="kmDebounce(filterPelceri, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
     </div>
@@ -1855,7 +1855,7 @@ initTapSound();
       <div style="font-size:0.7rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:4px 2px;margin-bottom:8px;">
         Чести прекршаји — материјалне и казнене одредбе
       </div>
-      <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;margin-bottom:10px;">
         <span style="color:var(--muted);">🔍</span>
         <input type="text" id="cesti-prekrsaji-search" placeholder="Претражи прекршаје..." oninput="kmDebounce(filterCestiPrekrsaji, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
       </div>
@@ -1873,7 +1873,7 @@ initTapSound();
     </div>
 
     <!-- Pretraga -->
-    <div style="display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
+    <div style="display:flex;align-items:center;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
       <input type="text" id="search-input" placeholder="Npr. nepropisno parkiranje, buka, tezge..." oninput="kmDebounce(filterAkti, 250)()" style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;">
     </div>
@@ -1895,7 +1895,7 @@ initTapSound();
 <div class="screen" id="screen-kamera" style="display:none;flex-direction:column;flex:1;">
 
   <!-- Toolbar -->
-  <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;">
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;">
     <button onclick="document.getElementById(&#39;camera-input&#39;).click()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
       📷 Slikaj
     </button>
@@ -1907,7 +1907,7 @@ initTapSound();
   <input type="file" id="gallery-input" accept="image/*" multiple="" style="display:none" onchange="handlePhotoCapture(event)">
 
   <!-- Folder selector -->
-  <div style="background:white;padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;">
+  <div style="background:var(--card);padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;">
     <span style="font-size:0.78rem;color:var(--muted);font-weight:600;">📁 Folder:</span>
     <select id="folder-select" onchange="renderPhotos()" style="flex:1;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82rem;background:var(--card);color:var(--text);">
       <option value="Sve">Sve fotografije</option>
@@ -1918,7 +1918,7 @@ initTapSound();
   <!-- Photo grid -->
   <div id="photo-grid" style="padding:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;"></div>
 
-  <div style="background:white;border-top:1px solid var(--border);padding:8px 12px;font-size:0.7rem;color:var(--muted);text-align:center;">
+  <div style="background:var(--card);border-top:1px solid var(--border);padding:8px 12px;font-size:0.7rem;color:var(--muted);text-align:center;">
     📦 Fotografije se čuvaju lokalno na ovom uređaju
   </div>
 </div>
@@ -2003,7 +2003,7 @@ initTapSound();
     </div>
 
     <!-- ACCORDION: ŽUTE TRAKE -->
-    <div style="background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div onclick="toggleAccordion(&#39;acc-zute&#39;)" style="background:linear-gradient(135deg,#f5c518,#e0a800);padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
         <span style="font-size:1.4rem;">🚌</span>
         <div style="flex:1;">
@@ -2078,7 +2078,7 @@ initTapSound();
     </div>
 
     <!-- ACCORDION: PEŠAČKE ZONE -->
-    <div style="background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div onclick="toggleAccordion(&#39;acc-pesacke&#39;)" style="background:linear-gradient(135deg,#1a4a8a,#0d2240);padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
         <span style="font-size:1.4rem;">🚶</span>
         <div style="flex:1;">
@@ -2181,7 +2181,7 @@ initTapSound();
     </div>
 
     <!-- ACCORDION: PARKING SERVIS -->
-    <div style="background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div onclick="toggleAccordion('acc-parking')" style="background:linear-gradient(135deg,#2e8b57,#1b5e3a);padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
         <span style="font-size:1.4rem;">🅿️</span>
         <div style="flex:1;">
@@ -2203,7 +2203,7 @@ initTapSound();
     </div>
 
     <!-- ACCORDION: VAZNI TELEFONI -->
-    <div style="background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div onclick="toggleAccordion('acc-telefoni')" style="background:linear-gradient(135deg,#8a3ffc,#5a1fb0);padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
         <span style="font-size:1.4rem;">☎️</span>
         <div style="flex:1;">
@@ -3455,8 +3455,8 @@ function porukeOpenThread(partner, displayName) {
   html += '</div>';
   
   // Quick reply box
-  html += '<div style="position:sticky;bottom:0;background:white;border-top:1px solid var(--border);padding:10px;margin-top:10px;display:flex;gap:8px;">' +
-    '<button onclick="porukeThreadAttach(\'' + partner + '\', \'' + displayName.replace(/'/g, "\\\'") + '\')" style="background:white;border:1.5px solid var(--border);border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:1.1rem;">\ud83d\udcc1</button>' +
+  html += '<div style="position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--border);padding:10px;margin-top:10px;display:flex;gap:8px;">' +
+    '<button onclick="porukeThreadAttach(\'' + partner + '\', \'' + displayName.replace(/'/g, "\\\'") + '\')" style="background:var(--card);border:1.5px solid var(--border);border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:1.1rem;">\ud83d\udcc1</button>' +
     '<input id="thread-quick-reply" type="text" placeholder="Odgovori..." style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:20px;font-size:0.85rem;outline:none;" onkeydown="if(event.key===\'Enter\')porukeThreadReply(\'' + partner + '\', \'' + displayName.replace(/'/g, "\\\'") + '\')">' +
     '<button onclick="porukeThreadReply(\'' + partner + '\', \'' + displayName.replace(/'/g, "\\\'") + '\')" style="background:var(--navy);color:white;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:1.1rem;">\u2192</button>' +
     '</div>';
@@ -3619,7 +3619,7 @@ async function porukeRenderInbox() {
     const avatar = senderPhoto
       ? '<img src="' + senderPhoto + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
       : '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;">' + initial + '</div>';
-    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'inbox\')" style="display:flex;gap:10px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;' + (unread ? 'border-left:3px solid var(--navy);' : '') + '">' +
+    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'inbox\')" style="display:flex;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;' + (unread ? 'border-left:3px solid var(--navy);' : '') + '">' +
       avatar +
       '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -3658,7 +3658,7 @@ async function porukeRenderSent() {
     const avatar = recPhoto
       ? '<img src="' + recPhoto + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
       : '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;">' + initial + '</div>';
-    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="display:flex;gap:10px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
+    html += '<div onclick="porukeOpenMessage(\'' + msg.id + '\', \'sent\')" style="display:flex;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;">' +
       avatar +
       '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -3687,13 +3687,13 @@ function porukeRenderCompose() {
     '<div style="padding:8px 0;">' +
     '<div style="font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:8px;">Nova poruka</div>' +
     '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Primaoc:</div>' +
-    '<input type="text" id="poruke-search" placeholder="Pretraga po imenu..." oninput="porukeFilterContacts()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;background:white;margin-bottom:8px;outline:none;">' +
-    '<div id="poruke-contact-list" style="max-height:240px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;margin-bottom:10px;background:white;"></div>' +
+    '<input type="text" id="poruke-search" placeholder="Pretraga po imenu..." oninput="porukeFilterContacts()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;background:var(--card);margin-bottom:8px;outline:none;">' +
+    '<div id="poruke-contact-list" style="max-height:240px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--card);"></div>' +
     '<div id="poruke-selected-display" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--navy);color:white;border-radius:10px;margin-bottom:10px;font-size:0.85rem;">' +
     '<span id="poruke-selected-text"></span>' +
     '<button onclick="porukeClearRecipient()" style="margin-left:auto;background:rgba(255,255,255,0.2);border:none;color:white;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.7rem;">\u2715</button>' +
     '</div>' +
-    '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
+    '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:var(--card);margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
     '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
     '<button onclick="porukeAttachPhoto()" style="flex:1;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcf7 Slika</button>' +
     '<button onclick="porukeAttachFile()" style="flex:1;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcc1 Fajl</button>' +
@@ -3816,13 +3816,13 @@ function porukeRenderAttachments() {
   let html = '';
   porukeAttachments.forEach((a, i) => {
     if (a.type === 'image') {
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:white;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
         '<img src="' + a.data + '" style="width:40px;height:40px;border-radius:6px;object-fit:cover;">' +
         '<span style="flex:1;font-size:0.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + a.name + '</span>' +
         '<button onclick="porukeRemoveAttachment(' + i + ')" style="background:#e53935;color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.65rem;">\u2715</button>' +
         '</div>';
     } else {
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:white;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">' +
         '<div style="width:40px;height:40px;border-radius:6px;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">\ud83d\udcc1</div>' +
         '<span style="flex:1;font-size:0.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + a.name + '</span>' +
         '<button onclick="porukeRemoveAttachment(' + i + ')" style="background:#e53935;color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.65rem;">\u2715</button>' +
@@ -3939,7 +3939,7 @@ function porukeOpenMessage(msgId, type) {
   content.innerHTML = 
     '<div style="padding:8px 0;">' +
     '<button onclick="porukeView(\'' + type + '\')" style="background:none;border:none;color:var(--navy);font-size:0.82rem;cursor:pointer;margin-bottom:12px;">\u2190 Nazad</button>' +
-    '<div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px;">' +
+    '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px;">' +
     '<div style="font-size:0.72rem;color:var(--muted);">' + (isReceived ? 'Od' : 'Primalac') + '</div>' +
     '<div style="font-weight:700;font-size:0.95rem;color:var(--text);margin-bottom:6px;">' + otherName + '</div>' +
     '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">' + time + (isReceived ? '' : (msg.read ? ' \u00b7 \u2713\u2713 Procitano' : ' \u00b7 \u2713 Poslato')) + '</div>' +
@@ -16089,7 +16089,7 @@ function renderAktiSearchResults(results, query) {
   el.innerHTML =
     `<div style="font-size:0.7rem;color:var(--muted);padding:2px 2px 8px;">Pronađeno ${results.length} člana/odredbe u zakonima i odlukama</div>` +
     results.map(r => `
-      <div onclick="openAkt(${r.aktId}, decodeURIComponent('${encodeURIComponent(r.clan)}'))" style="background:white;border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:6px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+      <div onclick="openAkt(${r.aktId}, decodeURIComponent('${encodeURIComponent(r.clan)}'))" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:6px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
           <span style="background:${tipColor[r.tip]};color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:0.5px;text-transform:uppercase;">${tipLabel[r.tip]}</span>
           <span style="font-size:0.72rem;color:var(--navy);font-weight:700;">${r.clan}</span>
@@ -16127,7 +16127,7 @@ function renderAkti(data) {
         ${groupLabel[tip]}
       </div>
       ${groups[tip].map(a => `
-        <div onclick="openAkt(${a.id})" style="background:white;border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div onclick="openAkt(${a.id})" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
           <span style="font-size:1.2rem;">${groupIcon[tip]}</span>
           <div style="flex:1;">
             <div style="font-size:0.82rem;font-weight:600;color:var(--navy);line-height:1.4;">${a.naziv}</div>
@@ -16613,7 +16613,7 @@ function closeImenikModal() {
 <div class="screen" id="screen-mapa" style="display: none;">
 
   <!-- Toolbar -->
-  <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;z-index:10;">
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;z-index:10;">
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
@@ -16621,7 +16621,7 @@ function closeImenikModal() {
   </div>
 
   <!-- Pretraga -->
-  <div style="background:white;padding:8px 12px;border-bottom:1px solid var(--border);">
+  <div style="background:var(--card);padding:8px 12px;border-bottom:1px solid var(--border);">
     <div style="display:flex;align-items:center;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
       <span style="color:var(--muted);">🔍</span>
       <input id="map-search" type="text" placeholder="Pretraži adresu u Beogradu..." style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;" onkeydown="if(event.key===&#39;Enter&#39;)searchAddress()">
@@ -16634,14 +16634,14 @@ function closeImenikModal() {
     <div id="leaflet-map" style="width:100%;flex:1;min-height:300px;border:none;z-index:1;"></div>
     <!-- Tracking info overlay -->
     <!-- Marker info -->
-    <div id="map-info" style="display:none;position:absolute;bottom:12px;left:12px;right:12px;background:white;border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.82rem;z-index:20;">
+    <div id="map-info" style="display:none;position:absolute;bottom:12px;left:12px;right:12px;background:var(--card);border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.82rem;z-index:20;">
       <div id="map-info-text" style="color:var(--navy);font-weight:600;"></div>
       <button onclick="document.getElementById(&#39;map-info&#39;).style.display=&#39;none&#39;" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:1rem;cursor:pointer;color:var(--muted);">✕</button>
     </div>
   </div>
 
   <!-- Brzi linkovi -->
-  <div style="background:white;border-top:1px solid var(--border);padding:10px 12px;">
+  <div style="background:var(--card);border-top:1px solid var(--border);padding:10px 12px;">
     <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Brzi pristup</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <button onclick="goTo(44.8176,20.4568,&#39;Beograd — centar&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">🏙️ Centar</button>
@@ -17085,7 +17085,7 @@ function renderPelceri(data) {
         ${kat}
       </div>
       ${items.map(p => `
-        <div onclick="openPelcer(${p.id})" style="background:white;border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div onclick="openPelcer(${p.id})" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
           <span style="font-size:1.2rem;">📋</span>
           <div style="flex:1;font-size:0.82rem;font-weight:600;color:var(--navy);line-height:1.4;">${p.naziv}</div>
           <span style="color:var(--muted);font-size:1rem;">›</span>
@@ -17339,7 +17339,7 @@ function renderCestiPrekrsaji() {
     html += '<div style="margin-bottom:12px;">';
     html += '<div style="font-size:0.72rem;font-weight:800;color:var(--gold);padding:8px 4px 6px;letter-spacing:0.5px;border-bottom:2px solid var(--gold);margin-bottom:8px;">' + kat.kategorija + '</div>';
     stavke.forEach(s => {
-      html += '<div onclick="openCestiPrekrsaj(' + ki + ',\''+s.naziv.replace(/'/g,"\\'")+'\')" style="background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .15s;">';
+      html += '<div onclick="openCestiPrekrsaj(' + ki + ',\''+s.naziv.replace(/'/g,"\\'")+'\')" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .15s;">';
       html += '<div style="font-size:0.85rem;font-weight:700;color:var(--navy);margin-bottom:6px;line-height:1.35;">' + s.naziv + '</div>';
       html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
       html += '<span style="font-size:0.72rem;background:#e8eef5;color:var(--navy);padding:3px 8px;border-radius:6px;font-weight:600;">📋 ' + s.materijalna + '</span>';
@@ -18166,7 +18166,7 @@ function renderCalendar() {
     const dayDate = new Date(year, month, d);
     const dayOfWeek = dayDate.getDay();
     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-    const bg = isToday ? 'background:var(--navy);color:white;' : (isWeekend ? 'background:rgba(0,0,0,0.04);' : 'background:white;');
+    const bg = isToday ? 'background:var(--navy);color:white;' : (isWeekend ? 'background:rgba(0,0,0,0.04);' : 'background:var(--card);');
     const weight = isToday ? 'font-weight:700;' : 'font-weight:500;';
     html += '<div style="text-align:center;padding:10px 0;border-radius:8px;font-size:0.85rem;' + bg + weight + 'border:1px solid var(--border);">' + d + '</div>';
   }
@@ -18176,7 +18176,7 @@ function renderCalendar() {
   // Today info card
   const fullDate = today.toLocaleDateString('sr-RS', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeStr = String(today.getHours()).padStart(2,'0') + ':' + String(today.getMinutes()).padStart(2,'0');
-  html += '<div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-top:8px;">';
+  html += '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-top:8px;">';
   html += '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;">Današnji datum</div>';
   html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text);">' + fullDate + '</div>';
   html += '<div style="font-size:0.82rem;color:var(--muted);margin-top:6px;">Trenutno vreme: <span style="font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;">' + timeStr + '</span></div>';
@@ -18333,7 +18333,7 @@ function adminRenderUsersList() {
   const users = getKMUsers().filter(u => u.source === 'server' || u.source === 'local');
   if (!users.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodatih korisnika.</div>'; return; }
   el.innerHTML = users.map(u => 
-    '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:white;margin-bottom:6px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);margin-bottom:6px;">' +
     '<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">' + (u.username || '?').charAt(0).toUpperCase() + '</div>' +
     '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (u.username || '') + '</div>' +
     '<div style="font-size:0.68rem;color:var(--muted);">' + (u.role === 'admin' ? 'Admin' : 'Korisnik') + '</div></div>' +
@@ -18385,7 +18385,7 @@ async function adminLoadLoginLogs(range) {
     const data = await res.json();
     if (data.success && data.logs && data.logs.length > 0) {
       el.innerHTML = data.logs.map(log => 
-        '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:white;">' +
+        '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--card);">' +
         '<div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;">' + (log.username || '?').charAt(0).toUpperCase() + '</div>' +
         '<div style="flex:1;"><div style="font-size:0.78rem;font-weight:600;">' + (log.username || '') + '</div>' +
         '<div style="font-size:0.66rem;color:var(--muted);">' + (log.device || log.timestamp || '').substring(0, 40) + '</div></div>' +
@@ -18495,7 +18495,7 @@ function renderAdminAktiList() {
   if (!custom.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Nema dodanih akata.</div>'; return; }
   const tipLabel = { zakon: 'Zakon', odluka: 'Odluka' };
   const tipColor = { zakon: '#1a4a8a', odluka: '#8e44ad' };
-  el.innerHTML = custom.map(a => '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:white;">' +
+  el.innerHTML = custom.map(a => '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);">' +
     '<span style="background:' + tipColor[a.tip] + ';color:white;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:5px;">' + tipLabel[a.tip] + '</span>' +
     '<div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + a.naziv + '</div><div style="font-size:0.7rem;color:var(--muted);">' + (a.broj||'') + '</div></div>' +
     '<button onclick="adminDeleteAkt(\'' + a._serverId + '\')" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:5px 8px;font-size:0.72rem;cursor:pointer;font-weight:600;flex-shrink:0;">Obriši</button></div>'
@@ -18653,7 +18653,7 @@ async function adminDeletePelcer(id) {
 
 <!-- ===== PASSWORD CHANGE MODAL ===== -->
 <div id="pwd-change-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)closePwdModal()">
-  <div style="background:white;border-radius:14px;padding:20px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+  <div style="background:var(--card);border-radius:14px;padding:20px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
     <h3 style="font-size:1rem;font-weight:700;margin:0 0 16px;color:var(--text);">🔑 Promena lozinke</h3>
     <p style="font-size:0.75rem;color:var(--muted);margin:0 0 12px;">Korisničko ime ostaje nepromenjeno: <b id="pwd-username-display"></b></p>
     <input id="pwd-old" type="password" placeholder="Trenutna lozinka" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:10px;">
@@ -18812,7 +18812,7 @@ async function adminDeletePelcer(id) {
   <p style="text-align:center;font-size:0.78rem;color:var(--muted);padding:8px 0 4px;">KMapp &#x00B7; Komunalna policija Beograd</p>
 </div>
 <div class="screen" id="screen-kalendar" style="display:none;flex-direction:column;flex:1;">
-  <div style="background:white;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;">
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;">
     <span style="font-size:1.2rem;">📅</span>
     <span id="kalendar-title" style="font-size:0.9rem;font-weight:700;color:var(--text);flex:1;">Kalendar</span>
     <button onclick="prevMonth()" style="background:var(--navy);color:white;border:none;border-radius:6px;padding:6px 10px;font-size:0.8rem;cursor:pointer;font-weight:700;">◀</button>
