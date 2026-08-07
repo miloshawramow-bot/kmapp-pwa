@@ -483,7 +483,7 @@ Komunalni policajac prijavljuje:
   }
 
   // ===== Buka, javni red i mir =====
-  if (q.includes('buk') || q.includes('mir') || q.includes('red') && q.includes('javni') || q.includes('ometanj')) {
+  if (hasWord('buk') || hasWord('mir') || (hasWord('red') && q.includes('javni')) || q.includes('ometanj')) {
     return `Javni red i mir:
 
 Odluka o javnom redu i miru grada Beograda:
@@ -582,7 +582,7 @@ Komunalni policajac može:
   }
 
   // ===== Saobraćaj =====
-  if (q.includes('saobraćaj') || q.includes('saobrac') || q.includes('stup') || q.includes('raskrsni') || q.includes('put') || q.includes('cesta') || q.includes('ulica')) {
+  if (q.includes('saobraćaj') || q.includes('saobrac') || q.includes('stup') || hasWord('raskrsni') || hasWord('cest') || hasWord('ulic')) {
     return `Saobraćaj i komunalna policija:
 
 Komunalni policajac i saobraćaj:
@@ -629,7 +629,7 @@ Prekršaji se prijavljuju građevinskoj inspekciji.`;
   }
 
   // ===== Kontakt / adrese =====
-  if (q.includes('kontakt') || q.includes('telefon') || q.includes('adresa') || q.includes('gde') && q.includes('nalazi')) {
+  if (q.includes('kontakt') || q.includes('telefon') || q.includes('adresa') || (hasWord('gde') && q.includes('nalazi'))) {
     return `Kontakti nadležnih organa:
 
 Komunalni inspektorat:
