@@ -56,7 +56,8 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 4. Local knowledge base with fuzzy matching
-    const knowledgeBase = getLocalKnowledge(question);
+    const knowledgeMatches = getLocalKnowledgeMatches(question);
+    const knowledgeBase = knowledgeMatches.length > 0 ? knowledgeMatches.join('\n\n---\n\n') : null;
     
     // 5. Try Cloudflare Workers AI if available
     let aiReply = null;
@@ -65,7 +66,7 @@ export async function onRequestPost({ request, env }) {
         const prompt = buildPrompt(question, context, knowledgeBase);
         const aiResult = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
           messages: [
-            { role: 'system', content: 'Ti si AI pravni asistent za komunalne inspektore i komunalnu policiju u Beogradu, Srbija. Odgovaraš na srpskom jeziku, jasno i koncizno. Koristi kontekst iz lokalnih propisa ako je dostupan. Ako ne znaš tačan odgovor, preporuči konsultaciju sa pravnikom.' },
+            { role: 'system', content: 'Ti si AI pravni asistent za komunalne inspektore i komunalnu policiju u Beogradu, Srbija. Odgovaraš na srpskom jeziku, jasno i koncizno. AKTI I LOKALNO ZNANJE u kontekstu su zvanični propisi — koristi ih kao izvor istine. Odgovori na tačno postavljeno pitanje koristeći dostupne podatke. Nemoj samo ponavljati tekst iz konteksta — prilagodi odgovor pitanju. Ako pitaš o nečemu što nije u kontekstu, odgovori iz opšteg pravnog znanja.' },
             { role: 'user', content: prompt }
           ],
           max_tokens: 800,
@@ -77,22 +78,22 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    // 6. Prefer local knowledge base for direct matches, use AI for everything else
+    // 6. Always use AI when available (with local knowledge as context), fall back to local KB
     let reply;
     let sources = [];
     
-    if (knowledgeBase) {
-      // Direct local knowledge match — return it immediately (faster + accurate)
-      reply = knowledgeBase;
+    if (aiReply && aiReply.trim().length > 0) {
+      // AI generated the answer using local knowledge as context
+      reply = aiReply;
       if (relevantAkti.length > 0) {
         sources.push(...relevantAkti.map(a => `${a.tip || 'Akt'} ${a.broj || ''}: ${a.naziv || ''}`));
       }
       if (relevantPelceri.length > 0) {
         sources.push(...relevantPelceri.map(p => `Pelcer: ${p.naziv || ''}`));
       }
-    } else if (aiReply) {
-      // No local match — use AI-generated reply
-      reply = aiReply;
+    } else if (knowledgeBase) {
+      // AI not available — return local knowledge directly
+      reply = knowledgeBase;
       if (relevantAkti.length > 0) {
         sources.push(...relevantAkti.map(a => `${a.tip || 'Akt'} ${a.broj || ''}: ${a.naziv || ''}`));
       }
@@ -177,14 +178,15 @@ function getSmartFallback(question, akti, pelceri) {
   return reply;
 }
 
-function getLocalKnowledge(question) {
+function getLocalKnowledgeMatches(question) {
   const q = question.toLowerCase();
   const qWords = q.split(/[^a-zščćžđ0-9]+/i).filter(Boolean);
   const hasWord = (prefix) => qWords.some(w => w.startsWith(prefix));
+  const matches = [];
   
   // ===== Ovlašćenja komunalne policije =====
   if (q.includes('ovlašćen') || q.includes('ovlascen') || (q.includes('može') && q.includes('komunal')) || (q.includes('pravo') && q.includes('polic'))) {
-    return `Ovlašćenja komunalne policije su definisana Zakonom o komunalnim policajcima ("Službeni glasnik RS", br. 104/2016, 95/2018 i 16/2020):
+    matches.push(`Ovlašćenja komunalne policije su definisana Zakonom o komunalnim policajcima ("Službeni glasnik RS", br. 104/2016, 95/2018 i 16/2020):
 
 Glavna ovlašćenja:
 1. Kontrola i nadzor nad izvršavanjem komunalnih propisa
@@ -205,12 +207,12 @@ Komunalni policajac MOŽE:
 • Da izda opomenu
 • Da pozove nadležnu inspekciju
 • Da zahteva identifikaciju lica
-• Da sastavi zapisnik o prekršaju`;
+• Da sastavi zapisnik o prekršaju`);
   }
   
   // ===== Žute trake i parking =====
   if (q.includes('žut') || q.includes('zut') || q.includes('trak') || q.includes('parking') || q.includes('parkir')) {
-    return `Žute trake i parking:
+    matches.push(`Žute trake i parking:
 
 Zona žute trake označava ZABRANU parkiranja po svuda. Vozila parkirana na žutoj traci se prijavljuju i mogu biti odvučena.
 
@@ -222,12 +224,12 @@ Pravila:
 5. Druga zona (žuta) - 24 RSD/h
 6. Treća zona (zelena) - 15 RSD/h
 
-Komunalni policajac prijavljuje vozila na žutoj traci putem aplikacije ili zapisnika, a odvlačenje vrši JKP "Parking Servis".`;
+Komunalni policajac prijavljuje vozila na žutoj traci putem aplikacije ili zapisnika, a odvlačenje vrši JKP "Parking Servis".`);
   }
 
   // ===== Pešačke zone =====
   if (q.includes('pešač') || q.includes('pesac') || q.includes('pešak') || q.includes('pesak')) {
-    return `Pešačke zone u Beogradu:
+    matches.push(`Pešačke zone u Beogradu:
 
 U pešačkim zonama zabranjen je saobraćaj motornih vozila, osim:
 1. Vozila javnog prevoza (GSP)
@@ -239,12 +241,12 @@ Pravila:
 • Parkiranje je zabranjeno osim na označenim mestima
 • Biciklisti mogu koristiti pešačke zone ako nisu drugačije označene
 
-Komunalni policajac kontrolira da li vozila imaju dozvolu za ulazak u pešačku zonu i prijavljuje vozila bez dozvole.`;
+Komunalni policajac kontrolira da li vozila imaju dozvolu za ulazak u pešačku zonu i prijavljuje vozila bez dozvole.`);
   }
 
   // ===== Zelenilo i javne površine =====
   if (q.includes('zelen') || hasWord('drvo') || hasWord('park') || q.includes('drveć') || q.includes('drvore')) {
-    return `Zelenilo i održavanje javnih površina:
+    matches.push(`Zelenilo i održavanje javnih površina:
 
 Zakon o zelenilu ("Službeni glasnik RS") i Odluka o održavanju zelenila grada Beograda:
 
@@ -261,12 +263,12 @@ Komunalni policajac prijavljuje:
 • Uništavanje zelenila
 • Parkiranje na zelenim površinama
 • Nelegalno sečenje drveća
-• Odlaganje otpada na zelenim površinama`;
+• Odlaganje otpada na zelenim površinama`);
   }
 
   // ===== Nelegalni objekti / gradnja =====
   if ((q.includes('nelegal') && (q.includes('objekat') || hasWord('gradnj') || hasWord('izgradnj'))) || q.includes('samoizgradnja') || (q.includes('objekat') && hasWord('gradnj'))) {
-    return `Prijava nelegalnih objekata:
+    matches.push(`Prijava nelegalnih objekata:
 
 Nelegalna gradnja se prijavljuje nadležnoj građevinskoj inspekciji. Komunalni policajac može:
 1. Uočiti i prijaviti nelegalnu gradnju
@@ -281,12 +283,12 @@ Postupak:
 
 Zakon o planiranju i izgradnji ("Službeni glasnik RS", br. 72/2009, 81/2009, 64/2010, 24/2011, 121/2012, 32/2013, 132/2014, 145/2014, 35/2015, 114/2015, 132/2016, 9/2017, 95/2018, 52/2019, 144/2020).
 
-Nadzor vrši Građevinska inspekcija pri Sekretarijatu za urbanizam i građevinarstvo grada Beograda.`;
+Nadzor vrši Građevinska inspekcija pri Sekretarijatu za urbanizam i građevinarstvo grada Beograda.`);
   }
 
   // ===== Komunalne delatnosti =====
   if (q.includes('komunaln') && (q.includes('delatn') || q.includes('uslug') || q.includes('zakon') || q.includes('jkp'))) {
-    return `Zakon o komunalnim delatnostima ("Službeni glasnik RS", br. 16/97, 42/98, 11/2009, 88/2011, 25/2015, 34/2016):
+    matches.push(`Zakon o komunalnim delatnostima ("Službeni glasnik RS", br. 16/97, 42/98, 11/2009, 88/2011, 25/2015, 34/2016):
 
 Komunalne delatnosti su:
 1. Snabdevanje vodom za piće
@@ -301,12 +303,12 @@ Komunalne delatnosti su:
 
 Javna komunalna preduzeća (JKP) obavljaju komunalne delatnosti po principu javne službe.
 
-Nadzor vrši Komunalna inspekcija pri Sekretarijatu za komunalne poslove i saobraćaj grada Beograda.`;
+Nadzor vrši Komunalna inspekcija pri Sekretarijatu za komunalne poslove i saobraćaj grada Beograda.`);
   }
 
   // ===== Inspekcija =====
   if (q.includes('inspekc') || q.includes('inspektor')) {
-    return `Komunalna inspekcija:
+    matches.push(`Komunalna inspekcija:
 
 Komunalni inspektor ima sledeća ovlašćenja:
 1. Izriče novčane kazne za prekršaje komunalnih propisa
@@ -319,12 +321,12 @@ Razlika između komunalnog policajca i inspektora:
 • Komunalni policajac - nadzor, opomena, zapisnik, prijava
 • Komunalni inspektor - kazna, rešenje, prisilna izvršenje
 
-Komunalni inspektorat pri Sekretarijatu za komunalne poslove i saobraćaj Grada Beograda nalazi se u ulici Sekspira 2.`;
+Komunalni inspektorat pri Sekretarijatu za komunalne poslove i saobraćaj Grada Beograda nalazi se u ulici Sekspira 2.`);
   }
 
   // ===== Javna svojina =====
   if (q.includes('javna svojin') || q.includes('javno dobro') || q.includes('javna površin') || q.includes('javne površine')) {
-    return `Javna svojina i javne površine:
+    matches.push(`Javna svojina i javne površine:
 
 Zakon o javnoj svojini ("Službeni glasnik RS", br. 36/91, 80/92, 33/93, 53/93, 67/93, 48/94, 12/96, 27/2001, 23/2002, 26/2003, 32/2005, 18/2015, 80/2020, 144/2022):
 
@@ -339,12 +341,12 @@ Zabranjeno je:
 • Ograđivanje javnih površina
 • Postavljanje reklama i natpisa bez dozvole
 
-Prekršaji se kažnjavaju novčanom kaznom i naređenjem uklanjanja.`;
+Prekršaji se kažnjavaju novčanom kaznom i naređenjem uklanjanja.`);
   }
 
   // ===== Odluke Skupštine grada =====
   if (q.includes('odluk') || q.includes('skupština') || q.includes('skupstina') || hasWord('gradsk')) {
-    return `Odluke Skupštine grada Beograda:
+    matches.push(`Odluke Skupštine grada Beograda:
 
 Najvažnije komunalne odluke:
 1. Odluka o javnom redu i miru
@@ -358,12 +360,12 @@ Najvažnije komunalne odluke:
 
 Komunalni policajac sprovodi ove odluke kroz nadzor i prijavljivanje prekršaja.
 
-Odluke su dostupne na sajtu grada Beograda i u Službenom listu grada Beograda.`;
+Odluke su dostupne na sajtu grada Beograda i u Službenom listu grada Beograda.`);
   }
 
   // ===== Zaposlenje / uslovi rada =====
   if (q.includes('posao') || q.includes('zaposlen') || q.includes('kriterijum') || q.includes('uslov') || q.includes('konkurs')) {
-    return `Uslovi za rad u komunalnoj policiji:
+    matches.push(`Uslovi za rad u komunalnoj policiji:
 
 1. Srpsko državljanstvo
 2. Starost 18-40 godina
@@ -374,12 +376,12 @@ Odluke su dostupne na sajtu grada Beograda i u Službenom listu grada Beograda.`
 7. Bez krivičnog gonjenja u toku
 8. Poznavanje zakona o komunalnim poslovima
 
-Procena se vrši putem konkursa koji objavljuje Sekretarijat za komunalne poslove i saobraćaj Grada Beograda.`;
+Procena se vrši putem konkursa koji objavljuje Sekretarijat za komunalne poslove i saobraćaj Grada Beograda.`);
   }
 
   // ===== Postupak prijave prekršaja =====
   if (q.includes('prijav') && (q.includes('prekrš') || q.includes('postupak') || q.includes('kazn'))) {
-    return `Postupak prijave prekršaja:
+    matches.push(`Postupak prijave prekršaja:
 
 1. Komunalni policajac uočava prekršaj
 2. Identifikacija lica (prekršioca)
@@ -396,12 +398,12 @@ Vrste prekršaja:
 • Nelegalno odlaganje otpada
 • Postavljanje rekla bez dozvole
 • Ometanje javnog reda i mira
-• Izlaganje robe van dozvoljenog prostora`;
+• Izlaganje robe van dozvoljenog prostora`);
   }
 
   // ===== Radno vreme i reklame =====
   if (q.includes('radno vreme') || q.includes('reklam') || q.includes('oglas') || q.includes('natpis')) {
-    return `Radno vreme i reklame:
+    matches.push(`Radno vreme i reklame:
 
 Radno vreme objekata:
 1. Radni dan 06:00-22:00 (poslovni prostori)
@@ -416,12 +418,12 @@ Reklame i natpisi:
 4. Zabranjene su reklame koje ometaju saobraćaj
 5. LED ekrani moraju imati dozvolu i ne smeju da ometaju saobraćaj
 
-Komunalni policajac prijavljuje nelegalne reklame i natpise.`;
+Komunalni policajac prijavljuje nelegalne reklame i natpise.`);
   }
 
   // ===== Uklanjanje nelegalnih sadržaja =====
   if (q.includes('uklanj') || q.includes('uklon') || q.includes('nedozvoljen') || q.includes('nelegalan sadržaj') || q.includes('uklanjanje')) {
-    return `Uklanjanje nelegalnih sadržaja:
+    matches.push(`Uklanjanje nelegalnih sadržaja:
 
 Postupak uklanjanja:
 1. Komunalni policajac uočava nelegalni sadržaj (ogradu, oglas, konstrukciju)
@@ -437,12 +439,12 @@ Vrste nelegalnih sadržaja:
 • Izložbe robe van dozvoljenog prostora
 • Kontejneri na javnoj površini bez dozvole
 • Gradilišta bez ograđivanja
-• Nelegalne konstrukcije (terase, tende)`;
+• Nelegalne konstrukcije (terase, tende)`);
   }
 
   // ===== Komunalne sankcije i kazne =====
   if ((q.includes('kazn') || q.includes('sankci') || q.includes('novčan') || q.includes('globa') || q.includes('kazna')) && !q.includes('žalb') && !q.includes('zalb') && !q.includes('prigov')) {
-    return `Komunalne sankcije i kazne:
+    matches.push(`Komunalne sankcije i kazne:
 
 Novčane kazne za prekršaje (Odluka o komunalnim sankcijama grada Beograda):
 
@@ -457,12 +459,12 @@ Novčane kazne za prekršaje (Odluka o komunalnim sankcijama grada Beograda):
 
 Kazne izriče komunalni inspektor, ne policajac!
 Policajac sastavlja zapisnik, inspektor izdaje rešenje.
-Pravo na žalbu: 8 dana od prijema rešenja.`;
+Pravo na žalbu: 8 dana od prijema rešenja.`);
   }
 
   // ===== Otpad i čistoća =====
   if (q.includes('otpad') || q.includes('čistoć') || q.includes('cistoc') || q.includes('smeće') || q.includes('smece') || q.includes('kontejner')) {
-    return `Odlaganje otpada i čistoća:
+    matches.push(`Odlaganje otpada i čistoća:
 
 Zakon o upravljanju otpadom ("Službeni glasnik RS", br. 36/2009, 14/2016) i Odluka o održavanju čistoće grada Beograda:
 
@@ -479,12 +481,12 @@ Komunalni policajac prijavljuje:
 • Odlaganje otpada van kontejnera
 • Divlje deponije
 • Nečistoću ispred objekata
-• Paljenje otpada`;
+• Paljenje otpada`);
   }
 
   // ===== Buka, javni red i mir =====
   if (hasWord('buk') || hasWord('mir') || (hasWord('red') && q.includes('javni')) || q.includes('ometanj')) {
-    return `Javni red i mir:
+    matches.push(`Javni red i mir:
 
 Odluka o javnom redu i miru grada Beograda:
 
@@ -504,12 +506,12 @@ Postupak:
 4. Sastavlja zapisnik
 5. Prijavljuje komunalnom inspektoru
 
-Napomena: Za ozbiljnije prekršaje (pretnje, nasilje) nadležna je MUP, ne komunalna policija.`;
+Napomena: Za ozbiljnije prekršaje (pretnje, nasilje) nadležna je MUP, ne komunalna policija.`);
   }
 
   // ===== Javna rasveta =====
   if (q.includes('rasvet') || q.includes('rasvjet') || q.includes('svetlo') || q.includes('svjetlo') || q.includes('lamp') || q.includes('sijalic')) {
-    return `Javna rasveta:
+    matches.push(`Javna rasveta:
 
 Odluka o javnoj rasveti grada Beograda:
 
@@ -530,12 +532,12 @@ Nadzor i održavanje:
 • Neispravne sijalice
 • Oštećeni stubovi rasvete
 • Rasveta koja ne radi noću
-• Previše osvetljenje (ometanje stanara)`;
+• Previše osvetljenje (ometanje stanara)`);
   }
 
   // ===== Neispravna vozila =====
   if (q.includes('neisprav') && q.includes('vozil') || q.includes('obiljež') && q.includes('vozil') || q.includes('parkir') && q.includes('neisprav')) {
-    return `Neispravna vozila:
+    matches.push(`Neispravna vozila:
 
 Komunalni policajac može da prijavi neispravna vozila:
 
@@ -554,12 +556,12 @@ Postupak:
 5. Prijavljuje JKP "Parking Servis" za uklanjanje
 6. Vozilo se odvlači na deponiju
 
-Obeležavanje: Komunalni policajac stavlja nalepnicu na vozilo sa datumom i pozivom za uklanjanje.`;
+Obeležavanje: Komunalni policajac stavlja nalepnicu na vozilo sa datumom i pozivom za uklanjanje.`);
   }
 
   // ===== PSAH / Kontrola poslovnih prostora =====
   if (q.includes('psah') || q.includes('kontrol') && q.includes('poslov') || q.includes('sanitarni') || q.includes('higijen')) {
-    return `PSAH i sanitarni nadzor:
+    matches.push(`PSAH i sanitarni nadzor:
 
 PSAH (Priprema, sprovođenje i analiza higijene):
 
@@ -578,12 +580,12 @@ Nadležni organi:
 Komunalni policajac može:
 • Prijava nehigijenskih uslova
 • Prijava radnika bez sanitarnih knjižica
-• Kontrola izlaganja hrane na javnoj površini`;
+• Kontrola izlaganja hrane na javnoj površini`);
   }
 
   // ===== Saobraćaj =====
   if (q.includes('saobraćaj') || q.includes('saobrac') || q.includes('stub') || hasWord('raskrsni') || hasWord('cest') || hasWord('ulic')) {
-    return `Saobraćaj i komunalna policija:
+    matches.push(`Saobraćaj i komunalna policija:
 
 Komunalni policajac i saobraćaj:
 1. Kontrola parkiranja (žute trake, zone)
@@ -600,12 +602,12 @@ NAPOMENA: Komunalni policajac NEMA ovlašćenja za:
 
 Komunalni policajac kontroliše samo komunalne aspekte saobraćaja (parking, zauzimanje javne površine, itd.).
 
-Za saobraćajne prekršaje kontaktirati: MUP - Saobraćajna policija (122)`;
+Za saobraćajne prekršaje kontaktirati: MUP - Saobraćajna policija (122)`);
   }
 
   // ===== Gradilišta =====
   if (q.includes('gradilišt') || q.includes('gradilist') || hasWord('ograd') || hasWord('gradnj') || hasWord('izgradnj')) {
-    return `Gradilišta:
+    matches.push(`Gradilišta:
 
 Odluka o uređenju gradilišta grada Beograda:
 
@@ -625,12 +627,12 @@ Komunalni policajac kontroliše:
 4. Da li su postavljene table sa podacima
 5. Da li je pešački prolaz obezbeđen
 
-Prekršaji se prijavljuju građevinskoj inspekciji.`;
+Prekršaji se prijavljuju građevinskoj inspekciji.`);
   }
 
   // ===== Kontakt / adrese =====
   if (q.includes('kontakt') || q.includes('telefon') || q.includes('adresa') || (hasWord('gde') && q.includes('nalazi'))) {
-    return `Kontakti nadležnih organa:
+    matches.push(`Kontakti nadležnih organa:
 
 Komunalni inspektorat:
 • Adresa: Sekspira 2, Beograd
@@ -655,12 +657,12 @@ JKP "Zelenilo-Beograd":
 
 MUP - Saobraćajna policija: 122
 Hitna pomoć: 194
-Vatrogasci: 193`;
+Vatrogasci: 193`);
   }
 
   // ===== Žalbe =====
   if (q.includes('žalb') || q.includes('zalb') || q.includes('prigov') || q.includes('pravo') && q.includes('žalb')) {
-    return `Pravo na žalbu:
+    matches.push(`Pravo na žalbu:
 
 Protiv rešenja komunalnog inspektora:
 1. Žalba se podnosi u roku od 8 dana od prijema rešenja
@@ -676,11 +678,11 @@ Postupak:
 4. Donosi rešenje o žalbi (prihvata/odbija)
 5. Protiv drugostepenog rešenja može se pokrenuti upravni spor
 
-Za pomoć pri žalbi: obratiti se pravniku ili advokatskoj kancelariji.`;
+Za pomoć pri žalbi: obratiti se pravniku ili advokatskoj kancelariji.`);
   }
 
-  // ===== None matched - use smart fallback
-  return null;
+  // Return all matched knowledge base sections (empty array if none)
+  return matches;
 }
 
 export async function onRequestGet({ request, env }) {
