@@ -243,7 +243,7 @@ Komunalni policajac kontrolira da li vozila imaju dozvolu za ulazak u pešačku 
   }
 
   // ===== Zelenilo i javne površine =====
-  if (q.includes('zelen') || q.includes('drvo') || q.includes('park') || q.includes('drveć') || q.includes('drvore')) {
+  if (q.includes('zelen') || hasWord('drvo') || hasWord('park') || q.includes('drveć') || q.includes('drvore')) {
     return `Zelenilo i održavanje javnih površina:
 
 Zakon o zelenilu ("Službeni glasnik RS") i Odluka o održavanju zelenila grada Beograda:
@@ -305,7 +305,7 @@ Nadzor vrši Komunalna inspekcija pri Sekretarijatu za komunalne poslove i saobr
   }
 
   // ===== Inspekcija =====
-  if (q.includes('inspekc') || q.includes('inspektor') || (q.includes('kazn') && q.includes('komunal'))) {
+  if (q.includes('inspekc') || q.includes('inspektor')) {
     return `Komunalna inspekcija:
 
 Komunalni inspektor ima sledeća ovlašćenja:
@@ -400,7 +400,7 @@ Vrste prekršaja:
   }
 
   // ===== Radno vreme i reklame =====
-  if (q.includes('radno vreme') || q.includes('reklam') || q.includes('oglas') || q.includes('natpis') || q.includes('rekl')) {
+  if (q.includes('radno vreme') || q.includes('reklam') || q.includes('oglas') || q.includes('natpis')) {
     return `Radno vreme i reklame:
 
 Radno vreme objekata:
@@ -441,7 +441,7 @@ Vrste nelegalnih sadržaja:
   }
 
   // ===== Komunalne sankcije i kazne =====
-  if (q.includes('kazn') || q.includes('sankci') || q.includes('novčan') || q.includes('globa') || q.includes('kazna')) {
+  if ((q.includes('kazn') || q.includes('sankci') || q.includes('novčan') || q.includes('globa') || q.includes('kazna')) && !q.includes('žalb') && !q.includes('zalb') && !q.includes('prigov')) {
     return `Komunalne sankcije i kazne:
 
 Novčane kazne za prekršaje (Odluka o komunalnim sankcijama grada Beograda):
@@ -582,7 +582,7 @@ Komunalni policajac može:
   }
 
   // ===== Saobraćaj =====
-  if (q.includes('saobraćaj') || q.includes('saobrac') || q.includes('stup') || hasWord('raskrsni') || hasWord('cest') || hasWord('ulic')) {
+  if (q.includes('saobraćaj') || q.includes('saobrac') || q.includes('stub') || hasWord('raskrsni') || hasWord('cest') || hasWord('ulic')) {
     return `Saobraćaj i komunalna policija:
 
 Komunalni policajac i saobraćaj:
