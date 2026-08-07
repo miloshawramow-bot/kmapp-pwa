@@ -77,11 +77,21 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    // 6. Use AI reply if available, otherwise use local knowledge
+    // 6. Prefer local knowledge base for direct matches, use AI for everything else
     let reply;
     let sources = [];
     
-    if (aiReply) {
+    if (knowledgeBase) {
+      // Direct local knowledge match — return it immediately (faster + accurate)
+      reply = knowledgeBase;
+      if (relevantAkti.length > 0) {
+        sources.push(...relevantAkti.map(a => `${a.tip || 'Akt'} ${a.broj || ''}: ${a.naziv || ''}`));
+      }
+      if (relevantPelceri.length > 0) {
+        sources.push(...relevantPelceri.map(p => `Pelcer: ${p.naziv || ''}`));
+      }
+    } else if (aiReply) {
+      // No local match — use AI-generated reply
       reply = aiReply;
       if (relevantAkti.length > 0) {
         sources.push(...relevantAkti.map(a => `${a.tip || 'Akt'} ${a.broj || ''}: ${a.naziv || ''}`));
@@ -90,8 +100,8 @@ export async function onRequestPost({ request, env }) {
         sources.push(...relevantPelceri.map(p => `Pelcer: ${p.naziv || ''}`));
       }
     } else {
-      // Fallback to local knowledge base
-      reply = knowledgeBase || getSmartFallback(question, relevantAkti, relevantPelceri);
+      // Fallback if neither AI nor local knowledge available
+      reply = getSmartFallback(question, relevantAkti, relevantPelceri);
     }
 
     return jsonResponse({ 
