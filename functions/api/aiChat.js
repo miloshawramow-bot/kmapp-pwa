@@ -66,10 +66,10 @@ export async function onRequestPost({ request, env }) {
         const prompt = buildPrompt(question, context, knowledgeBase);
         const aiResult = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
           messages: [
-            { role: 'system', content: "Ti si AI pravni asistent za komunalne inspektore i komunalnu policiju u Beogradu, Srbija. Odgovaraš na srpskom jeziku, jasno i koncizno. VAŽNO: Ako je u kontekstu dato 'Lokalno znanje', TO JE OBAVEZAN I JEDINI IZVOR ISTINE za odgovor — MORAŠ ga koristiti i NE SMEŠ izmišljati druge zakone, članove ili propise koji nisu u kontekstu. Samo preformuliši i prilagodi dati tekst da odgovori na tačno postavljeno pitanje, ne izmišljaj dodatne izvore. Ako lokalno znanje NIJE dato u kontekstu, tek onda odgovori iz opšteg pravnog znanja i jasno naznači da je to opšta informacija." },
+            { role: 'system', content: "Ti si AI pravni asistent za komunalne inspektore i komunalnu policiju u Beogradu, Srbija. Odgovaraš na srpskom jeziku, detaljno i strukturisano. VAŽNO: Ako je u kontekstu dato 'Lokalno znanje', TO JE OBAVEZAN I JEDINI IZVOR ISTINE za odgovor — MORAŠ ga koristiti u celosti i NE SMEŠ izmišljati druge zakone, članove ili propise koji nisu u kontekstu. Nemoj skraćivati ili izostavljati bitne detalje iz konteksta — uključi sve relevantne informacije (članove, brojeve glasnika, procedura, prilozi). Formatiraj odgovor sa jasnim naslovima sekcija i navedi sve stavke iz konteksta. Ako lokalno znanje NIJE dato u kontekstu, tek onda odgovori iz opšteg pravnog znanja i jasno naznači da je to opšta informacija." },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 800,
+          max_tokens: 1500,
           temperature: 0.1
         });
         aiReply = aiResult.response;
@@ -123,7 +123,7 @@ function buildPrompt(question, context, localKB) {
   if (localKB) {
     prompt += `Lokalno znanje:\n${localKB}\n\n`;
   }
-  prompt += 'Odgovori jasno, koncizno i na srpskom jeziku. Ako pitaš o specifičnom zakonu, navedi član i stav ako je poznat.';
+  prompt += 'Odgovori detaljno i strukturisano na srpskom jeziku. Uključi SVE relevantne informacije iz lokalnog znanja — članove, brojeve glasnika, procedure, priložene dokumente. Nemoj izostavljati bitne detalje. Ako lokalno znanje sadrži liste stavki, navedi ih sve.';
   return prompt;
 }
 
@@ -683,21 +683,21 @@ Za pomoć pri žalbi: obratiti se pravniku ili advokatskoj kancelariji.`);
 
   // ===== Agregati na javnim površinama =====
   if (q.includes('agregat')) {
-    matches.push(`Agregati na javnim površinama:
+    matches.push(`Odluka o komunalnom redu – Beograd
 
-Prema članu 23. stav 1. tačka 4. Odluke o komunalnom redu grada Beograda, zabranjeno je ostavljanje agregata na površini javne namene ili površini u javnom korišćenju. To obuhvata ulice, trotoare, trgove, javna parkirališta i druge javno dostupne površine.
+Prema članu 23. stav 1. tačka 4. Odluke o komunalnom redu, zabranjeno je ostavljanje agregata na površini javne namene ili površini u javnom korišćenju. To obuhvata, između ostalog, ulice, trotoare, trgove, javna parkirališta i druge javno dostupne površine.
 
-Odluka je objavljena u "Službenom listu grada Beograda", sa izmenama zaključno sa brojevima 73/2025, 90/2025 - ispr. i 101/2025.
+Odluka je objavljena u „Službenom listu grada Beograda", a dostupna verzija obuhvata izmene zaključno sa brojevima 73/2025 i 90/2025 - ispr. i 101/2025.
 
 Ako agregat zauzima kolovoz ili trotoar:
-Potrebno je podneti zahtev za izdavanje rešenja o izmeni režima saobraćaja Sekretarijatu za saobraćaj Grada Beograda. Obrazac zahteva traži podatke o lokaciji, površini zauzeća, periodu zauzeća i razlogu postavljanja.
+Za zauzeće dela kolovoza ili trotoara potrebno je podneti zahtev za izdavanje rešenja o izmeni režima saobraćaja Sekretarijatu za saobraćaj Grada Beograda. Obrazac zahteva traži podatke o lokaciji, površini zauzeća, periodu zauzeća i razlogu postavljanja.
 
 Uz zahtev se obično prilažu:
-1. Saobraćajni elaborat
-2. Odgovarajuća dozvola ili odobrenje za radove
-3. Saglasnost upravljača puta JP "Putevi Beograda"
-4. Dokaz o uplati administrativnih taksi
-5. Izjava-saglasnost za pribavljanje podataka iz službenih evidencija
+- saobraćajni elaborat;
+- odgovarajuća dozvola ili odobrenje za radove;
+- saglasnost upravljača puta JP „Putevi Beograda";
+- dokaz o uplati administrativnih taksi;
+- izjava-saglasnost za pribavljanje podataka iz službenih evidencija.
 
 Napomena: Ako agregat stoji na privatnoj parceli i ne zauzima javnu površinu, ova odluka se ne primenjuje. Komunalni inspektor je nadležan za kontrolu i izricanje mera u slučaju nepropisnog zauzeća javne površine agregatom.`);
   }
