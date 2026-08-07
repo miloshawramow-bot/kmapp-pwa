@@ -18663,7 +18663,7 @@ async function adminDeletePelcer(id) {
 <!-- ===== ADMIN PANEL SCREEN ===== -->
 <!-- ===== KALENDAR ===== -->
 <!-- ===== AI ASISTENT ===== -->
-<div class="screen" id="screen-ai" style="display:none;flex-direction:column;flex:1;background:var(--bg);">
+<div class="screen" id="screen-ai" style="display:none;flex-direction:column;flex:1;background:var(--bg);overflow:hidden;padding-bottom:0;">
   <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;" id="ai-chat-area">
     <div style="text-align:center;padding:20px 16px 12px;">
       <div style="width:48px;height:48px;margin:0 auto 8px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(13,34,64,0.3);">
@@ -18681,8 +18681,8 @@ async function adminDeletePelcer(id) {
       <button onclick="aiAsk('Koje su komunalne delatnosti?')" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:8px 14px;font-size:0.78rem;color:var(--text);cursor:pointer;white-space:nowrap;">📋 Komunalne delatnosti</button>
     </div>
   </div>
-  <div style="padding:10px 12px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
-    <input id="ai-input" type="text" placeholder="Postavite pitanje..." style="flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 14px;font-size:0.95rem;font-family:'Segoe UI',Arial,sans-serif;outline:none;background:var(--bg);color:var(--text);" onkeydown="if(event.key==='Enter')aiSend()">
+  <div style="padding:10px 12px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;position:relative;z-index:10;">
+    <input id="ai-input" type="text" placeholder="Postavite pitanje..." style="flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 14px;font-size:16px;font-family:'Segoe UI',Arial,sans-serif;outline:none;background:#fff;color:var(--text);-webkit-appearance:none;appearance:none;" onkeydown="if(event.key==='Enter')aiSend()">
     <button onclick="aiSend()" style="background:linear-gradient(135deg, var(--navy), var(--blue));color:white;border:none;border-radius:50%;width:42px;height:42px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">➤</button>
   </div>
 </div>
@@ -18831,7 +18831,7 @@ function aiAddMessage(text, isUser) {
     ? 'align-self:flex-end;max-width:80%;background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:0.92rem;line-height:1.45;box-shadow:0 2px 6px rgba(0,0,0,0.1);'
     : 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.92rem;line-height:1.55;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
   
-  var formatted = text.replace(/\n/g, '<br>');
+  var formatted = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/\n/g, '<br>');
   bubble.innerHTML = formatted;
   
   area.appendChild(bubble);
@@ -18891,7 +18891,7 @@ async function aiSend() {
     var area = document.getElementById('ai-chat-area');
     var bubble = document.createElement('div');
     bubble.style.cssText = 'align-self:flex-start;max-width:88%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:0.92rem;line-height:1.55;box-shadow:0 1px 4px rgba(0,0,0,0.05);';
-    bubble.innerHTML = reply.replace(/\n/g, '<br>');
+    bubble.innerHTML = reply.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/\n/g, '<br>');
     area.appendChild(bubble);
     area.scrollTop = area.scrollHeight;
     
