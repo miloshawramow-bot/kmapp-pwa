@@ -17980,7 +17980,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v181';
+const KM_VERSION = 'v182';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18032,21 +18032,26 @@ function isStandalone() {
 
 function showInstallButtonIfNeeded() {
   var btn = document.getElementById('pwa-install-btn');
-  if (!btn) return;
+  var loginBtn = document.getElementById('login-install-btn');
   // Hide if already installed as PWA
   if (isStandalone()) {
-    btn.style.display = 'none';
+    if (btn) btn.style.display = 'none';
+    if (loginBtn) loginBtn.style.display = 'none';
     return;
   }
-  // Show button for ALL users (Android, iOS, desktop)
-  // On click: Android/Chrome uses native prompt; iOS gets instructions
-  btn.style.display = 'flex';
-  // Update icon/text based on platform
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (isIOS) {
-    btn.innerHTML = '⬇️ Instaliraj';
-    btn.style.fontSize = '0.6rem';
-    btn.style.padding = '6px 10px';
+  // Show header button for ALL users (Android, iOS, desktop)
+  if (btn) {
+    btn.style.display = 'flex';
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      btn.innerHTML = '⬇️ Instaliraj';
+      btn.style.fontSize = '0.6rem';
+      btn.style.padding = '6px 10px';
+    }
+  }
+  // Show login screen install button
+  if (loginBtn) {
+    loginBtn.style.display = 'block';
   }
 }
 
@@ -18103,6 +18108,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (sBtn) sBtn.style.display = 'none';
     }
   });
+// Also try after a delay in case DOMContentLoaded already fired
+setTimeout(showInstallButtonIfNeeded, 1000);
+setTimeout(showInstallButtonIfNeeded, 3000);
 // Also try after a delay in case DOMContentLoaded already fired
 setTimeout(showInstallButtonIfNeeded, 2000);
 
