@@ -2804,15 +2804,12 @@ const ugradeniDocs = [
 function toggleAccordion(id) {
   var panel = document.getElementById(id);
   if (!panel) return;
-  var arrow = document.getElementById(id + '-arrow');
-  if (panel.style.display === 'none' || panel.style.display === '') {
-    panel.style.display = 'flex';
-    panel.classList.add('open');
-    if (arrow) arrow.style.transform = 'rotate(180deg)';
-  } else {
-    panel.style.display = 'none';
+  // Only toggle the .open class — CSS handles .acc-body visibility
+  // NEVER set panel.style.display here — that hides the entire section including the header
+  if (panel.classList.contains('open')) {
     panel.classList.remove('open');
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  } else {
+    panel.classList.add('open');
   }
 }
 // Alias so onclick="toggleAcc(...)" works
@@ -16640,6 +16637,81 @@ function closeImenikModal() {
 </div>
 
 <script>
+// ===== GLOBAL SEARCH =====
+function openGlobalSearch() {
+  var overlay = document.getElementById('gs-overlay');
+  if (overlay) {
+    overlay.classList.add('open');
+    var input = document.getElementById('gs-input');
+    if (input) { input.value = ''; input.focus(); }
+    var results = document.getElementById('gs-results');
+    if (results) results.innerHTML = '<div class="gs-empty">Unesite najmanje 2 karaktera...</div>';
+  }
+}
+
+function closeGlobalSearch() {
+  var overlay = document.getElementById('gs-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function gsSearch(query) {
+  var results = document.getElementById('gs-results');
+  if (!results) return;
+  if (!query || query.length < 2) {
+    results.innerHTML = '<div class="gs-empty">Unesite najmanje 2 karaktera...</div>';
+    return;
+  }
+  var q = query.toLowerCase();
+  var html = '';
+  var count = 0;
+
+  // Search imenik
+  if (typeof imenikData !== 'undefined' && imenikData) {
+    imenikData.forEach(function(c) {
+      var fullName = (c.ime + ' ' + c.prezime).toLowerCase();
+      if (fullName.includes(q) || (c.username && c.username.toLowerCase().includes(q))) {
+        count++;
+        html += '<div onclick="switchTab(\'imenik\');closeGlobalSearch();" style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;">';
+        html += '<div style="font-weight:600;font-size:0.85rem;">' + c.ime + ' ' + c.prezime + '</div>';
+        html += '<div style="font-size:0.75rem;color:var(--muted);">Imenik</div>';
+        html += '</div>';
+      }
+    });
+  }
+
+  // Search akti
+  if (typeof aktiData !== 'undefined' && aktiData) {
+    aktiData.forEach(function(a) {
+      if (a.naziv && a.naziv.toLowerCase().includes(q)) {
+        count++;
+        html += '<div onclick="switchTab(\'akti\');closeGlobalSearch();" style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;">';
+        html += '<div style="font-weight:600;font-size:0.85rem;">' + a.naziv + '</div>';
+        html += '<div style="font-size:0.75rem;color:var(--muted);">Akti</div>';
+        html += '</div>';
+      }
+    });
+  }
+
+  // Search pelceri
+  if (typeof pelceriData !== 'undefined' && pelceriData) {
+    pelceriData.forEach(function(p) {
+      if (p.naziv && p.naziv.toLowerCase().includes(q)) {
+        count++;
+        html += '<div onclick="switchTab(\'pelceri\');closeGlobalSearch();" style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;">';
+        html += '<div style="font-weight:600;font-size:0.85rem;">' + p.naziv + '</div>';
+        html += '<div style="font-size:0.75rem;color:var(--muted);">Pelceri</div>';
+        html += '</div>';
+      }
+    });
+  }
+
+  if (count === 0) {
+    results.innerHTML = '<div class="gs-empty">Nema rezultata za "' + query + '"</div>';
+  } else {
+    results.innerHTML = '<div style="padding:8px 14px;font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + count + ' rezultata</div>' + html;
+  }
+}
+
 // ===== PELCERI =====
 const pelceriData = [
   {
@@ -17908,7 +17980,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v180';
+const KM_VERSION = 'v181';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
