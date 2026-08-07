@@ -98,6 +98,13 @@
     background: var(--light);
     border-color: var(--border);
   }
+  body.dark-mode #ai-input {
+    background: var(--card) !important;
+    color: var(--text) !important;
+  }
+  body.dark-mode #ai-input::placeholder {
+    color: var(--muted) !important;
+  }
 
 
   html {
@@ -1606,15 +1613,15 @@ initTapSound();
         <div class="acc-sub-title">📋 Dodaj novi pelcer</div>
         <div style="margin-bottom:10px;">
           <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Kategorija</label>
-          <input id="admin-pelcer-kategorija" type="text" placeholder="npr. Oglašavanje, Bašta, Muzika..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+          <input id="admin-pelcer-kategorija" type="text" placeholder="npr. Oglašavanje, Bašta, Muzika..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--card);color:var(--text);">
         </div>
         <div style="margin-bottom:10px;">
           <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Naziv</label>
-          <input id="admin-pelcer-naziv" type="text" placeholder="npr. Sredstvo za oglašavanje" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+          <input id="admin-pelcer-naziv" type="text" placeholder="npr. Sredstvo za oglašavanje" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--card);color:var(--text);">
         </div>
         <div style="margin-bottom:12px;">
           <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Tekst pelcera</label>
-          <textarea id="admin-pelcer-tekst" placeholder="Unesite tekst pelcera..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;background:white;color:var(--text);"></textarea>
+          <textarea id="admin-pelcer-tekst" placeholder="Unesite tekst pelcera..." style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;min-height:200px;resize:vertical;font-family:inherit;background:var(--card);color:var(--text);"></textarea>
         </div>
         <div id="admin-pelcer-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
         <button onclick="adminSavePelcer()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">💾 Sačuvaj pelcer</button>
@@ -1630,11 +1637,11 @@ initTapSound();
         <div class="acc-sub-title">👤 Kreiraj novog korisnika</div>
         <div style="margin-bottom:10px;">
           <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Korisničko ime (Ime.Prezime)</label>
-          <input id="admin-user-username" type="text" placeholder="npr. Petar.Petrovic" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+          <input id="admin-user-username" type="text" placeholder="npr. Petar.Petrovic" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--card);color:var(--text);">
         </div>
         <div style="margin-bottom:10px;">
           <label style="font-size:0.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Lozinka</label>
-          <input id="admin-user-password" type="text" placeholder="npr. 064-123-4567" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:white;color:var(--text);">
+          <input id="admin-user-password" type="text" placeholder="npr. 064-123-4567" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.85rem;outline:none;background:var(--card);color:var(--text);">
         </div>
         <div id="admin-user-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
         <button onclick="adminCreateUser()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">➕ Kreiraj korisnika</button>
@@ -1751,9 +1758,9 @@ initTapSound();
 <div class="screen" id="screen-poruke" style="display: none;flex-direction:column;flex:1;">
   <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:6px;">
     <button id="poruke-tab-conversations" onclick="porukeView('conversations')" style="flex:1;padding:10px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">💬 Razgovori</button>
-    <button id="poruke-tab-inbox" onclick="porukeView('inbox')" style="flex:1;padding:10px;background:white;color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📥 Primljene</button>
-    <button id="poruke-tab-sent" onclick="porukeView('sent')" style="flex:1;padding:10px;background:white;color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📤 Poslate</button>
-    <button id="poruke-tab-compose" onclick="porukeView('compose')" style="flex:1;padding:10px;background:white;color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">✍️ Nova</button>
+    <button id="poruke-tab-inbox" onclick="porukeView('inbox')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📥 Primljene</button>
+    <button id="poruke-tab-sent" onclick="porukeView('sent')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📤 Poslate</button>
+    <button id="poruke-tab-compose" onclick="porukeView('compose')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">✍️ Nova</button>
   </div>
   <div id="poruke-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;">
     <div style="text-align:center;color:var(--muted);padding:40px 0;">Učitavanje poruka...</div>
@@ -1827,7 +1834,7 @@ initTapSound();
 
     <div style="display:flex;gap:6px;margin-bottom:10px;">
       <button id="pelceri-sub-primeri" onclick="switchPelceriSub('primeri')" style="flex:1;border:1.5px solid var(--navy);background:var(--navy);color:white;font-weight:700;font-size:0.78rem;padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">Примери описа</button>
-      <button id="pelceri-sub-cesti" onclick="switchPelceriSub('cesti')" style="flex:1;border:1.5px solid var(--border);background:white;color:var(--text);font-weight:700;font-size:0.78rem;padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">Чести прекршаји</button>
+      <button id="pelceri-sub-cesti" onclick="switchPelceriSub('cesti')" style="flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-weight:700;font-size:0.78rem;padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">Чести прекршаји</button>
     </div>
 
     <div id="pelceri-primeri-section">
@@ -1874,8 +1881,8 @@ initTapSound();
     <!-- Opseg pretrage -->
     <div style="display:flex;gap:6px;">
       <button class="akti-scope-btn active-scope" data-scope="sve" onclick="setAktiScope('sve')" style="flex:1;border:1.5px solid var(--border);background:var(--navy);color:white;border-color:var(--navy);font-weight:700;font-size:0.78rem;padding:7px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">Sve</button>
-      <button class="akti-scope-btn" data-scope="zakon" onclick="setAktiScope('zakon')" style="flex:1;border:1.5px solid var(--border);background:white;color:var(--text);font-weight:700;font-size:0.78rem;padding:7px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">📜 Zakoni</button>
-      <button class="akti-scope-btn" data-scope="odluka" onclick="setAktiScope('odluka')" style="flex:1;border:1.5px solid var(--border);background:white;color:var(--text);font-weight:700;font-size:0.78rem;padding:7px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">⚖️ Odluke</button>
+      <button class="akti-scope-btn" data-scope="zakon" onclick="setAktiScope('zakon')" style="flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-weight:700;font-size:0.78rem;padding:7px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">📜 Zakoni</button>
+      <button class="akti-scope-btn" data-scope="odluka" onclick="setAktiScope('odluka')" style="flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-weight:700;font-size:0.78rem;padding:7px 4px;border-radius:8px;cursor:pointer;transition:all .15s;">⚖️ Odluke</button>
     </div>
 
     <div id="akti-search-meta" style="font-size:0.72rem;color:var(--muted);display:none;padding:0 2px;"></div>
@@ -1902,7 +1909,7 @@ initTapSound();
   <!-- Folder selector -->
   <div style="background:white;padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;">
     <span style="font-size:0.78rem;color:var(--muted);font-weight:600;">📁 Folder:</span>
-    <select id="folder-select" onchange="renderPhotos()" style="flex:1;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82rem;background:white;color:var(--text);">
+    <select id="folder-select" onchange="renderPhotos()" style="flex:1;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82rem;background:var(--card);color:var(--text);">
       <option value="Sve">Sve fotografije</option>
     </select>
     <button onclick="newFolder()" style="padding:7px 10px;background:var(--light);border:1.5px solid var(--border);border-radius:8px;font-size:0.78rem;font-weight:700;color:var(--navy);cursor:pointer;">➕</button>
@@ -3437,7 +3444,7 @@ function porukeOpenThread(partner, displayName) {
         '</div>';
     } else {
       html += '<div style="align-self:flex-start;max-width:78%;position:relative;">' +
-        '<div style="background:white;color:var(--text);border:1.5px solid var(--border);border-radius:14px 14px 14px 4px;padding:8px 12px;">' +
+        '<div style="background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:14px 14px 14px 4px;padding:8px 12px;">' +
         '<div style="font-size:0.85rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>' +
         '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">' + time + '</div>' +
         '</div>' +
@@ -3688,8 +3695,8 @@ function porukeRenderCompose() {
     '</div>' +
     '<textarea id="poruke-text" placeholder="Unesite tekst poruke..." style="width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;background:white;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea>' +
     '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
-    '<button onclick="porukeAttachPhoto()" style="flex:1;padding:10px;background:white;border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcf7 Slika</button>' +
-    '<button onclick="porukeAttachFile()" style="flex:1;padding:10px;background:white;border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcc1 Fajl</button>' +
+    '<button onclick="porukeAttachPhoto()" style="flex:1;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcf7 Slika</button>' +
+    '<button onclick="porukeAttachFile()" style="flex:1;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:0.82rem;cursor:pointer;color:var(--text);">\ud83d\udcc1 Fajl</button>' +
     '</div>' +
     '<div id="poruke-attachments" style="display:none;margin-bottom:8px;"></div>' +
     '<button onclick="porukeSend()" style="width:100%;padding:14px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;">Posalji poruku</button>' +
@@ -16608,9 +16615,9 @@ function closeImenikModal() {
   <!-- Toolbar -->
   <div style="background:white;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;z-index:10;">
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
-    <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🛰️ Satelit</button>
+    <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
-    <button onclick="if(leafletMap){leafletMap.setView([44.8125,20.4573],13);if(mapMarker){leafletMap.removeLayer(mapMarker);mapMarker=null;}if(mapCircle){leafletMap.removeLayer(mapCircle);mapCircle=null;}var i=document.getElementById('map-info');if(i)i.style.display='none';}" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:white;color:var(--text);cursor:pointer;">🔄 Reset</button>
+    <button onclick="if(leafletMap){leafletMap.setView([44.8125,20.4573],13);if(mapMarker){leafletMap.removeLayer(mapMarker);mapMarker=null;}if(mapCircle){leafletMap.removeLayer(mapCircle);mapCircle=null;}var i=document.getElementById('map-info');if(i)i.style.display='none';}" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🔄 Reset</button>
   </div>
 
   <!-- Pretraga -->
@@ -18654,7 +18661,7 @@ async function adminDeletePelcer(id) {
     <input id="pwd-new2" type="password" placeholder="Ponovi novu lozinku" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:0.9rem;outline:none;margin-bottom:12px;">
     <div id="pwd-error" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;"></div>
     <div style="display:flex;gap:8px;">
-      <button onclick="closePwdModal()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;background:white;color:var(--text);">Otkaži</button>
+      <button onclick="closePwdModal()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;background:var(--card);color:var(--text);">Otkaži</button>
       <button onclick="changePassword()" style="flex:1;padding:10px;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">Promeni</button>
     </div>
   </div>
@@ -18682,7 +18689,7 @@ async function adminDeletePelcer(id) {
     </div>
   </div>
   <div style="padding:10px 12px calc(12px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;position:relative;z-index:101;">
-    <input id="ai-input" type="text" placeholder="Postavite pitanje..." style="flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 14px;font-size:16px;font-family:'Segoe UI',Arial,sans-serif;outline:none;background:#fff;color:var(--text);-webkit-appearance:none;appearance:none;" onkeydown="if(event.key==='Enter')aiSend()">
+    <input id="ai-input" type="text" placeholder="Postavite pitanje..." style="flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 14px;font-size:16px;font-family:'Segoe UI',Arial,sans-serif;outline:none;background:var(--card);color:var(--text);-webkit-appearance:none;appearance:none;" onkeydown="if(event.key==='Enter')aiSend()">
     <button onclick="aiSend()" style="background:linear-gradient(135deg, var(--navy), var(--blue));color:white;border:none;border-radius:50%;width:42px;height:42px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">➤</button>
   </div>
 </div>
