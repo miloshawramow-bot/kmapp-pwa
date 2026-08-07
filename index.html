@@ -126,6 +126,7 @@
     margin: 0 auto;
     padding-bottom: 0px;
   }
+  #offline-indicator { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; box-sizing: border-box; z-index: 9999; }
 
   /* HEADER */
   header {
@@ -1033,6 +1034,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+<div id="offline-indicator" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e74c3c;color:white;text-align:center;padding:6px;font-size:0.75rem;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.3);">📶 Nema interneta — KMapp radi offline (podaci su kesirani)</div>
 <div id="diag-error" style="display:none !important;"></div>
 <script>
 // ===== INDEPENDENT LOADER SAFETY (immune to main script crashes) =====
@@ -2074,7 +2076,14 @@ initTapSound();
           </table>
         </div>
 
-      </div>
+      
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0d060;">
+          <button onclick="showZuteTrakeNaMapi()" style="width:100%;background:linear-gradient(135deg,#1a4a8a,#2e7dd1);color:white;border:none;border-radius:10px;padding:12px;font-size:0.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(26,74,138,0.3);">
+            📍 Prikaži sve žute trake na mapi
+          </button>
+          <div style="font-size:0.68rem;color:#5a4a00;text-align:center;margin-top:6px;">Kliknite na ulicu za detalje</div>
+        </div>
+</div>
     </div>
 
     <!-- ACCORDION: PEŠAČKE ZONE -->
@@ -3138,14 +3147,21 @@ async function porukeCheckNew() {
             if (unread.length > 0) {
               const latest = unread[unread.length - 1];
               const senderName = latest.senderName || latest.sender || 'Nepoznato';
-              const preview = latest.text ? latest.text.substring(0, 80) : 'Nova poruka';
-              new Notification('KMapp - ' + senderName, {
-                body: preview + (count > 1 ? ' (+' + (count-1) + ' više)' : ''),
+              const preview = latest.text ? latest.text.substring(0, 100) : 'Nova poruka';
+              const notif = new Notification('KMapp - ' + senderName, {
+                body: preview + (count > 1 ? '\n(+' + (count-1) + ' više poruka)' : ''),
                 icon: 'icons/icon-192.png',
-                tag: 'kmapp-msg',
+                badge: 'icons/icon-192.png',
+                tag: 'kmapp-msg-' + (latest.sender || 'unknown'),
                 renotify: true,
-                data: { url: location.href }
+                vibrate: [200, 80, 200],
+                data: { url: location.href + '#poruke' }
               });
+              notif.onclick = function() {
+                window.focus();
+                switchTab('poruke');
+                notif.close();
+              };
             }
           } catch(e) {}
         }
@@ -17886,6 +17902,76 @@ var STREET_COORDS = {
   'Đure Jakšića': {lat: 44.8177749, lon: 20.4644258},
 };
 
+// ===== ŽUTE TRAKE NA MAPI =====
+var zuteTrakeLayer = null;
+function showZuteTrakeNaMapi() {
+  switchTab('mapa');
+  setTimeout(function() {
+    if (!leafletMap) initLeafletMap();
+    if (!leafletMap) { showToast('❌ Mapa nije dostupna'); return; }
+    
+    // Remove existing layer if any
+    if (zuteTrakeLayer) { leafletMap.removeLayer(zuteTrakeLayer); }
+    zuteTrakeLayer = L.layerGroup();
+    
+    // 24h restriction streets (red markers)
+    var zute24h = ['Vasina ulica','Bulevar Mihajla Pupina','Brankov most i Brankova','Kraljice Natalije','Radnička','Bulevar vojvode Mišića','Vijadukt za Banovo brdo','Kirovljeva','Paštrovićeva','Visoka','Kralja Milana','Terazije','Kolarčeva','Svetogorska','Braće Jugovića','Kraljice Marije','Bulevar oslobođenja'];
+    
+    // 7-9 and 14-18 restriction streets (orange markers)
+    var zuteRush = ['Bulevar despota Stefana','Sindjelićeva','Bulevar Nikole Tesle','Vojislava Ilića','Milentija Popovića','Požeska','Hajduk Veljkov venac'];
+    
+    var allBounds = [];
+    var found24 = 0, foundRush = 0;
+    
+    zute24h.forEach(function(street) {
+      var c = STREET_COORDS[street];
+      if (c) {
+        var marker = L.marker([c.lat, c.lon]).addTo(zuteTrakeLayer);
+        marker.bindPopup(
+          '<div style="min-width:160px;">' +
+          '<div style="font-weight:800;color:#c0392b;font-size:0.9rem;">🚫 ' + street + '</div>' +
+          '<div style="font-size:0.75rem;margin-top:4px;color:#333;">Zabrana: <b>00-24h</b><br>Samo JGP</div>' +
+          '</div>'
+        );
+        allBounds.push([c.lat, c.lon]);
+        found24++;
+      }
+    });
+    
+    zuteRush.forEach(function(street) {
+      var c = STREET_COORDS[street];
+      if (c) {
+        var marker = L.marker([c.lat, c.lon]).addTo(zuteTrakeLayer);
+        marker.bindPopup(
+          '<div style="min-width:160px;">' +
+          '<div style="font-weight:800;color:#e67e22;font-size:0.9rem;">⏰ ' + street + '</div>' +
+          '<div style="font-size:0.75rem;margin-top:4px;color:#333;">Zabrana: <b>7-9h i 14-18h</b></div>' +
+          '</div>'
+        );
+        allBounds.push([c.lat, c.lon]);
+        foundRush++;
+      }
+    });
+    
+    zuteTrakeLayer.addTo(leafletMap);
+    
+    if (allBounds.length > 0) {
+      leafletMap.fitBounds(allBounds, { padding: [40, 40] });
+    }
+    setTimeout(function() { leafletMap.invalidateSize(); }, 200);
+    
+    // Add info panel
+    var info = document.getElementById('map-info');
+    if (info) {
+      document.getElementById('map-info-text').innerHTML = 
+        '📍 Žute trake: ' + found24 + ' ulica (24h) + ' + foundRush + ' ulica (špic)';
+      info.style.display = 'block';
+    }
+    
+    showToast('📍 Žute trake prikazane na mapi (' + (found24 + foundRush) + ' ulica)');
+  }, 300);
+}
+
 function showStreetOnMap(streetName) {
   if (!streetName) return;
   showToast('📍 Tražim: ' + streetName + '...');
@@ -18013,7 +18099,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v184';
+const KM_VERSION = 'v185';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -18925,5 +19011,39 @@ async function aiSend() {
 var aiStyle = document.createElement('style');
 aiStyle.textContent = '@keyframes aiBounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}';
 document.head.appendChild(aiStyle);
+
+// ===== OFFLINE INDICATOR =====
+function updateOnlineStatus() {
+  var indicator = document.getElementById('offline-indicator');
+  if (!indicator) return;
+  if (!navigator.onLine) {
+    indicator.style.display = 'block';
+  } else {
+    indicator.style.display = 'none';
+  }
+}
+window.addEventListener('online', function() {
+  updateOnlineStatus();
+  showToast('✅ Ponovo online — podaci se sinhronizuju');
+  // Re-check for new messages
+  if (typeof porukeCheckNew === 'function') porukeCheckNew();
+});
+window.addEventListener('offline', function() {
+  updateOnlineStatus();
+  showToast('📶 Nema interneta — rad offline');
+});
+updateOnlineStatus();
+
+// ===== NOTIFICATION CLICK HANDLER (from service worker) =====
+navigator.serviceWorker.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
+    if (event.data.url && event.data.url.includes('poruke')) {
+      switchTab('poruke');
+    } else {
+      switchTab('poruke');
+    }
+  }
+});
+
 </script>
 </body></html>
