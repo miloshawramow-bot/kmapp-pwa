@@ -2823,12 +2823,26 @@ const ugradeniDocs = [
 function toggleAccordion(id) {
   var panel = document.getElementById(id);
   if (!panel) return;
-  // Only toggle the .open class — CSS handles .acc-body visibility
-  // NEVER set panel.style.display here — that hides the entire section including the header
-  if (panel.classList.contains('open')) {
-    panel.classList.remove('open');
+  
+  // Case 1: .acc-item elements (Settings/Admin) — toggle .open class, CSS handles .acc-body
+  if (panel.classList.contains('acc-item')) {
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+    } else {
+      panel.classList.add('open');
+    }
+    return;
+  }
+  
+  // Case 2: Informator accordion panels (acc-zute, acc-pesacke, etc.)
+  // These use inline display:none, so we toggle display directly
+  var arrow = document.getElementById(id + '-arrow');
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    panel.style.display = 'flex';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
   } else {
-    panel.classList.add('open');
+    panel.style.display = 'none';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
   }
 }
 // Alias so onclick="toggleAcc(...)" works
