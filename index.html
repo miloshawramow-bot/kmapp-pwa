@@ -1696,7 +1696,7 @@ initTapSound();
       <div class="settings-row">
         <span class="s-icon">📱</span>
         <span class="s-label">Verzija</span>
-        <span class="s-val">1.0.0</span>
+        <span class="s-val">2.0.1</span>
       </div>
       <div class="settings-row">
         <span class="s-icon">📂</span>
@@ -1707,6 +1707,16 @@ initTapSound();
         <span class="s-icon">🏙️</span>
         <span class="s-label">Grad</span>
         <span class="s-val">Beograd</span>
+      </div>
+      <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://kmapp-n37.pages.dev/kmapp-release.apk','_blank')">
+        <span class="s-icon">🤖</span>
+        <span class="s-label">Android APK</span>
+        <span class="s-val" style="color:var(--blue);font-weight:600;">Preuzmi ↓</span>
+      </div>
+      <div class="settings-row" style="cursor:pointer;" onclick="navigator.clipboard.writeText('https://kmapp-n37.pages.dev/kmapp-release.apk').then(()=>showToast('Link kopiran!'))">
+        <span class="s-icon">📋</span>
+        <span class="s-label">Kopiraj APK link</span>
+        <span class="s-val" style="color:var(--muted);">Link</span>
       </div>
     </div>
   </div>
@@ -18782,7 +18792,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v200';
+const KM_VERSION = 'v201';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
