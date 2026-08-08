@@ -151,11 +151,12 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || 'Nova poruka',
     icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
+    badge: './icons/badge-96.png',
     vibrate: [200, 80, 200, 80, 200],
     tag: 'kmapp-push-' + (data.tag || 'msg'),
     renotify: true,
-    requireInteraction: false,
+    requireInteraction: true,
+    silent: false,
     data: { url: data.url || 'https://kmapp-n37.pages.dev/' },
     actions: [
       { action: 'open', title: 'Otvori' },
@@ -163,13 +164,15 @@ self.addEventListener('push', (event) => {
     ]
   };
   
-  // Set app badge if supported (Android Chrome 54+, show red dot on icon)
+  // Set app badge if supported - use self (not navigator) in Service Worker context
   let badgePromise = Promise.resolve();
-  if (navigator.setAppBadge) {
-    try {
-      badgePromise = navigator.setAppBadge(1);
-    } catch(e) {}
-  }
+  try {
+    if (self.setAppBadge) {
+      badgePromise = self.setAppBadge(1);
+    } else if (self.registration.setAppBadge) {
+      badgePromise = self.registration.setAppBadge(1);
+    }
+  } catch(e) {}
   
   event.waitUntil(
     Promise.all([
@@ -183,9 +186,10 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   // Clear badge
-  if (navigator.clearAppBadge) {
-    try { navigator.clearAppBadge(); } catch(e) {}
-  }
+  try {
+    if (self.clearAppBadge) { self.clearAppBadge(); }
+    else if (self.registration.clearAppBadge) { self.registration.clearAppBadge(); }
+  } catch(e) {}
   const targetUrl = (event.notification.data && event.notification.data.url) || 'https://kmapp-n37.pages.dev/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
