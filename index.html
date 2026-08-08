@@ -1503,6 +1503,11 @@ initTapSound();
     <span style="flex:1;">Test push notifikacije</span>
     <span style="font-size:0.7rem;opacity:0.7;" id="push-test-status">Proveri</span>
   </div>
+  <div class="settings-row" id="settings-push-diag" onclick="runPushDiagnostics()" style="cursor:pointer;background:#8e44ad;color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
+    <span>🔬</span>
+    <span>Dijagnostika push notifikacija</span>
+    <span id="push-diag-status" style="margin-left:auto;font-size:0.8rem;">Pokreni</span>
+  </div>
   <div class="settings-row" id="settings-push-enable" onclick="enablePushNotifications()" style="cursor:pointer;background:#27ae60;color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
     <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">✅</div>
     <span style="flex:1;">Uključi notifikacije</span>
@@ -3267,6 +3272,86 @@ async function enablePushNotifications() {
 }
 
 // Test push notification - send a test push from server
+async function runPushDiagnostics() {
+  var results = [];
+  var log = function(msg) { results.push(msg); console.log('[Diag]', msg); };
+  
+  // 1. Check browser support
+  log('1. Browser: ' + navigator.userAgent.substring(0, 60));
+  if (!('serviceWorker' in navigator)) { log('❌ Service Worker NOT supported'); return showDiagResults(results); }
+  if (!('PushManager' in window)) { log('❌ Push NOT supported'); return showDiagResults(results); }
+  log('✅ SW i Push podrzani');
+  
+  // 2. Check notification permission
+  if (!('Notification' in window)) { log('❌ Notifications NOT supported'); return showDiagResults(results); }
+  log('2. Permission: ' + Notification.permission);
+  if (Notification.permission !== 'granted') log('❌ Permission nije granted!');
+  
+  // 3. Check SW registration
+  try {
+    var regs = await navigator.serviceWorker.getRegistrations();
+    log('3. Registracije: ' + regs.length);
+    regs.forEach(function(r, i) {
+      log('   SW[' + i + ']: ' + r.active.scriptURL + ' state=' + r.scope);
+    });
+    if (regs.length === 0) log('❌ NEMA registrisanog SW!');
+  } catch(e) { log('❌ SW reg error: ' + e.message); }
+  
+  // 4. Check push subscription
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      log('4. Push subscription: ACTIVE');
+      log('   Endpoint: ' + sub.endpoint.substring(0, 50) + '...');
+    } else {
+      log('4. ❌ NEMA push subscription! Klikni "Ukljuci notifikacije"');
+    }
+  } catch(e) { log('❌ Sub error: ' + e.message); }
+  
+  // 5. Check if SW is controlled
+  if (navigator.serviceWorker.controller) {
+    log('5. Controller: ' + navigator.serviceWorker.controller.scriptURL);
+  } else {
+    log('5. ❌ Nema controller SW!');
+  }
+  
+  // 6. Send test push
+  var username = getCurrentUsername();
+  if (!username) { log('6. ❌ Nisi ulogovan'); return showDiagResults(results); }
+  log('6. Username: ' + username);
+  
+  try {
+    log('7. Saljem test push...');
+    var res = await fetch(KM_API_BASE + '/diagPush', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username })
+    });
+    var data = await res.json();
+    log('8. Server odgovor: ' + JSON.stringify(data).substring(0, 200));
+    if (data.subscription) {
+      log('   Endpoint: ' + data.subscription.endpointDomain);
+      log('   p256dh: ' + (data.subscription.hasP256dh ? 'YES (' + data.subscription.p256dhLength + ')' : 'NO'));
+      log('   auth: ' + (data.subscription.hasAuth ? 'YES (' + data.subscription.authLength + ')' : 'NO'));
+    }
+    if (data.pushResult) {
+      log('9. Push result: ' + (data.pushResult.success ? '✅ ' + data.pushResult.status : '❌ ' + data.pushResult.error));
+    }
+  } catch(e) { log('❌ Fetch error: ' + e.message); }
+  
+  log('');
+  log('Ako vidis notifikaciju sad, push radi!');
+  log('Ako NE vidis, problem je u SW na uredjaju');
+  
+  showDiagResults(results);
+}
+
+function showDiagResults(results) {
+  var text = results.join('\n');
+  alert(text);
+}
+
 async function testPushNotification() {
   const username = getCurrentUsername();
   if (!username) {
@@ -18690,7 +18775,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v185';
+const KM_VERSION = 'v197';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
