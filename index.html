@@ -17606,16 +17606,18 @@ function newFolder() {
 
 function handlePhotoCapture(event) {
   const files = Array.from(event.target.files);
-  if (!files.length) return;
-  event.target.value = '';
+  if (!files.length) {
+    console.log('[KMapp Camera] No files received from input');
+    return;
+  }
 
-  const folder = document.getElementById('folder-select').value;
-  const targetFolder = folder === 'Sve' ? (folders[0] || 'Opšte') : folder;
+  const folder = document.getElementById('folder-select');
+  const targetFolder = folder ? (folder.value === 'Sve' ? (folders[0] || 'Opšte') : folder.value) : 'Opšte';
 
   let processed = 0;
   showToast('⏳ Učitavanje ' + files.length + ' fotografija...');
 
-  // Try to get GPS location
+  // Try to get GPS location (async, non-blocking)
   let geoData = null;
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -17626,71 +17628,112 @@ function handlePhotoCapture(event) {
           accuracy: Math.round(pos.coords.accuracy)
         };
       },
-      function() { geoData = null; },
+      function(err) {
+        console.log('[KMapp Camera] GPS unavailable:', err.message);
+        geoData = null;
+      },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   }
 
   files.forEach(file => {
+    console.log('[KMapp Camera] Processing file:', file.name, 'size:', file.size, 'type:', file.type);
     const reader = new FileReader();
     reader.onload = function(e) {
       const img = new Image();
       img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const maxDim = 1280;
-        let w = img.width, h = img.height;
-        if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
-        else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1024;
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
+          else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
 
-        // Draw timestamp + geo overlay
-        var now = new Date();
-        var ts = now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
-                 now.toLocaleTimeString('sr-RS', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        var geoText = geoData ? '📍 ' + geoData.lat.toFixed(5) + ', ' + geoData.lon.toFixed(5) : '';
+          // Draw timestamp + geo overlay
+          var now = new Date();
+          var ts = now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+                   now.toLocaleTimeString('sr-RS', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+          var geoText = geoData ? '📍 ' + geoData.lat.toFixed(5) + ', ' + geoData.lon.toFixed(5) : '';
 
-        // Semi-transparent bar at bottom
-        var barHeight = 48;
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(0, h - barHeight, w, barHeight);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold ' + Math.max(12, w * 0.025) + 'px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('📅 ' + ts, 8, h - barHeight + 18);
-        if (geoText) {
-          ctx.font = Math.max(10, w * 0.02) + 'px sans-serif';
-          ctx.fillText(geoText + ' (±' + geoData.accuracy + 'm)', 8, h - barHeight + 36);
-        }
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-
-        photos.unshift({
-          id: Date.now() + Math.random(),
-          folder: targetFolder,
-          data: dataUrl,
-          date: now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
-          timestamp: now.toISOString(),
-          geo: geoData
-        });
-
-        processed++;
-        if (processed === files.length) {
-          try {
-            localStorage.setItem('bk_photos', JSON.stringify(photos));
-            renderPhotos();
-            showToast('✅ Sačuvano ' + files.length + ' fotografija u "' + targetFolder + '"' + (geoData ? ' sa geo-lokacijom' : ''));
-          } catch (err) {
-            photos.shift();
-            showToast('⚠️ Nema dovoljno memorije — obrišite stare fotografije');
+          // Semi-transparent bar at bottom
+          var barHeight = 44;
+          ctx.fillStyle = 'rgba(0,0,0,0.65)';
+          ctx.fillRect(0, h - barHeight, w, barHeight);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold ' + Math.max(11, w * 0.022) + 'px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('📅 ' + ts, 8, h - barHeight + 16);
+          if (geoText) {
+            ctx.font = Math.max(9, w * 0.018) + 'px sans-serif';
+            ctx.fillText(geoText + ' (±' + geoData.accuracy + 'm)', 8, h - barHeight + 32);
           }
+
+          // Try different quality levels to fit localStorage
+          var quality = 0.7;
+          var dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          // If too large for localStorage, reduce quality
+          while (dataUrl.length > 1500000 && quality > 0.3) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          photos.unshift({
+            id: Date.now() + Math.random(),
+            folder: targetFolder,
+            data: dataUrl,
+            date: now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+            timestamp: now.toISOString(),
+            geo: geoData
+          });
+
+          processed++;
+          if (processed === files.length) {
+            try {
+              localStorage.setItem('bk_photos', JSON.stringify(photos));
+              renderPhotos();
+              showToast('✅ Sačuvano ' + files.length + ' fotografija u "' + targetFolder + '"' + (geoData ? ' sa geo-lokacijom' : ''));
+              console.log('[KMapp Camera] Photo saved successfully. Total photos:', photos.length);
+            } catch (err) {
+              // Try removing oldest photos to make room
+              while (photos.length > 1) {
+                photos.pop();
+                try {
+                  localStorage.setItem('bk_photos', JSON.stringify(photos));
+                  renderPhotos();
+                  showToast('✅ Sačuvano (obrisane stare fotografije)');
+                  console.log('[KMapp Camera] Saved after clearing old photos. Total:', photos.length);
+                  return;
+                } catch(e) { /* keep trying */ }
+              }
+              photos.shift();
+              showToast('⚠️ Nema dovoljno memorije — obrišite stare fotografije');
+              console.error('[KMapp Camera] localStorage full, could not save photo');
+            }
+          }
+        } catch(err) {
+          console.error('[KMapp Camera] Error processing photo:', err);
+          showToast('❌ Greška pri obradi fotografije: ' + err.message);
         }
+      };
+      img.onerror = function() {
+        console.error('[KMapp Camera] Image failed to load');
+        showToast('❌ Slika nije uspela da se učita');
       };
       img.src = e.target.result;
     };
+    reader.onerror = function() {
+      console.error('[KMapp Camera] FileReader error');
+      showToast('❌ Greška pri čitanju fajla');
+    };
     reader.readAsDataURL(file);
   });
+
+  // Clear input AFTER processing starts (not before)
+  event.target.value = '';
 }
 
 function renderPhotos() {
