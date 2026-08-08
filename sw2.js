@@ -156,15 +156,36 @@ self.addEventListener('push', (event) => {
     tag: 'kmapp-push-' + (data.tag || 'msg'),
     renotify: true,
     requireInteraction: false,
-    data: { url: data.url || 'https://kmapp-n37.pages.dev/' }
+    data: { url: data.url || 'https://kmapp-n37.pages.dev/' },
+    actions: [
+      { action: 'open', title: 'Otvori' },
+      { action: 'close', title: 'Zatvori' }
+    ]
   };
+  
+  // Set app badge if supported (Android Chrome 54+, show red dot on icon)
+  let badgePromise = Promise.resolve();
+  if (navigator.setAppBadge) {
+    try {
+      badgePromise = navigator.setAppBadge(1);
+    } catch(e) {}
+  }
+  
   event.waitUntil(
-    self.registration.showNotification(data.title || 'KMapp', options)
+    Promise.all([
+      self.registration.showNotification(data.title || 'KMapp', options),
+      badgePromise
+    ])
   );
 });
 
+// Clear badge when notification is clicked
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  // Clear badge
+  if (navigator.clearAppBadge) {
+    try { navigator.clearAppBadge(); } catch(e) {}
+  }
   const targetUrl = (event.notification.data && event.notification.data.url) || 'https://kmapp-n37.pages.dev/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

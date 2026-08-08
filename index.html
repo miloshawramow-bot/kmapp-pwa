@@ -1497,6 +1497,18 @@ initTapSound();
     <span style="font-size:0.7rem;opacity:0.8;">Dodaj na početni ekran</span>
   </div>
 
+  <!-- 🔔 Notifikacije -->
+  <div class="settings-row" id="settings-push-test" onclick="testPushNotification()" style="cursor:pointer;background:var(--navy);color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
+    <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">🔔</div>
+    <span style="flex:1;">Test push notifikacije</span>
+    <span style="font-size:0.7rem;opacity:0.7;" id="push-test-status">Proveri</span>
+  </div>
+  <div class="settings-row" id="settings-push-enable" onclick="enablePushNotifications()" style="cursor:pointer;background:#27ae60;color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
+    <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">✅</div>
+    <span style="flex:1;">Uključi notifikacije</span>
+    <span style="font-size:0.7rem;opacity:0.7;">Dozvoli push</span>
+  </div>
+
   <!-- 🔍 Global Search trigger -->
   <div class="settings-row" onclick="openGlobalSearch()" style="cursor:pointer;background:var(--navy);color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
     <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
@@ -3203,6 +3215,96 @@ function porukeStartPolling() {
 }
 
 // ===== PUSH NOTIFICATIONS =====
+// Enable push notifications - request permission and subscribe
+async function enablePushNotifications() {
+  showToast('🔔 Tražim dozvolu za notifikacije...');
+  if (!('Notification' in window)) {
+    showToast('❌ Ovaj uređaj ne podržava notifikacije');
+    return;
+  }
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showToast('❌ Push nije podržan na ovom uređaju');
+    return;
+  }
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      showToast('❌ Dozvola odbijena. Idi u podešavanja browsera.');
+      return;
+    }
+    showToast('✅ Dozvola odobrena! Registrujem push...');
+    await subscribeToPush();
+    
+    // Send a test push from the server
+    setTimeout(async () => {
+      const username = getCurrentUsername();
+      if (!username) return;
+      try {
+        const res = await fetchWithFallback(KM_API_BASE + '/testPush', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.pushResult && data.pushResult.success) {
+            showToast('✅ Test push poslat! Trebalo bi da vidiis notifikaciju.');
+          } else if (data.pushResult) {
+            showToast('⚠️ Push nije poslat: ' + (data.pushResult.error || 'greska'));
+          } else {
+            showToast('⚠️ Nema push subscription. Pokusaj ponovo.');
+          }
+        } else {
+          showToast('⚠️ ' + (data.error || 'Greska'));
+        }
+      } catch(e) {
+        showToast('⚠️ Greska: ' + e.message);
+      }
+    }, 2000);
+  } catch(e) {
+    showToast('❌ Greska: ' + e.message);
+  }
+}
+
+// Test push notification - send a test push from server
+async function testPushNotification() {
+  const username = getCurrentUsername();
+  if (!username) {
+    showToast('❌ Nisi ulogovan');
+    return;
+  }
+  
+  // Check notification permission first
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    showToast('❌ Prvo ukljuci notifikacije (dugme iznad)');
+    return;
+  }
+  
+  showToast('🔔 Saljem test push...');
+  try {
+    const res = await fetchWithFallback(KM_API_BASE + '/testPush', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const data = await res.json();
+    if (data.success && data.pushResult && data.pushResult.success) {
+      showToast('✅ Test push poslat!');
+      document.getElementById('push-test-status').textContent = 'Poslat!';
+      setTimeout(() => { document.getElementById('push-test-status').textContent = 'Proveri'; }, 5000);
+    } else if (data.success === false && data.error && data.error.includes('No push subscription')) {
+      showToast('❌ Nema registracije. Klikni "Ukljuci notifikacije" prvo.');
+    } else if (data.pushResult) {
+      showToast('❌ Push greska: ' + (data.pushResult.error || 'nepoznato'));
+      document.getElementById('push-test-status').textContent = data.pushResult.error ? data.pushResult.error.substring(0,30) : 'Greska';
+    } else {
+      showToast('❌ Nepoznata greska');
+    }
+  } catch(e) {
+    showToast('❌ Greska: ' + e.message);
+  }
+}
+
 async function subscribeToPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.log('Push not supported on this device');
