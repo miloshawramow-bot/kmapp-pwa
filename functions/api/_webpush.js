@@ -95,7 +95,6 @@ export async function sendWebPush(subscription, payload, vapidPrivateKey, vapidP
         'Authorization': 'vapid t=' + vapidJwt + ', k=' + vapidPublicKey,
         'TTL': '2419200',
         'Urgency': 'high',
-        'Topic': 'kmapp-msg',
       },
       body: encrypted,
     });

@@ -1,5 +1,5 @@
-// KMapp Service Worker v196 — improved offline caching + push notifications
-const CACHE = 'kmapp-v196';
+// KMapp Service Worker v197 — improved offline caching + push notifications
+const CACHE = 'kmapp-v197';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -153,10 +153,11 @@ self.addEventListener('push', (event) => {
     icon: './icons/icon-192.png',
     badge: './icons/badge-96.png',
     vibrate: [200, 80, 200, 80, 200],
-    tag: 'kmapp-push-' + (data.tag || 'msg'),
+    tag: 'kmapp-' + Date.now(),
     renotify: true,
     requireInteraction: true,
     silent: false,
+    sound: './sounds/notification.wav',
     data: { url: data.url || 'https://kmapp-n37.pages.dev/' },
     actions: [
       { action: 'open', title: 'Otvori' },
