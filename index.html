@@ -1463,6 +1463,7 @@ initTapSound();
       <button class="tb-btn" onclick="fmt(&#39;insertUnorderedList&#39;)">• Lista</button>
       <button class="tb-btn" onclick="insertCameraPhoto()" style="font-size:0.9rem;">📷 Slika</button>
       <button class="tb-btn" onclick="document.getElementById('image-upload').click()" style="font-size:0.9rem;">🖼️ Uvoz</button>
+      <button class="tb-btn" onclick="insertSavedPhoto()" style="font-size:0.9rem;">📁 Iz foto</button>
       <button class="tb-btn" onclick="backToList()">← Nazad</button>
     </div>
     <input type="file" id="camera-capture" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event, true)">
@@ -1657,6 +1658,7 @@ initTapSound();
           <div style="display:flex;gap:6px;">
             <button onclick="adminLoadLoginLogs('today')" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
             <button onclick="adminLoadLoginLogs('all')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📊 Istorija</button>
+            <button onclick="exportLoginLogsCSV()" style="background:#27ae60;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">⬇️ CSV</button>
           </div>
         </div>
         <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
@@ -4508,13 +4510,11 @@ function handlePhoto(event, fromCamera) {
   reader.onload = function(e) {
     const editor = document.getElementById('doc-editor');
     editor.focus();
-    // Restore cursor position
     if (savedRange) {
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(savedRange);
     }
-    // Insert image as base64 — resized for storage
     const img = new Image();
     img.onload = function() {
       const canvas = document.createElement('canvas');
@@ -4523,7 +4523,22 @@ function handlePhoto(event, fromCamera) {
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // Add timestamp + geo overlay for document photos
+      if (fromCamera) {
+        var now = new Date();
+        var ts = now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+                 now.toLocaleTimeString('sr-RS', {hour:'2-digit',minute:'2-digit'});
+        var barHeight = 32;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, h - barHeight, w, barHeight);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('📅 ' + ts, 8, h - 10);
+      }
       const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
       document.execCommand('insertHTML', false, '<div style="text-align:center;margin:10px 0;"><img src="' + dataUrl + '" style="max-width:100%;border:1px solid #ccc;border-radius:8px;"></div>');
       savedRange = null;
@@ -16653,6 +16668,7 @@ function closeImenikModal() {
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🛰️ Satelit</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
     <button onclick="if(leafletMap){leafletMap.setView([44.8125,20.4573],13);if(mapMarker){leafletMap.removeLayer(mapMarker);mapMarker=null;}if(mapCircle){leafletMap.removeLayer(mapCircle);mapCircle=null;}var i=document.getElementById('map-info');if(i)i.style.display='none';}" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🔄 Reset</button>
+    <button onclick="toggleMapFullscreen()" id="btn-fullscreen" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">⛶ Ceo</button>
   </div>
 
   <!-- Pretraga -->
@@ -16661,6 +16677,11 @@ function closeImenikModal() {
       <span style="color:var(--muted);">🔍</span>
       <input id="map-search" type="text" placeholder="Pretraži adresu u Beogradu..." style="flex:1;border:none;background:none;padding:9px 0;font-size:0.88rem;outline:none;" onkeydown="if(event.key===&#39;Enter&#39;)searchAddress()">
       <button onclick="searchAddress()" style="background:none;border:none;color:var(--accent);font-size:1rem;cursor:pointer;padding:4px;">→</button>
+    </div>
+    <div id="map-street-filter" style="display:none;margin-top:6px;align-items:center;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;">
+      <span style="color:var(--accent);font-size:0.8rem;">🏷️</span>
+      <input id="map-street-filter-input" type="text" placeholder="Filtriraj prikazane ulice..." style="flex:1;border:none;background:none;padding:7px 0;font-size:0.82rem;outline:none;" oninput="filterMapMarkers()">
+      <button onclick="clearStreetFilter()" style="background:none;border:none;color:var(--muted);font-size:0.9rem;cursor:pointer;padding:4px;">✕</button>
     </div>
   </div>
 
@@ -17592,12 +17613,27 @@ function handlePhotoCapture(event) {
   const targetFolder = folder === 'Sve' ? (folders[0] || 'Opšte') : folder;
 
   let processed = 0;
-  showToast('⏳ Učitavanje ' + files.length + ' fotografije...');
+  showToast('⏳ Učitavanje ' + files.length + ' fotografija...');
+
+  // Try to get GPS location
+  let geoData = null;
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        geoData = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          accuracy: Math.round(pos.coords.accuracy)
+        };
+      },
+      function() { geoData = null; },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  }
 
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = function(e) {
-      // Compress image via canvas to keep localStorage size reasonable
       const img = new Image();
       img.onload = function() {
         const canvas = document.createElement('canvas');
@@ -17606,14 +17642,37 @@ function handlePhotoCapture(event) {
         if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
         else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // Draw timestamp + geo overlay
+        var now = new Date();
+        var ts = now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+                 now.toLocaleTimeString('sr-RS', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        var geoText = geoData ? '📍 ' + geoData.lat.toFixed(5) + ', ' + geoData.lon.toFixed(5) : '';
+
+        // Semi-transparent bar at bottom
+        var barHeight = 48;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(0, h - barHeight, w, barHeight);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold ' + Math.max(12, w * 0.025) + 'px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('📅 ' + ts, 8, h - barHeight + 18);
+        if (geoText) {
+          ctx.font = Math.max(10, w * 0.02) + 'px sans-serif';
+          ctx.fillText(geoText + ' (±' + geoData.accuracy + 'm)', 8, h - barHeight + 36);
+        }
+
         const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
 
         photos.unshift({
           id: Date.now() + Math.random(),
           folder: targetFolder,
           data: dataUrl,
-          date: new Date().toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+          date: now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+          timestamp: now.toISOString(),
+          geo: geoData
         });
 
         processed++;
@@ -17621,9 +17680,9 @@ function handlePhotoCapture(event) {
           try {
             localStorage.setItem('bk_photos', JSON.stringify(photos));
             renderPhotos();
-            showToast('✅ Sačuvano ' + files.length + ' fotografija u "' + targetFolder + '"');
+            showToast('✅ Sačuvano ' + files.length + ' fotografija u "' + targetFolder + '"' + (geoData ? ' sa geo-lokacijom' : ''));
           } catch (err) {
-            photos.shift(); // rollback last if storage full
+            photos.shift();
             showToast('⚠️ Nema dovoljno memorije — obrišite stare fotografije');
           }
         }
@@ -17975,6 +18034,7 @@ function showZuteTrakeNaMapi() {
     }
     
     showToast('📍 Žute trake prikazane na mapi (' + (found24 + foundRush) + ' ulica)');
+  showStreetFilterBar();
   }, 300);
 }
 
@@ -18058,6 +18118,199 @@ function showPesackeNaMapi() {
     
     showToast('🚶 Pešačke zone prikazane na mapi (' + found + ' ulica)');
   }, 300);
+}
+
+// ===== MAP FULLSCREEN =====
+function toggleMapFullscreen() {
+  var mapScreen = document.getElementById('screen-mapa');
+  if (!mapScreen) return;
+  if (mapScreen.style.position === 'fixed') {
+    // Exit fullscreen
+    mapScreen.style.position = '';
+    mapScreen.style.top = '';
+    mapScreen.style.left = '';
+    mapScreen.style.right = '';
+    mapScreen.style.bottom = '';
+    mapScreen.style.zIndex = '';
+    var btn = document.getElementById('btn-fullscreen');
+    if (btn) btn.textContent = '⛶ Ceo';
+    document.body.style.overflow = '';
+  } else {
+    // Enter fullscreen
+    mapScreen.style.position = 'fixed';
+    mapScreen.style.top = '0';
+    mapScreen.style.left = '0';
+    mapScreen.style.right = '0';
+    mapScreen.style.bottom = '0';
+    mapScreen.style.zIndex = '5000';
+    var btn = document.getElementById('btn-fullscreen');
+    if (btn) btn.textContent = '⛶ Izađi';
+    document.body.style.overflow = 'hidden';
+  }
+  setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 300);
+}
+
+// ===== MAP STREET FILTER =====
+function showStreetFilterBar() {
+  var bar = document.getElementById('map-street-filter');
+  if (bar) bar.style.display = 'flex';
+}
+
+function hideStreetFilterBar() {
+  var bar = document.getElementById('map-street-filter');
+  if (bar) {
+    bar.style.display = 'none';
+    var input = document.getElementById('map-street-filter-input');
+    if (input) input.value = '';
+  }
+}
+
+function filterMapMarkers() {
+  var query = document.getElementById('map-street-filter-input').value.toLowerCase().trim();
+  
+  // Filter markers in zuteTrakeLayer
+  if (zuteTrakeLayer) {
+    zuteTrakeLayer.eachLayer(function(marker) {
+      var popupContent = marker.getPopup() ? marker.getPopup().getContent() : '';
+      var streetName = popupContent.replace(/<[^>]*>/g, '').replace(/[🚫⏰]/g, '').trim().toLowerCase();
+      if (!query || streetName.includes(query)) {
+        if (!zuteTrakeLayer.hasLayer(marker)) zuteTrakeLayer.addLayer(marker);
+      } else {
+        if (zuteTrakeLayer.hasLayer(marker)) zuteTrakeLayer.removeLayer(marker);
+      }
+    });
+  }
+  
+  // Filter markers in pesackeLayer
+  if (pesackeLayer) {
+    pesackeLayer.eachLayer(function(marker) {
+      var popupContent = marker.getPopup() ? marker.getPopup().getContent() : '';
+      var streetName = popupContent.replace(/<[^>]*>/g, '').replace(/[🚶]/g, '').trim().toLowerCase();
+      if (!query || streetName.includes(query)) {
+        if (!pesackeLayer.hasLayer(marker)) pesackeLayer.addLayer(marker);
+      } else {
+        if (pesackeLayer.hasLayer(marker)) pesackeLayer.removeLayer(marker);
+      }
+    });
+  }
+}
+
+function clearStreetFilter() {
+  var input = document.getElementById('map-street-filter-input');
+  if (input) input.value = '';
+  filterMapMarkers();
+}
+
+// ===== LOGIN CSV EXPORT =====
+async function exportLoginLogsCSV() {
+  showToast('⏳ Pripremam CSV...');
+  try {
+    var logs = [];
+    // Try API first
+    if (KM_API_BASE) {
+      var res = await fetchWithFallback(KM_API_BASE + '/getLoginLogs', { method: 'POST' });
+      if (res && res.ok) {
+        var data = await res.json();
+        logs = Array.isArray(data) ? data : (data.logs || []);
+      }
+    }
+    
+    if (!logs.length) {
+      showToast('⚠️ Nema login zapisa za eksport');
+      return;
+    }
+    
+    // Build CSV
+    var csv = 'Korisnik,Datum,Vreme,Uredjaj\n';
+    logs.forEach(function(log) {
+      var ts = log.timestamp || log.date || '';
+      var date = ts ? new Date(ts).toLocaleDateString('sr-RS') : '';
+      var time = ts ? new Date(ts).toLocaleTimeString('sr-RS') : '';
+      var device = (log.device || '').replace(/"/g, '""');
+      var username = (log.username || '').replace(/"/g, '""');
+      csv += '"' + username + '","' + date + '","' + time + '","' + device + '"\n';
+    });
+    
+    // Download
+    var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'kmapp_login_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ CSV preuzet (' + logs.length + ' zapisa)');
+  } catch(e) {
+    showToast('❌ Greška pri eksportu: ' + e.message);
+  }
+}
+
+// ===== INSERT SAVED PHOTO INTO DOCUMENT =====
+function insertSavedPhoto() {
+  // Show a mini gallery picker of saved photos
+  var existing = document.getElementById('saved-photo-picker');
+  if (existing) { existing.remove(); return; }
+  
+  var savedPhotos = [];
+  try { savedPhotos = JSON.parse(localStorage.getItem('bk_photos') || '[]'); } catch(e) {}
+  
+  if (!savedPhotos.length) {
+    showToast('📷 Nema sačuvanih fotografija. Slikajte prvo u Kamera tabu.');
+    return;
+  }
+  
+  var overlay = document.createElement('div');
+  overlay.id = 'saved-photo-picker';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:400;display:flex;flex-direction:column;';
+  
+  var header = '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#222;color:white;">' +
+    '<span style="font-weight:700;font-size:0.9rem;">📁 Izaberi fotografiju</span>' +
+    '<button onclick="document.getElementById('saved-photo-picker').remove()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:1.1rem;cursor:pointer;">✕</button>' +
+    '</div>';
+  
+  var grid = '<div style="flex:1;overflow-y:auto;padding:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;">' +
+    savedPhotos.map(function(p, i) {
+      return '<div onclick="insertSavedPhotoIntoDoc(' + i + ')" style="aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;background:#333;">' +
+        '<img src="' + p.data + '" style="width:100%;height:100%;object-fit:cover;">' +
+        '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:white;font-size:0.6rem;padding:3px 5px;">' + (p.date || '') + '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>';
+  
+  overlay.innerHTML = header + grid;
+  document.body.appendChild(overlay);
+}
+
+function insertSavedPhotoIntoDoc(index) {
+  var savedPhotos = [];
+  try { savedPhotos = JSON.parse(localStorage.getItem('bk_photos') || '[]'); } catch(e) {}
+  if (!savedPhotos[index]) return;
+  
+  var p = savedPhotos[index];
+  var picker = document.getElementById('saved-photo-picker');
+  if (picker) picker.remove();
+  
+  var editor = document.getElementById('doc-editor');
+  editor.focus();
+  if (savedRange) {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  
+  var caption = '📅 ' + (p.timestamp ? new Date(p.timestamp).toLocaleString('sr-RS') : p.date || '');
+  if (p.geo) caption += ' | 📍 ' + p.geo.lat.toFixed(5) + ', ' + p.geo.lon.toFixed(5);
+  
+  var html = '<div style="text-align:center;margin:10px 0;">' +
+    '<img src="' + p.data + '" style="max-width:100%;border:1px solid #ccc;border-radius:8px;">' +
+    '<div style="font-size:0.7rem;color:#666;margin-top:4px;">' + caption + '</div>' +
+    '</div>';
+  
+  document.execCommand('insertHTML', false, html);
+  savedRange = null;
+  showToast('✅ Fotografija ubačena u dokument');
 }
 
 function showStreetOnMap(streetName) {
