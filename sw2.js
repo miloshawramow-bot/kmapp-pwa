@@ -1,5 +1,5 @@
-// KMapp Service Worker v199 — improved offline caching + push notifications
-const CACHE = 'kmapp-v199';
+// KMapp Service Worker v200 — improved offline caching + push notifications
+const CACHE = 'kmapp-v200';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -142,53 +142,61 @@ self.addEventListener('sync', (event) => {
 
 // ===== PUSH NOTIFICATIONS =====
 self.addEventListener('push', (event) => {
+  console.log('[SW] Push event received!', event);
+  
   let data = { title: 'KMapp', body: 'Nova poruka', url: 'https://kmapp-n37.pages.dev/' };
   try {
     if (event.data) data = event.data.json();
   } catch(e) {
     if (event.data) data.body = event.data.text();
   }
-  const options = {
+  
+  // LOG to server: SW received the push event
+  var logPromise = fetch('https://kmapp-n37.pages.dev/api/pushLog', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'sw-log', event: 'push-received', detail: (data.title || '') + ': ' + (data.body || '').substring(0, 50) })
+  }).catch(function(e) { console.log('[SW] Log failed:', e); });
+  
+  // MINIMAL notification options — remove anything that might cause silent failure
+  var options = {
     body: data.body || 'Nova poruka',
     icon: './icons/icon-192.png',
-    badge: './icons/badge-96.png',
-    vibrate: [200, 80, 200, 80, 200],
-    tag: 'kmapp-' + Date.now(),
-    renotify: true,
-    requireInteraction: true,
-    silent: false,
-    sound: './sounds/notification.wav',
-    data: { url: data.url || 'https://kmapp-n37.pages.dev/' },
-    actions: [
-      { action: 'open', title: 'Otvori' },
-      { action: 'close', title: 'Zatvori' }
-    ]
+    tag: 'kmapp-push',
+    data: { url: data.url || 'https://kmapp-n37.pages.dev/' }
   };
   
-  // Set app badge if supported - use self (not navigator) in Service Worker context
-  let badgePromise = Promise.resolve();
-  try {
-    if (self.setAppBadge) {
-      badgePromise = self.setAppBadge(1);
-    } else if (self.registration.setAppBadge) {
-      badgePromise = self.registration.setAppBadge(1);
-    }
-  } catch(e) {}
+  console.log('[SW] Showing notification:', data.title || 'KMapp', options);
   
-  // Try to notify open clients to play sound
-  const clientPromise = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-    clients.forEach(client => {
+  // Show notification — catch any error and log it
+  var notifPromise = self.registration.showNotification(data.title || 'KMapp', options)
+    .then(function() {
+      console.log('[SW] Notification shown successfully');
+      // Log success
+      return fetch('https://kmapp-n37.pages.dev/api/pushLog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'sw-log', event: 'notification-shown', detail: 'OK' })
+      }).catch(function() {});
+    })
+    .catch(function(err) {
+      console.error('[SW] showNotification FAILED:', err);
+      // Log failure
+      return fetch('https://kmapp-n37.pages.dev/api/pushLog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'sw-log', event: 'showNotification-error', detail: String(err.message || err) })
+      }).catch(function() {});
+    });
+  
+  // Notify open clients
+  var clientPromise = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
+    clients.forEach(function(client) {
       client.postMessage({ type: 'push-received', title: data.title, body: data.body });
     });
   });
   
-  event.waitUntil(
-    Promise.all([
-      self.registration.showNotification(data.title || 'KMapp', options),
-      badgePromise,
-      clientPromise
-    ])
-  );
+  event.waitUntil(Promise.all([notifPromise, logPromise, clientPromise]));
 });
 
 // Clear badge when notification is clicked
