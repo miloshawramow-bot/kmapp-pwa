@@ -13,7 +13,7 @@ export async function onRequestPost({ request, env }) {
     try {
       const recipient = body.recipient || '';
       if (recipient) {
-        const sub = await DB.prepare('SELECT subscription FROM push_subscriptions WHERE username = ?')
+        const sub = await DB.prepare('SELECT subscription FROM push_subscriptions WHERE username = ? COLLATE NOCASE')
           .bind(recipient).first();
         if (sub && sub.subscription) {
           const vapidPrivateKey = env.VAPID_PRIVATE_KEY;
