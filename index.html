@@ -3020,7 +3020,7 @@ async function fetchWithFallback(url, options) {
     const res1 = await fetch(cfUrl, opts1);
     clearTimeout(t1);
     if (res1.ok) {
-      const data = await res1.json();
+      const data = await res1.clone().json();
       if (data.success !== false) {
         kmBackendOnline = true;
         kmUseCloudflareAPI = true;
