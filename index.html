@@ -19626,6 +19626,7 @@ window.addEventListener('offline', function() {
 updateOnlineStatus();
 
 // ===== NOTIFICATION CLICK HANDLER (from service worker) =====
+// Also handles push-received messages from SW to play sound when app is in background
 navigator.serviceWorker.addEventListener('message', function(event) {
   if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
     if (event.data.url && event.data.url.includes('poruke')) {
@@ -19633,6 +19634,35 @@ navigator.serviceWorker.addEventListener('message', function(event) {
     } else {
       switchTab('poruke');
     }
+  }
+  // Play sound when push received and app is open/in background
+  if (event.data && event.data.type === 'push-received') {
+    try {
+      // Create and play a notification sound using Web Audio API
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // Play two-tone beep (like a notification)
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.frequency.value = 880; // A5
+      gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      osc1.start(audioCtx.currentTime);
+      osc1.stop(audioCtx.currentTime + 0.15);
+      // Second tone
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.frequency.value = 1318; // E6
+      gain2.gain.setValueAtTime(0.3, audioCtx.currentTime + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc2.start(audioCtx.currentTime + 0.15);
+      osc2.stop(audioCtx.currentTime + 0.3);
+      // Vibrate
+      if (navigator.vibrate) navigator.vibrate([200, 80, 200, 80, 200]);
+    } catch(e) { console.log('Sound play failed:', e.message); }
   }
 });
 
