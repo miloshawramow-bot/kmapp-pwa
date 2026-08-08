@@ -1920,9 +1920,12 @@ initTapSound();
   </div>
 
   <!-- Photo counter + actions -->
-  <div id="photo-counter-bar" style="display:none;background:var(--card);padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+  <div id="photo-counter-bar" style="display:none;background:var(--card);padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:6px;">
     <span id="photo-count-text" style="font-size:0.75rem;font-weight:600;color:var(--navy);">0 fotografija</span>
-    <button onclick="deleteAllPhotos()" style="padding:5px 10px;background:#e74c3c15;border:1.5px solid #e74c3c40;border-radius:6px;font-size:0.72rem;font-weight:600;color:#e74c3c;cursor:pointer;">🗑️ Obriši sve</button>
+    <div style="display:flex;gap:6px;">
+      <button onclick="generatePhotoReport()" style="padding:5px 10px;background:#1a4a8a15;border:1.5px solid #1a4a8a40;border-radius:6px;font-size:0.72rem;font-weight:600;color:#1a4a8a;cursor:pointer;">📄 Izveštaj</button>
+      <button onclick="deleteAllPhotos()" style="padding:5px 10px;background:#e74c3c15;border:1.5px solid #e74c3c40;border-radius:6px;font-size:0.72rem;font-weight:600;color:#e74c3c;cursor:pointer;">🗑️ Obriši sve</button>
+    </div>
   </div>
 
   <!-- Photo grid -->
@@ -17801,6 +17804,58 @@ function deleteAllPhotos() {
   localStorage.removeItem('bk_photos');
   renderPhotos();
   showToast('🗑️ Sve fotografije obrisane');
+}
+
+function generatePhotoReport() {
+  if (!photos.length) {
+    showToast('📷 Nema fotografija za izveštaj');
+    return;
+  }
+  
+  var sel = document.getElementById('folder-select');
+  var filter = sel ? sel.value : 'Sve';
+  var reportPhotos = filter === 'Sve' ? photos : photos.filter(function(p) { return p.folder === filter; });
+  
+  if (!reportPhotos.length) {
+    showToast('📷 Nema fotografija u folderu "' + filter + '"');
+    return;
+  }
+  
+  // Build report content
+  var now = new Date();
+  var reportDate = now.toLocaleDateString('sr-RS', {day:'2-digit',month:'long',year:'numeric'});
+  var reportTime = now.toLocaleTimeString('sr-RS', {hour:'2-digit',minute:'2-digit'});
+  
+  var html = '<div style="margin-bottom:20px;padding:10px;background:#f0f4ff;border-radius:8px;border:1px solid #d0e0ff;">';
+  html += '<div style="font-weight:800;font-size:0.9rem;color:#1a3a6a;">FOTODOKUMENTACIJA</div>';
+  html += '<div style="font-size:0.75rem;color:#555;margin-top:4px;">Datum izveštaja: ' + reportDate + ' u ' + reportTime + '<br>';
+  html += 'Broj fotografija: ' + reportPhotos.length;
+  if (filter !== 'Sve') html += ' (folder: ' + filter + ')';
+  html += '</div></div>';
+  
+  reportPhotos.forEach(function(p, i) {
+    html += '<div style="margin:12px 0;">';
+    html += '<div style="font-weight:700;font-size:0.82rem;margin-bottom:4px;">Slika ' + (i+1) + ' — ' + (p.date || '') + '</div>';
+    html += '<img src="' + p.data + '" style="max-width:100%;border:1px solid #ccc;border-radius:8px;">';
+    if (p.geo) {
+      html += '<div style="font-size:0.72rem;color:#555;margin-top:4px;">📍 GPS: ' + p.geo.lat.toFixed(5) + ', ' + p.geo.lon.toFixed(5) + ' (±' + (p.geo.accuracy || '?') + 'm)</div>';
+    }
+    html += '<div style="font-size:0.72rem;color:#888;margin-top:2px;">Folder: ' + (p.folder || 'Opšte') + '</div>';
+    html += '</div>';
+  });
+  
+  // Create new document
+  var docId = Date.now();
+  var title = 'Fotodokumentacija ' + now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric'});
+  docs.unshift({ id: docId, title: title, content: html, date: now.toLocaleDateString('sr-RS', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) });
+  localStorage.setItem('bk_docs', JSON.stringify(docs));
+  
+  // Open the document
+  switchTab('dokumenti');
+  setTimeout(function() {
+    loadDoc(docId);
+    showToast('📄 Izveštaj generisan: ' + reportPhotos.length + ' fotografija');
+  }, 300);
 }
 
 function downloadPhoto() {
