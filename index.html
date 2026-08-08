@@ -2981,7 +2981,7 @@ const KM_API_BASE_CF = '/api';
 const KM_API_BASE_B44 = 'https://solas-799a3993.base44.app/functions';
 const KM_API_BASE = KM_API_BASE_CF;  // Default to Cloudflare
 let kmUseCloudflareAPI = true;
-const VAPID_PUBLIC_KEY = 'BNKen9vXP30E8jiNLFxokw3zj7Ba7pXDua6M8bfU383-VUcmw5NcqfKzTaU3KHgb8vDT5DJxWqwbv_T0i9xT38o';
+const VAPID_PUBLIC_KEY = 'BO_VicJbLYfwhwCq48A6-cg4I-LHCbKLyN9BH6QvKM6RlUXzEMh74FleJ2fpQAsStTg0MhGiBe08mpieqLaoPwI';
 let porukeCurrentView = 'conversations';
 
 // ===== GRACEFUL DEGRADATION =====
@@ -3215,6 +3215,15 @@ async function subscribeToPush() {
   try {
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
+    // Check if existing subscription was created with current VAPID key
+    if (sub) {
+      const storedKey = localStorage.getItem('km_vapid_key');
+      if (storedKey !== VAPID_PUBLIC_KEY) {
+        console.log('VAPID key changed - re-subscribing');
+        await sub.unsubscribe();
+        sub = null;
+      }
+    }
     if (!sub) {
       const keyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       sub = await reg.pushManager.subscribe({
@@ -3222,6 +3231,7 @@ async function subscribeToPush() {
         applicationServerKey: keyBytes
       });
       console.log('New push subscription created');
+      localStorage.setItem('km_vapid_key', VAPID_PUBLIC_KEY);
     }
     const username = getCurrentUsername();
     if (!username) {

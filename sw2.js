@@ -1,5 +1,5 @@
-// KMapp Service Worker v190 — improved offline caching + push notifications
-const CACHE = 'kmapp-v190';
+// KMapp Service Worker v193 — improved offline caching + push notifications
+const CACHE = 'kmapp-v193';
 const STATIC_ASSETS = [
   './',
   './index.html',
