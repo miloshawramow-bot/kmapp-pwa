@@ -1,5 +1,5 @@
-// KMapp Service Worker v185 — improved offline caching + push notifications
-const CACHE = 'kmapp-v185';
+// KMapp Service Worker v190 — improved offline caching + push notifications
+const CACHE = 'kmapp-v190';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -127,6 +127,17 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => caches.match(OFFLINE_FALLBACK));
     })
   );
+});
+
+// ===== BACKGROUND SYNC (retry failed sends when online) =====
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'retry-send-message') {
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+        clients.forEach(c => c.postMessage({ type: 'RETRY_SEND' }));
+      })
+    );
+  }
 });
 
 // ===== PUSH NOTIFICATIONS =====

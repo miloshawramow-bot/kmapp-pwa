@@ -1919,6 +1919,12 @@ initTapSound();
     <button onclick="newFolder()" style="padding:7px 10px;background:var(--light);border:1.5px solid var(--border);border-radius:8px;font-size:0.78rem;font-weight:700;color:var(--navy);cursor:pointer;">➕</button>
   </div>
 
+  <!-- Photo counter + actions -->
+  <div id="photo-counter-bar" style="display:none;background:var(--card);padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+    <span id="photo-count-text" style="font-size:0.75rem;font-weight:600;color:var(--navy);">0 fotografija</span>
+    <button onclick="deleteAllPhotos()" style="padding:5px 10px;background:#e74c3c15;border:1.5px solid #e74c3c40;border-radius:6px;font-size:0.72rem;font-weight:600;color:#e74c3c;cursor:pointer;">🗑️ Obriši sve</button>
+  </div>
+
   <!-- Photo grid -->
   <div id="photo-grid" style="padding:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;"></div>
 
@@ -17742,6 +17748,12 @@ function renderPhotos() {
   const sel = document.getElementById('folder-select');
   const filter = sel ? sel.value : 'Sve';
   const list = filter === 'Sve' ? photos : photos.filter(p => p.folder === filter);
+  
+  // Update counter
+  var counter = document.getElementById('photo-count-text');
+  var counterBar = document.getElementById('photo-counter-bar');
+  if (counter) counter.textContent = photos.length + (photos.length === 1 ? ' fotografija' : ' fotografija');
+  if (counterBar) counterBar.style.display = photos.length > 0 ? 'flex' : 'none';
 
   if (!list.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);font-size:0.85rem;">
@@ -17780,6 +17792,15 @@ function deletePhoto() {
   closePhotoViewer();
   renderPhotos();
   showToast('🗑️ Fotografija obrisana');
+}
+
+function deleteAllPhotos() {
+  if (!photos.length) return;
+  if (!confirm('Obrisati sve ' + photos.length + ' fotografija? Ova akcija je nepovratna!')) return;
+  photos = [];
+  localStorage.removeItem('bk_photos');
+  renderPhotos();
+  showToast('🗑️ Sve fotografije obrisane');
 }
 
 function downloadPhoto() {
