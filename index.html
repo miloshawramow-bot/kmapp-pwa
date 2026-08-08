@@ -3340,12 +3340,30 @@ async function subscribeToPush() {
       console.log('No username - cannot save push subscription');
       return;
     }
-    // Serialize subscription safely (toJSON handles ArrayBuffer -> base64)
-    const subData = sub.toJSON ? sub.toJSON() : {
+    // Manually extract keys using getKey() - more reliable than toJSON()
+    let p256dhKey = '';
+    let authKey = '';
+    try {
+      const p256dhBuf = sub.getKey('p256dh');
+      const authBuf = sub.getKey('auth');
+      // Convert ArrayBuffer to base64url
+      p256dhKey = btoa(String.fromCharCode(...new Uint8Array(p256dhBuf)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      authKey = btoa(String.fromCharCode(...new Uint8Array(authBuf)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch(keyErr) {
+      console.log('getKey failed, trying toJSON fallback');
+      const subJson = sub.toJSON ? sub.toJSON() : {};
+      p256dhKey = (subJson.keys && subJson.keys.p256dh) || '';
+      authKey = (subJson.keys && subJson.keys.auth) || '';
+    }
+    
+    const subData = {
       endpoint: sub.endpoint,
       expirationTime: sub.expirationTime,
-      keys: { p256dh: '', auth: '' }
+      keys: { p256dh: p256dhKey, auth: authKey }
     };
+    console.log('Push subscription:', subData.endpoint ? 'OK' : 'EMPTY', 'keys:', p256dhKey ? 'YES' : 'NO');
     const res = await fetchWithFallback(KM_API_BASE + '/savePushSubscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3357,10 +3375,11 @@ async function subscribeToPush() {
       showToast('🔔 Push notifikacije aktivne');
     } else {
       console.log('Push subscription save failed:', data);
+      showToast('⚠️ Push save failed: ' + (data.error || 'greska'));
     }
   } catch(e) {
     console.log('Push subscription error:', e.message || e);
-    // Silently fail - don't scare users with technical push errors
+    showToast('⚠️ Push greska: ' + (e.message || 'nepoznato'));
   }
 }
 
