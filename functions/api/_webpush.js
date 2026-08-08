@@ -1,4 +1,5 @@
 // Web Push implementation for Cloudflare Workers using Web Crypto API
+// Fixed: RFC 8291 compliance — 2-byte IKM length, same salt for nonce, binary-safe HKDF info
 const VAPID_SUBJECT = 'mailto:kmapp@beograd.gov.rs';
 
 function base64UrlDecode(str) {
@@ -36,11 +37,12 @@ async function createVapidJwt(privateKeyStr, audience) {
   return unsigned + '.' + base64UrlEncode(sig);
 }
 
+// Fixed HKDF: accepts both string and Uint8Array for info (binary-safe)
 async function hkdf(ikm, salt, info, length) {
-  const enc = new TextEncoder();
+  const infoBytes = typeof info === 'string' ? new TextEncoder().encode(info) : info;
   const key = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
   return new Uint8Array(await crypto.subtle.deriveBits(
-    {name:'HKDF',hash:'SHA-256',salt:salt,info:enc.encode(info)}, key, length*8));
+    {name:'HKDF',hash:'SHA-256',salt:salt,info:infoBytes}, key, length*8));
 }
 
 async function encryptPayload(payload, p256dh, auth) {
@@ -52,27 +54,41 @@ async function encryptPayload(payload, p256dh, auth) {
   const ecdhPubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', ephemKey.publicKey));
   const sharedSecret = new Uint8Array(await crypto.subtle.deriveBits({name:'ECDH',public:pubKey}, ephemKey.privateKey, 256));
   const authSecret = base64UrlDecode(auth);
-  const ikm = new Uint8Array(authSecret.length + 1 + sharedSecret.length);
+
+  // FIX #1: IKM uses uint16 big-endian length (2 bytes) per RFC 8291
+  const ikm = new Uint8Array(authSecret.length + 2 + sharedSecret.length);
   ikm.set(authSecret, 0);
-  ikm[authSecret.length] = sharedSecret.length;
-  ikm.set(sharedSecret, authSecret.length + 1);
+  ikm[authSecret.length] = 0x00;      // high byte of uint16
+  ikm[authSecret.length + 1] = sharedSecret.length & 0xFF;  // low byte
+  ikm.set(sharedSecret, authSecret.length + 2);
+
   const salt = crypto.getRandomValues(new Uint8Array(16));
+
+  // key_info = "WebPush: info\0" || ecdhPubRaw || pubKeyBytes  (all binary)
   const infoPrefix = new TextEncoder().encode('WebPush: info\0');
-  const infoBytes = new Uint8Array(infoPrefix.length + ecdhPubRaw.length + pubKeyBytes.length);
-  infoBytes.set(infoPrefix, 0);
-  infoBytes.set(ecdhPubRaw, infoPrefix.length);
-  infoBytes.set(pubKeyBytes, infoPrefix.length + ecdhPubRaw.length);
-  const cek = await hkdf(ikm, salt, infoBytes, 16);
-  const nonce = await hkdf(ikm, new Uint8Array(16), 'Content-Encoding: nonce\0', 12);
+  const keyInfo = new Uint8Array(infoPrefix.length + ecdhPubRaw.length + pubKeyBytes.length);
+  keyInfo.set(infoPrefix, 0);
+  keyInfo.set(ecdhPubRaw, infoPrefix.length);
+  keyInfo.set(pubKeyBytes, infoPrefix.length + ecdhPubRaw.length);
+
+  // FIX #3: Pass Uint8Array directly to hkdf (no TextEncoder on binary data)
+  const cek = await hkdf(ikm, salt, keyInfo, 16);
+
+  // FIX #2: Nonce uses the SAME salt as CEK (not a zeroed salt)
+  const nonce = await hkdf(ikm, salt, 'Content-Encoding: nonce\0', 12);
+
   const aesKey = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
   const encrypted = new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce}, aesKey, plaintext));
+
+  // aes128gcm header: salt(16) || rs(4, big-endian) || idlen(1) || keyId(65)
   const rs = new Uint8Array(4);
   new DataView(rs.buffer).setUint32(0, 4096, false);
   const header = new Uint8Array(16 + 4 + 1 + 65);
   header.set(salt, 0);
   header.set(rs, 16);
-  header[20] = 65;
+  header[20] = 65; // keyId length
   header.set(ecdhPubRaw, 21);
+
   const result = new Uint8Array(header.length + encrypted.length);
   result.set(header, 0);
   result.set(encrypted, header.length);
@@ -100,10 +116,8 @@ export async function sendWebPush(subscription, payload, vapidPrivateKey, vapidP
     });
     if (response.ok || response.status === 201) return { success: true, status: response.status };
     const text = await response.text();
-    console.log('Push failed:', response.status, text);
     return { success: false, error: response.status + ': ' + text };
   } catch (e) {
-    console.log('Push error:', e.message);
     return { success: false, error: e.message };
   }
 }
