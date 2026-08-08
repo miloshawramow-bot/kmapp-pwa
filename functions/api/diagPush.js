@@ -63,6 +63,8 @@ export async function onRequestPost({ request, env }) {
       subscription: {
         hasEndpoint,
         endpointDomain: subData.endpoint ? new URL(subData.endpoint).origin : 'NONE',
+        endpointTail: subData.endpoint ? subData.endpoint.slice(-20) : 'NONE',
+        updatedDate: row.updated_date || row.created_date || 'unknown',
         hasP256dh,
         hasAuth,
         p256dhLength: subData.keys && subData.keys.p256dh ? subData.keys.p256dh.length : 0,

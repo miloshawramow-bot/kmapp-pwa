@@ -3276,6 +3276,13 @@ async function runPushDiagnostics() {
   var results = [];
   var log = function(msg) { results.push(msg); console.log('[Diag]', msg); };
   
+  // 0. Force re-save current subscription to server first (avoid stale DB entry)
+  log('0. Sinhronizujem subscription sa serverom...');
+  try {
+    await subscribeToPush();
+    log('   ✅ Sinhronizovano');
+  } catch(e) { log('   ⚠️ Sync error: ' + e.message); }
+  
   // 1. Check browser support
   log('1. Browser: ' + navigator.userAgent.substring(0, 60));
   if (!('serviceWorker' in navigator)) { log('❌ Service Worker NOT supported'); return showDiagResults(results); }
@@ -18775,7 +18782,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v198';
+const KM_VERSION = 'v199';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
