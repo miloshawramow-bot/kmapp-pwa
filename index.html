@@ -896,6 +896,26 @@
   }
 
 
+  /* ===== PULL TO REFRESH ===== */
+  #ptr-indicator {
+    display: none;
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%) translateY(-60px);
+    width: 36px; height: 36px;
+    background: var(--card);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    align-items: center; justify-content: center;
+    z-index: 50;
+    transition: transform 0.2s ease, opacity 0.2s;
+    opacity: 0;
+    font-size: 1.1rem;
+  }
+  #ptr-indicator.ptr-visible { display: flex; opacity: 1; }
+  #ptr-indicator.ptr-active { transform: translateX(-50%) translateY(0) rotate(180deg); }
+  #ptr-indicator.ptr-ready { transform: translateX(-50%) translateY(0) rotate(360deg); background: var(--blue); color: white; }
+
   /* ===== SIDE MENU ===== */
   #side-menu-overlay {
     position: fixed; inset: 0; z-index: 200;
@@ -1165,6 +1185,33 @@ document.addEventListener('click', function(e) {
 }, true);
 
 initTapSound();
+
+// ===== HAPTIC FEEDBACK (Android vibration) =====
+function haptic(pattern) {
+  try {
+    if (navigator.vibrate) {
+      if (typeof pattern === 'string') {
+        switch(pattern) {
+          case 'light': navigator.vibrate(15); break;
+          case 'medium': navigator.vibrate(30); break;
+          case 'heavy': navigator.vibrate(50); break;
+          case 'success': navigator.vibrate([15, 30, 30]); break;
+          case 'error': navigator.vibrate([50, 50, 50]); break;
+          case 'warning': navigator.vibrate([30, 60, 30]); break;
+          default: navigator.vibrate(20);
+        }
+      } else {
+        navigator.vibrate(pattern);
+      }
+    }
+  } catch(e) {}
+}
+
+// Add haptic to existing tap sound listener
+document.addEventListener('click', function(e) {
+  const target = e.target.closest('button, [onclick], .side-menu-item, .acc-header, .tab-btn, .link-card, .settings-row');
+  if (target) haptic('light');
+}, true);
 
 </script>
 <div id="app-loader">
@@ -1795,7 +1842,8 @@ initTapSound();
     <button id="poruke-tab-sent" onclick="porukeView('sent')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">📤 Poslate</button>
     <button id="poruke-tab-compose" onclick="porukeView('compose')" style="flex:1;padding:10px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;">✍️ Nova</button>
   </div>
-  <div id="poruke-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;">
+  <div id="poruke-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;position:relative;">
+    <div id="ptr-indicator">↻</div>
     <div style="text-align:center;color:var(--muted);padding:40px 0;">Učitavanje poruka...</div>
   </div>
 </div>
@@ -3561,6 +3609,80 @@ function porukeView(view) {
   else if (view === 'compose') porukeRenderCompose();
 }
 
+// ===== PULL TO REFRESH (Poruke) =====
+(function() {
+  let ptrStartY = 0;
+  let ptrPulling = false;
+  let ptrThreshold = 70;
+  let ptrIndicator = null;
+  let ptrContainer = null;
+
+  function initPtr() {
+    ptrContainer = document.getElementById('poruke-content');
+    ptrIndicator = document.getElementById('ptr-indicator');
+    if (!ptrContainer || !ptrIndicator) return;
+
+    ptrContainer.addEventListener('touchstart', function(e) {
+      if (ptrContainer.scrollTop <= 0) {
+        ptrStartY = e.touches[0].clientY;
+        ptrPulling = true;
+      } else {
+        ptrPulling = false;
+      }
+    }, { passive: true });
+
+    ptrContainer.addEventListener('touchmove', function(e) {
+      if (!ptrPulling) return;
+      const pullDistance = e.touches[0].clientY - ptrStartY;
+      if (pullDistance > 10 && ptrContainer.scrollTop <= 0) {
+        const progress = Math.min(pullDistance / ptrThreshold, 1);
+        ptrIndicator.classList.add('ptr-visible');
+        ptrIndicator.style.transform = 'translateX(-50%) translateY(' + Math.min(pullDistance * 0.5, 40) + 'px) rotate(' + (progress * 360) + 'deg)';
+        ptrIndicator.style.opacity = progress;
+        if (pullDistance >= ptrThreshold) {
+          ptrIndicator.classList.add('ptr-ready');
+        } else {
+          ptrIndicator.classList.remove('ptr-ready');
+        }
+      }
+    }, { passive: true });
+
+    ptrContainer.addEventListener('touchend', async function(e) {
+      if (!ptrPulling) return;
+      ptrPulling = false;
+      const pullDistance = (ptrIndicator.style.transform.match(/translateY\((\d+)px/)|| [])[1] || 0;
+      if (ptrIndicator.classList.contains('ptr-ready')) {
+        haptic('medium');
+        ptrIndicator.innerHTML = '⏳';
+        // Reload current view
+        const view = porukeCurrentView || 'conversations';
+        if (view === 'conversations') porukeRenderConversations();
+        else if (view === 'inbox') porukeRenderInbox();
+        else if (view === 'sent') { porukeSent = await porukeFetchSent(); porukeRenderSent(); }
+        await new Promise(r => setTimeout(r, 500));
+        ptrIndicator.innerHTML = '✓';
+        haptic('light');
+        setTimeout(() => {
+          ptrIndicator.classList.remove('ptr-visible', 'ptr-ready');
+          ptrIndicator.style.transform = '';
+          ptrIndicator.style.opacity = '';
+          ptrIndicator.innerHTML = '↻';
+        }, 600);
+      } else {
+        ptrIndicator.classList.remove('ptr-visible', 'ptr-ready');
+        ptrIndicator.style.transform = '';
+        ptrIndicator.style.opacity = '';
+      }
+    }, { passive: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPtr);
+  } else {
+    initPtr();
+  }
+})();
+
 async function porukeRenderConversations() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
@@ -4185,11 +4307,13 @@ async function porukeSend() {
     });
     const data = await res.json();
     if (data.success) {
+      haptic('success');
       if (statusEl) { statusEl.textContent = '\u2705 Poruka poslata!'; statusEl.style.color = '#43a047'; }
       document.getElementById('poruke-text').value = '';
       porukeAttachments = [];
       setTimeout(() => porukeView('sent'), 1200);
     } else {
+      haptic('error');
       if (statusEl) { statusEl.textContent = '\u26A0\uFE0F Greska: ' + (data.error || 'Nepoznata'); statusEl.style.color = '#e53935'; }
     }
   } catch (e) {
@@ -18813,7 +18937,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v203';
+const KM_VERSION = 'v204';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
