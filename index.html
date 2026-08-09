@@ -18813,7 +18813,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v202';
+const KM_VERSION = 'v203';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -19073,34 +19073,63 @@ function changePassword() {
 
 
 // ===== WAKE LOCK (Ekran uvek aktivan) =====
+// Enhanced: auto re-acquire every 30s (iOS Safari releases after ~60s)
+// Optional 10-minute auto-off timer
 let wakeLock = null;
+let wakeLockInterval = null;
+let wakeLockTimeout = null;
+const WAKELOCK_AUTO_OFF_MS = 10 * 60 * 1000; // 10 minuta
+
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      // Release existing first
+      if (wakeLock) {
+        try { await wakeLock.release(); } catch(e) {}
+        wakeLock = null;
+      }
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake Lock: (re)aktiviran', new Date().toLocaleTimeString());
+      return true;
+    }
+  } catch(e) { console.error('Wake Lock greška:', e); }
+  return false;
+}
+
 async function toggleWakeLock() {
   const toggle = document.getElementById('wakelock-toggle');
   const slider = document.getElementById('wakelock-slider');
   const knob = slider ? slider.querySelector('span') : null;
   if (toggle.checked) {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-        localStorage.setItem('km_wakelock', '1');
-        if (slider) { slider.style.background = 'var(--blue)'; }
-        if (knob) { knob.style.left = '21px'; }
-        // Re-acquire on visibility change (browser releases wake lock when tab is hidden)
-        document.addEventListener('visibilitychange', reacquireWakeLock);
-        console.log('Wake Lock: aktiviran');
-      } else {
+    const ok = await acquireWakeLock();
+    if (ok) {
+      localStorage.setItem('km_wakelock', '1');
+      if (slider) { slider.style.background = 'var(--blue)'; }
+      if (knob) { knob.style.left = '21px'; }
+      // Re-acquire every 30s — iOS Safari silently releases wake lock
+      wakeLockInterval = setInterval(acquireWakeLock, 30000);
+      // Re-acquire on visibility change
+      document.addEventListener('visibilitychange', reacquireWakeLock);
+      // Auto-off after 10 minutes
+      wakeLockTimeout = setTimeout(() => {
+        console.log('Wake Lock: 10 min isteklo, auto-off');
         toggle.checked = false;
-        showToast('⚠️ Vaš pregledač ne podržava Wake Lock');
-      }
-    } catch(e) {
+        toggleWakeLock();
+        showToast('⏰ Ekran je bio aktivan 10 min. Dodirnite za produženje.');
+      }, WAKELOCK_AUTO_OFF_MS);
+      showToast('💡 Ekran aktivan 10 minuta');
+    } else {
       toggle.checked = false;
-      console.error('Wake Lock greška:', e);
+      showToast('⚠️ Pregledač ne podržava Wake Lock');
     }
   } else {
+    // Turn off
     if (wakeLock) {
-      wakeLock.release();
+      try { await wakeLock.release(); } catch(e) {}
       wakeLock = null;
     }
+    if (wakeLockInterval) { clearInterval(wakeLockInterval); wakeLockInterval = null; }
+    if (wakeLockTimeout) { clearTimeout(wakeLockTimeout); wakeLockTimeout = null; }
     localStorage.removeItem('km_wakelock');
     if (slider) { slider.style.background = 'var(--border)'; }
     if (knob) { knob.style.left = '3px'; }
@@ -19108,16 +19137,13 @@ async function toggleWakeLock() {
     console.log('Wake Lock: deaktiviran');
   }
 }
+
 async function reacquireWakeLock() {
   if (document.visibilityState === 'visible' && localStorage.getItem('km_wakelock') === '1') {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Wake Lock: ponovo aktiviran');
-      }
-    } catch(e) { console.error('Wake Lock re-acquire:', e); }
+    await acquireWakeLock();
   }
 }
+
 function initWakeLock() {
   const toggle = document.getElementById('wakelock-toggle');
   if (!toggle) return;
