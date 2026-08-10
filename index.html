@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Večna">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Večna Arhiva</title>
+<style>
+:root {
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --card: #1e2a4a;
+  --primary: #c9a84c;
+  --primary-dark: #a8893a;
+  --text: #e8e8e8;
+  --muted: #8a8a9a;
+  --border: #2a3a5c;
+  --danger: #e74c3c;
+  --light: #243355;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
+}
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 800; color: var(--bg);
+}
+.logo-text { font-size: 1rem; font-weight: 700; color: var(--primary); }
+.header-right { display: flex; gap: 8px; align-items: center; }
+.icon-btn { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; padding: 4px 8px; }
+.screen {
+  display: none; flex-direction: column;
+  min-height: calc(100vh - 60px - 56px);
+  padding: 12px 14px 80px;
+  animation: fadeIn 0.3s ease-out;
+}
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  display: flex; justify-content: space-around;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border); z-index: 100;
+}
+nav button {
+  flex: 1; background: none; border: none;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 2px; cursor: pointer;
+  color: var(--muted); font-size: 0.65rem; font-weight: 600;
+  transition: color 0.2s;
+}
+nav button.active { color: var(--primary); }
+nav button .nav-icon { font-size: 1.3rem; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+.citulja-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; margin-bottom: 12px; cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s;
+}
+.citulja-card:active { transform: scale(0.98); }
+.citulja-card:hover { border-color: var(--primary); }
+.citulja-photo {
+  width: 100%; height: 180px; object-fit: cover; background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; color: var(--muted);
+}
+.citulja-info { padding: 12px 14px; }
+.citulja-name { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+.citulja-dates { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.citulja-excerpt {
+  font-size: 0.82rem; color: var(--muted); margin-top: 8px; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.citulja-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 0.7rem; color: var(--muted); }
+.citulja-badge { background: var(--light); color: var(--primary); padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 600; }
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 8px 12px; margin-bottom: 14px;
+}
+.search-bar input { flex: 1; border: none; background: none; color: var(--text); font-size: 0.88rem; outline: none; }
+.search-bar input::placeholder { color: var(--muted); }
+.search-icon { color: var(--muted); font-size: 1rem; }
+.detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.detail-back { background: none; border: none; color: var(--primary); font-size: 0.85rem; cursor: pointer; }
+.detail-photo { width: 120px; height: 150px; border-radius: 10px; object-fit: cover; border: 2px solid var(--border); margin: 0 auto 16px; display: block; }
+.detail-photo-placeholder {
+  width: 120px; height: 150px; border-radius: 10px; background: var(--surface);
+  border: 2px solid var(--border); margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--muted);
+}
+.detail-name { font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--text); }
+.detail-dates { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
+.detail-section { margin-top: 18px; }
+.detail-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 8px; }
+.detail-text { font-size: 0.88rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+.candle-section { text-align: center; padding: 20px 0; margin-top: 16px; border-top: 1px solid var(--border); }
+.candle-count { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+.candle-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--bg); border: none; border-radius: 50px;
+  padding: 10px 24px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; transition: transform 0.15s;
+}
+.candle-btn:active { transform: scale(0.95); }
+.candle-anim { display: inline-block; animation: flicker 1s ease-in-out infinite alternate; }
+@keyframes flicker { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0.85; transform: scale(0.95); } }
+.memory-list { margin-top: 16px; text-align: left; }
+.memory-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; }
+.memory-author { font-size: 0.78rem; font-weight: 700; color: var(--primary); }
+.memory-text { font-size: 0.82rem; color: var(--text); margin-top: 4px; line-height: 1.5; }
+.memory-date { font-size: 0.68rem; color: var(--muted); margin-top: 4px; }
+.memory-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.memory-form textarea {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; color: var(--text); font-size: 0.82rem; outline: none;
+  resize: vertical; min-height: 60px; font-family: inherit;
+}
+.memory-form button { align-self: flex-end; background: var(--primary); color: var(--bg); border: none; border-radius: 8px; padding: 8px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; display: block; }
+.form-input, .form-textarea {
+  width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; color: var(--text); font-size: 0.88rem; outline: none; font-family: inherit;
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-input:focus, .form-textarea:focus { border-color: var(--primary); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--bg); border: none; border-radius: 12px;
+  padding: 12px 24px; font-size: 0.9rem; font-weight: 700; cursor: pointer; width: 100%; transition: transform 0.15s;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-danger { background: var(--danger); color: white; border: none; border-radius: 10px; padding: 10px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: var(--bg); }
+.login-logo { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: var(--bg); margin-bottom: 16px; }
+.login-title { font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.login-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; text-align: center; }
+.login-form { width: 100%; max-width: 320px; }
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px 20px; text-align: center; gap: 12px; }
+.empty-icon { font-size: 2.5rem; }
+.empty-text { font-size: 0.88rem; color: var(--muted); }
+.empty-hint { font-size: 0.75rem; color: var(--muted); opacity: 0.7; }
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--surface); color: var(--text); padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border); font-size: 0.82rem; z-index: 9999; animation: toastSlide 0.3s ease-out; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+@keyframes toastSlide { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.section-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.filter-chips { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+.chip { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.75rem; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.chip.active { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="login-screen">
+  <div class="login-logo">ВА</div>
+  <div class="login-title">Večna Arhiva</div>
+  <div class="login-sub">Digitalne čitulje i memorijal<br>Uspomene koje traju</div>
+  <div class="login-form">
+    <div class="form-group">
+      <label class="form-label">Korisničko ime</label>
+      <input type="text" id="login-username" class="form-input" placeholder="Unesite korisničko ime">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lozinka</label>
+      <input type="password" id="login-password" class="form-input" placeholder="Unesite lozinku">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Prijavi se</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="app-header" style="display:none;">
+  <div class="logo"><div class="logo-icon">ВА</div><div class="logo-text">Večna Arhiva</div></div>
+  <div class="header-right"><button class="icon-btn" onclick="switchTab('podesavanja')">⚙️</button></div>
+</header>
+
+<!-- NASLOVNICA -->
+<div id="screen-naslovnica" class="screen">
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Pretraži po imenu..." oninput="kmDebounce(searchCitulje, 250)()">
+  </div>
+  <div class="filter-chips" id="filter-chips">
+    <div class="chip active" onclick="setFilter('all', this)">Sve</div>
+    <div class="chip" onclick="setFilter('recent', this)">Nedavne</div>
+    <div class="chip" onclick="setFilter('month', this)">Ovog meseca</div>
+  </div>
+  <div id="citulje-list"></div>
+</div>
+
+<!-- DETALJ -->
+<div id="screen-detalj" class="screen"><div id="detalj-content"></div></div>
+
+<!-- DODAJ -->
+<div id="screen-dodaj" class="screen">
+  <div class="section-title">Nova čitulja</div>
+  <div class="form-group"><label class="form-label">Ime i prezime *</label><input type="text" id="form-ime" class="form-input" placeholder="npr. Petar Petrović"></div>
+  <div class="form-group"><label class="form-label">Datum rođenja</label><input type="date" id="form-datumRodj" class="form-input"></div>
+  <div class="form-group"><label class="form-label">Datum smrti *</label><input type="date" id="form-datumSmrti" class="form-input"></div>
+  <div class="form-group"><label class="form-label">Slika (URL)</label><input type="text" id="form-slika" class="form-input" placeholder="https://..."></div>
+  <div class="form-group"><label class="form-label">Kratak opis</label><textarea id="form-opis" class="form-textarea" placeholder="Kratak tekst..."></textarea></div>
+  <div class="form-group"><label class="form-label">Puna čitulja</label><textarea id="form-tekst" class="form-textarea" style="min-height:140px;" placeholder="Puni tekst čitulje..."></textarea></div>
+  <div class="form-group"><label class="form-label">Kategorija</label><select id="form-kategorija" class="form-input"><option value="opste">Opšte</option><option value="pomen">Pomen</option><option value="godisnjica">Godišnjica</option></select></div>
+  <div class="form-group"><label class="form-label">Mesto sahrane</label><input type="text" id="form-mesto" class="form-input" placeholder="npr. Novo groblje, Beograd"></div>
+  <div class="form-group"><label class="form-label">Datum sahrane/parastosa</label><input type="date" id="form-datumSahrane" class="form-input"></div>
+  <button class="btn-primary" onclick="saveCitulja()">Sačuvaj čitulju</button>
+</div>
+
+<!-- PODESAVANJA -->
+<div id="screen-podesavanja" class="screen">
+  <div class="section-title">Podešavanja</div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:var(--bg);" id="settings-avatar">U</div>
+      <div><div style="font-weight:700;font-size:0.95rem;" id="settings-username">korisnik</div><div style="font-size:0.75rem;color:var(--muted);" id="settings-role">gost</div></div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:0.82rem;color:var(--muted);line-height:1.6;"><strong style="color:var(--text);">Večna Arhiva v1.0</strong><br>Digitalne čitulje i memorijal platforma.<br>Podaci se čuvaju lokalno na uređaju.</div>
+  </div>
+  <div class="card" id="admin-panel" style="display:none;">
+    <div class="section-title" style="font-size:0.95rem;">Admin panel</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn-primary" onclick="switchTab('dodaj')">➕ Nova čitulja</button>
+      <button class="btn-primary" style="background:var(--light);color:var(--text);" onclick="exportData()">📥 Izvezi podatke</button>
+      <button class="btn-primary" style="background:var(--light);color:var(--text);" onclick="importData()">📤 Uvezi podatke</button>
+    </div>
+  </div>
+  <div class="card"><button class="btn-primary" style="background:var(--danger);color:white;" onclick="doLogout()">Odjavi se</button></div>
+</div>
+
+<!-- NAV -->
+<nav id="app-nav" style="display:none;">
+  <button onclick="switchTab('naslovnica')" id="tab-naslovnica" class="active"><span class="nav-icon">🕯️</span> Čitulje</button>
+  <button onclick="switchTab('dodaj')" id="tab-dodaj" style="display:none;"><span class="nav-icon">➕</span> Dodaj</button>
+  <button onclick="switchTab('podesavanja')" id="tab-podesavanja"><span class="nav-icon">⚙️</span> Podešavanja</button>
+</nav>
+
+<script>
+const VA_VERSION = 'v1.0';
+const VA_STORAGE = 'vecna_arhiva_data';
+const VA_USER = 'vecna_arhiva_user';
+const VA_CANDLES = 'vecna_candles';
+const VA_MEMORIES = 'vecna_memories';
+let citulje = [];
+let currentFilter = 'all';
+let currentUser = null;
+let editingId = null;
+
+function loadData() {
+  try { citulje = JSON.parse(localStorage.getItem(VA_STORAGE) || '[]'); } catch(e) { citulje = []; }
+  if (citulje.length === 0) {
+    citulje = [
+      { id:'demo1', ime:'Petar Petrović', datumRodj:'1950-03-15', datumSmrti:'2026-07-20', slika:'', opis:'Voljeni otac, deda i prijatelj. Njegova uspomena večno živi u našim srcima.', tekst:'Sa dubokim bolom javljamo porodica Petrović da je naš voljeni otac, deda i prijatelj Petar Petrović preminuo dana 20.07.2026. u 76. godini života.\n\nSahrana: 25.07.2026. u 13h, Novo groblje, Beograd.\n\nPočivao u miru Božjem.', kategorija:'opste', mesto:'Novo groblje, Beograd', datumSahrane:'2026-07-25', createdAt:'2026-07-21T10:00:00' },
+      { id:'demo2', ime:'Milica Jovanović', datumRodj:'1965-08-22', datumSmrti:'2026-08-01', slika:'', opis:'Draga majka i baka. Njena dobrota i osmeh biće večno zapamćeni.', tekst:'U tišini naših srca, tvoje uspomene večno žive.\n\nMilica Jovanović (1965-2026)\n\nSahrana: 05.08.2026. u 12h, groblje Orlovača.\n\nPomen: 09.08.2026. u 11h.', kategorija:'pomen', mesto:'Orlovača, Beograd', datumSahrane:'2026-08-05', createdAt:'2026-08-02T08:00:00' },
+      { id:'demo3', ime:'Nikola Marković', datumRodj:'1948-01-10', datumSmrti:'2026-06-15', slika:'', opis:'Godišnjica smrti. Večna mu slava i hvala.', tekst:'GODIŠNJICA SMRTI\n\nNikola Marković\n(10.01.1948 — 15.06.2026)\n\nVečna ti slava i hvala.', kategorija:'godisnjica', mesto:'Bežanijska groblja', datumSahrane:'2026-06-20', createdAt:'2026-06-16T09:00:00' }
+    ];
+    saveData();
+  }
+}
+function saveData() { localStorage.setItem(VA_STORAGE, JSON.stringify(citulje)); }
+function loadCandles() { try { return JSON.parse(localStorage.getItem(VA_CANDLES) || '{}'); } catch(e) { return {}; } }
+function saveCandles(c) { localStorage.setItem(VA_CANDLES, JSON.stringify(c)); }
+function getCandleCount(id) { return loadCandles()[id] || 0; }
+function lightCandle(id) { const c = loadCandles(); c[id] = (c[id]||0)+1; saveCandles(c); return c[id]; }
+function loadMemories() { try { return JSON.parse(localStorage.getItem(VA_MEMORIES) || '{}'); } catch(e) { return {}; } }
+function saveMemories(m) { localStorage.setItem(VA_MEMORIES, JSON.stringify(m)); }
+function getMemories(id) { return loadMemories()[id] || []; }
+function addMemory(id, author, text) { const m = loadMemories(); if(!m[id]) m[id]=[]; m[id].unshift({author,text,date:new Date().toLocaleString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}); saveMemories(m); }
+
+function isLoggedIn() { return !!localStorage.getItem(VA_USER); }
+function getCurrentUser() { try { return JSON.parse(localStorage.getItem(VA_USER)); } catch(e) { return null; } }
+function doLogin() {
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value.trim();
+  if (!u || !p) { showToast('Unesite podatke'); return; }
+  currentUser = { username:u, role:(u==='admin'&&p==='admin')?'admin':'gost', displayName:u.charAt(0).toUpperCase()+u.slice(1) };
+  localStorage.setItem(VA_USER, JSON.stringify(currentUser));
+  showApp();
+}
+function doLogout() { localStorage.removeItem(VA_USER); currentUser=null; location.reload(); }
+function showApp() {
+  currentUser = getCurrentUser(); if(!currentUser) return;
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('app-header').style.display='flex';
+  document.getElementById('app-nav').style.display='flex';
+  document.getElementById('tab-dodaj').style.display = currentUser.role==='admin' ? 'flex' : 'none';
+  document.getElementById('admin-panel').style.display = currentUser.role==='admin' ? 'block' : 'none';
+  document.getElementById('settings-username').textContent = currentUser.displayName;
+  document.getElementById('settings-role').textContent = currentUser.role==='admin' ? 'Administrator' : 'Gost';
+  document.getElementById('settings-avatar').textContent = currentUser.displayName.charAt(0).toUpperCase();
+  switchTab('naslovnica');
+}
+function switchTab(name) {
+  if(name!=='login' && !isLoggedIn()) return;
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  const s=document.getElementById('screen-'+name); if(s){s.classList.add('active');s.style.display='flex';}
+  const t=document.getElementById('tab-'+name); if(t)t.classList.add('active');
+  if(name==='naslovnica') renderCitulje();
+  if(name==='dodaj') clearForm();
+}
+function renderCitulje() {
+  const list=document.getElementById('citulje-list'); if(!list) return;
+  const q=(document.getElementById('search-input')?.value||'').toLowerCase();
+  let f=citulje.filter(c=>c.ime.toLowerCase().includes(q));
+  if(currentFilter==='recent'){const w=Date.now()-7*86400000;f=f.filter(c=>new Date(c.createdAt)>w);}
+  else if(currentFilter==='month'){const n=new Date();f=f.filter(c=>{const d=new Date(c.datumSmrti);return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();});}
+  f.sort((a,b)=>new Date(b.datumSmrti)-new Date(a.datumSmrti));
+  if(f.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">🕯️</div><div class="empty-text">Nema čitulja</div><div class="empty-hint">Pokušajte drugu pretragu</div></div>';return;}
+  list.innerHTML=f.map(c=>{
+    const photo=c.slika?`<img class="citulja-photo" src="${c.slika}" onerror="this.style.display='none';this.parentElement.innerHTML='🕯️'">`:`<div class="citulja-photo">🕯️</div>`;
+    const kat={opste:'Opšte',pomen:'Pomen',godisnjica:'Godišnjica'}[c.kategorija]||'Opšte';
+    return `<div class="citulja-card" onclick="openCitulja('${c.id}')">${photo}<div class="citulja-info"><div class="citulja-name">${c.ime}</div><div class="citulja-dates">${fmtDate(c.datumRodj)} — ${fmtDate(c.datumSmrti)}</div><div class="citulja-excerpt">${c.opis||c.tekst?.substring(0,100)||''}</div><div class="citulja-meta"><span class="citulja-badge">${kat}</span><span>🕯️ ${getCandleCount(c.id)} &nbsp; 💬 ${getMemories(c.id).length}</span></div></div></div>`;
+  }).join('');
+}
+function setFilter(f,el){currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderCitulje();}
+function searchCitulje(){renderCitulje();}
+function openCitulja(id){
+  const c=citulje.find(x=>x.id===id);if(!c)return;
+  const photo=c.slika?`<img class="detail-photo" src="${c.slika}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="detail-photo-placeholder" style="display:none;">🕯️</div>`:`<div class="detail-photo-placeholder">🕯️</div>`;
+  const candles=getCandleCount(id),mems=getMemories(id);
+  let h=`<div class="detail-header"><button class="detail-back" onclick="switchTab('naslovnica')">← Nazad</button></div>${photo}<div class="detail-name">${c.ime}</div><div class="detail-dates">${fmtDate(c.datumRodj)} — ${fmtDate(c.datumSmrti)}</div>`;
+  if(c.mesto)h+=`<div class="detail-dates">📍 ${c.mesto}</div>`;
+  if(c.datumSahrane)h+=`<div class="detail-dates">🪦 ${fmtDate(c.datumSahrane)}</div>`;
+  h+=`<div class="detail-section"><div class="detail-section-title">Čitulja</div><div class="detail-text">${escHtml(c.tekst||c.opis||'')}</div></div>`;
+  h+=`<div class="candle-section"><div class="candle-count">🕯️ Upaljeno ${candles} sveć${candles===1?'a':(candles<5?'e':'a')}</div><button class="candle-btn" onclick="lightCandleAction('${id}')"><span class="candle-anim">🕯️</span> Upali sveću</button></div>`;
+  h+=`<div class="detail-section"><div class="detail-section-title">Uspomene</div><div class="memory-form"><textarea id="memory-text" placeholder="Podelite uspomen..." maxlength="500"></textarea><button onclick="addMemoryAction('${id}')">Pošalji</button></div></div>`;
+  if(mems.length>0){h+=`<div class="memory-list">`;mems.forEach(m=>{h+=`<div class="memory-item"><div class="memory-author">${escHtml(m.author||'Anonimno')}</div><div class="memory-text">${escHtml(m.text)}</div><div class="memory-date">${m.date}</div></div>`;});h+=`</div>`;}
+  if(currentUser?.role==='admin')h+=`<div class="divider"></div><div style="display:flex;gap:8px;"><button class="btn-danger" onclick="deleteCitulja('${id}')">🗑 Obriši</button><button class="btn-primary" style="background:var(--light);color:var(--text);flex:1;" onclick="editCitulja('${id}')">✏ Izmeni</button></div>`;
+  document.getElementById('detalj-content').innerHTML=h;
+  switchTab('detalj');
+}
+function lightCandleAction(id){lightCandle(id);showToast('🕯️ Sveća upaljena');if(navigator.vibrate)navigator.vibrate(50);openCitulja(id);}
+function addMemoryAction(id){const t=document.getElementById('memory-text')?.value.trim();if(!t){showToast('Unesite tekst');return;}addMemory(id,currentUser?.displayName||'Anonimno',t);showToast('Uspomena dodata');openCitulja(id);}
+function clearForm(){editingId=null;['form-ime','form-datumRodj','form-datumSmrti','form-slika','form-opis','form-tekst','form-mesto','form-datumSahrane'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('form-kategorija').value='opste';document.querySelector('#screen-dodaj .section-title').textContent='Nova čitulja';}
+function editCitulja(id){const c=citulje.find(x=>x.id===id);if(!c)return;editingId=id;document.getElementById('form-ime').value=c.ime||'';document.getElementById('form-datumRodj').value=c.datumRodj||'';document.getElementById('form-datumSmrti').value=c.datumSmrti||'';document.getElementById('form-slika').value=c.slika||'';document.getElementById('form-opis').value=c.opis||'';document.getElementById('form-tekst').value=c.tekst||'';document.getElementById('form-kategorija').value=c.kategorija||'opste';document.getElementById('form-mesto').value=c.mesto||'';document.getElementById('form-datumSahrane').value=c.datumSahrane||'';document.querySelector('#screen-dodaj .section-title').textContent='Izmeni čitulju';switchTab('dodaj');}
+function saveCitulja(){
+  const ime=document.getElementById('form-ime').value.trim(),ds=document.getElementById('form-datumSmrti').value;
+  if(!ime||!ds){showToast('Ime i datum smrti su obavezni');return;}
+  const d={ime,datumRodj:document.getElementById('form-datumRodj').value,datumSmrti:ds,slika:document.getElementById('form-slika').value.trim(),opis:document.getElementById('form-opis').value.trim(),tekst:document.getElementById('form-tekst').value.trim(),kategorija:document.getElementById('form-kategorija').value,mesto:document.getElementById('form-mesto').value.trim(),datumSahrane:document.getElementById('form-datumSahrane').value};
+  if(editingId){const i=citulje.findIndex(c=>c.id===editingId);if(i>=0)citulje[i]={...citulje[i],...d};showToast('Čitulja izmenjena');}
+  else{d.id='cit-'+Date.now();d.createdAt=new Date().toISOString();citulje.push(d);showToast('Čitulja dodata');}
+  saveData();clearForm();switchTab('naslovnica');
+}
+function deleteCitulja(id){if(!confirm('Obrisati čitulju?'))return;citulje=citulje.filter(c=>c.id!==id);saveData();showToast('Čitulja obrisana');switchTab('naslovnica');}
+function exportData(){const d={citulje,candles:loadCandles(),memories:loadMemories(),date:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='vecna-arhiva-'+new Date().toISOString().slice(0,10)+'.json';a.click();showToast('Podaci izvezeni');}
+function importData(){const i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.citulje)citulje=d.citulje;if(d.candles)saveCandles(d.candles);if(d.memories)saveMemories(d.memories);saveData();showToast('Podaci uvezeni');renderCitulje();}catch(err){showToast('Greška');}};r.readAsText(f);};i.click();}
+function fmtDate(d){if(!d)return'?';try{return new Date(d).toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return d;}}
+function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+function showToast(m){const e=document.querySelector('.toast');if(e)e.remove();const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+function kmDebounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(()=>fn.apply(this,arguments),ms);};}
+loadData();
+if(isLoggedIn())showApp();else{document.getElementById('screen-login').style.display='flex';setTimeout(()=>{document.getElementById('login-username')?.focus();},100);}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+console.log('Večna Arhiva',VA_VERSION);
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.png
+  Cache-Control: public, max-age=86400
