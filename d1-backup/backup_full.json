@@ -1,0 +1,110 @@
+{
+  "export_date": "2026-08-10",
+  "source": "Cloudflare D1 - kmapp database",
+  "database_id": "4dcd7a55-9aa6-4dd9-8cd5-8c5a47c99b8b",
+  "data": {
+    "akti": {
+      "success": true,
+      "akti": []
+    },
+    "inbox_admin": {
+      "success": true,
+      "messages": []
+    },
+    "inbox_s.a": {
+      "success": true,
+      "messages": []
+    },
+    "inbox_test01": {
+      "success": true,
+      "messages": []
+    },
+    "login_logs": {
+      "success": true,
+      "logs": []
+    },
+    "pelceri": {
+      "success": true,
+      "pelceri": []
+    },
+    "sent_admin": {
+      "success": true,
+      "messages": [
+        {
+          "id": "d3860c92-3413-4e32-ab3a-de4be60453e1",
+          "sender": "admin",
+          "senderName": "",
+          "recipient": "S.A",
+          "recipientName": "",
+          "text": "Test poruka - da li radi notifikacija? 📱🔔",
+          "read": 0,
+          "created_date": "2026-08-08 12:47:00"
+        },
+        {
+          "id": "7bf5d04d-ac6d-4049-a0c3-7a0ad2bc8889",
+          "sender": "admin",
+          "senderName": "",
+          "recipient": "Milos.Avramov",
+          "recipientName": "",
+          "text": "Test poruka sa zvukom i notifikacijom! 📱🔔",
+          "read": 1,
+          "created_date": "2026-08-08 12:43:46"
+        },
+        {
+          "id": "87540609-4f0e-4730-bc1a-b6804400c881",
+          "sender": "admin",
+          "senderName": "Admin",
+          "recipient": "Milos.Avramov",
+          "recipientName": "Milos Avramov",
+          "text": "📱 TEST v196 - zvuk + vibracija + badge",
+          "read": 1,
+          "created_date": "2026-08-08 11:09:32"
+        },
+        {
+          "id": "562431dd-e68f-44ec-9e64-13935df28e94",
+          "sender": "admin",
+          "senderName": "Admin",
+          "recipient": "Milos.Avramov",
+          "recipientName": "Milos Avramov",
+          "text": "🔔 TEST PUSH - ovo treba da stigne kao notifikacija na telefon!",
+          "read": 1,
+          "created_date": "2026-08-08 11:00:45"
+        }
+      ]
+    },
+    "sent_s.a": {
+      "success": true,
+      "messages": []
+    },
+    "sent_test01": {
+      "success": true,
+      "messages": []
+    },
+    "users": {
+      "success": true,
+      "users": [
+        {
+          "id": "754d49e2-3123-435d-aeaa-bc9d554c50f6",
+          "username": "admin",
+          "password": "admin",
+          "displayName": "Admin",
+          "role": "admin"
+        },
+        {
+          "id": "cde996ed-587b-4875-a8af-79730a74c232",
+          "username": "s.a",
+          "password": "1234",
+          "displayName": "S.A",
+          "role": "user"
+        },
+        {
+          "id": "ec4bb407-9145-4409-a0f6-327c08e69f81",
+          "username": "test01",
+          "password": "test01",
+          "displayName": "Test01",
+          "role": "user"
+        }
+      ]
+    }
+  }
+}
