@@ -1050,6 +1050,93 @@
   .weather-forecast-desc { color: rgba(160,188,216,0.7); font-size: 0.7rem; flex: 1; }
   .weather-forecast-temps { color: #fff; font-size: 0.8rem; font-weight: 700; text-align: right; }
   .weather-forecast-temps span { color: rgba(160,188,216,0.6); font-weight: 400; font-size: 0.72rem; }
+
+  /* ===== SKELETON LOADING ===== */
+  .skeleton-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 8px 0;
+    border: 1px solid var(--border);
+  }
+  .skeleton-line {
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--border) 25%, var(--light) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    margin-bottom: 8px;
+  }
+  .skeleton-line:last-child { width: 60%; margin-bottom: 0; }
+  .skeleton-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(90deg, var(--border) 25%, var(--light) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    flex-shrink: 0;
+  }
+  .skeleton-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ===== SMOOTH TAB TRANSITIONS ===== */
+  .screen-content {
+    animation: screenFadeIn 0.25s ease-out;
+  }
+  @keyframes screenFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== EMPTY STATES ===== */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px 20px; text-align: center; gap: 12px;
+  }
+  .empty-state-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; color: var(--muted);
+  }
+  .empty-state-text { font-size: 0.85rem; color: var(--muted); }
+  .empty-state-hint { font-size: 0.72rem; color: var(--muted); opacity: 0.7; }
+
+  /* ===== LONG-PRESS MENU ===== */
+  .ctx-menu {
+    position: fixed; z-index: 9999;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    overflow: hidden;
+    min-width: 160px;
+    animation: ctxMenuPop 0.15s ease-out;
+  }
+  @keyframes ctxMenuPop {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .ctx-menu-item {
+    padding: 12px 16px; font-size: 0.85rem; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .ctx-menu-item:last-child { border-bottom: none; }
+  .ctx-menu-item:active { background: var(--light); }
+  .ctx-menu-item.danger { color: var(--danger); }
+  .ctx-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(0,0,0,0.15);
+    animation: fadeIn 0.1s ease-out;
+  }
 </style>
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1844,7 +1931,7 @@ document.addEventListener('click', function(e) {
   </div>
   <div id="poruke-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;position:relative;">
     <div id="ptr-indicator">↻</div>
-    <div style="text-align:center;color:var(--muted);padding:40px 0;">Učitavanje poruka...</div>
+    <div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:50%;"></div><div class="skeleton-line" style="width:80%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:40%;"></div><div class="skeleton-line" style="width:70%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:75%;"></div></div></div>
   </div>
 </div>
 
@@ -2965,6 +3052,9 @@ function switchTab(name) {
   if (screen) {
     screen.classList.add('active');
     screen.style.display = 'flex';
+    screen.classList.remove('screen-content');
+    void screen.offsetWidth;
+    screen.classList.add('screen-content');
   }
   const tab = document.getElementById('tab-' + name);
   if (tab) tab.classList.add('active');
@@ -3686,7 +3776,7 @@ function porukeView(view) {
 async function porukeRenderConversations() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
-  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
+  content.innerHTML = '<div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:50%;"></div><div class="skeleton-line" style="width:80%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:40%;"></div><div class="skeleton-line" style="width:70%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:75%;"></div></div></div>' ;
   
   const [inbox, sent] = await Promise.all([porukeFetchInbox(), porukeFetchSent()]);
   porukeInbox = inbox;
@@ -3729,7 +3819,7 @@ async function porukeRenderConversations() {
   convList.sort((a, b) => new Date(b.lastMsg.created_date || b.lastMsg.createdAt || 0) - new Date(a.lastMsg.created_date || a.lastMsg.createdAt || 0));
   
   if (convList.length === 0) {
-    content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\ud83d\udcac</div>Nemate razgovora</div>';
+    content.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-text">Nemate razgovora</div><div class="empty-state-hint">Pošaljite poruku da započnete razgovor</div></div>';
     return;
   }
   
@@ -3886,25 +3976,41 @@ function porukeOpenThread(partner, displayName) {
   content.innerHTML = html;
   content.scrollTop = content.scrollHeight;
   
-  // Long-press to show delete buttons on messages
+  // Long-press context menu for message bubbles
   (function() {
-    const bubbles = content.querySelectorAll('.msg-delete-btn');
     let pressTimer = null;
-    let deleteMode = false;
-    function toggleDeleteMode() {
-      deleteMode = !deleteMode;
-      bubbles.forEach(b => { b.style.display = deleteMode ? 'flex' : 'none'; });
-      if (deleteMode) {
-        showToast('Dodirni \u00d7 da obri\u0161e\u0161 poruku');
-      }
+    function showCtxMenu(e, msgId, msgText) {
+      e.preventDefault();
+      e.stopPropagation();
+      // Remove existing menu
+      document.querySelectorAll('.ctx-overlay, .ctx-menu').forEach(el => el.remove());
+      const x = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX) || 100;
+      const y = (e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY) || 100;
+      const overlay = document.createElement('div');
+      overlay.className = 'ctx-overlay';
+      overlay.onclick = () => { overlay.remove(); menu.remove(); };
+      const menu = document.createElement('div');
+      menu.className = 'ctx-menu';
+      menu.style.left = Math.min(x, window.innerWidth - 180) + 'px';
+      menu.style.top = Math.min(y, window.innerHeight - 120) + 'px';
+      menu.innerHTML = 
+        '<div class="ctx-menu-item" onclick="navigator.clipboard.writeText(\''+msgText.replace(/'/g,"\\'").replace(/\n/g,' ')+'\').then(()=>{showToast(\'Kopirano\');});this.parentElement.previousElementSibling.remove();this.parentElement.remove();">📋 Kopiraj</div>' +
+        '<div class="ctx-menu-item danger" onclick="porukeDeleteMessage(\''+msgId+'\');this.parentElement.previousElementSibling.remove();this.parentElement.remove();">🗑 Obriši</div>';
+      document.body.appendChild(overlay);
+      document.body.appendChild(menu);
+      haptic('medium');
     }
     content.querySelectorAll('[style*="position:relative"]').forEach(bubble => {
+      const msgId = (bubble.querySelector('[onclick*="porukeDeleteMessage"]') || {}).getAttribute && (bubble.querySelector('[onclick*="porukeDeleteMessage"]') || {}).getAttribute('onclick');
+      const msgText = bubble.querySelector('[style*="white-space:pre-wrap"]') ? bubble.querySelector('[style*="white-space:pre-wrap"]').textContent : '';
+      const id = msgId ? msgId.match(/porukeDeleteMessage\('([^']+)'\)/) : null;
+      const cleanId = id ? id[1] : '';
       bubble.addEventListener('touchstart', function(e) {
-        pressTimer = setTimeout(() => { toggleDeleteMode(); }, 600);
+        pressTimer = setTimeout(() => { showCtxMenu(e, cleanId, msgText); }, 500);
       });
       bubble.addEventListener('touchend', function() { clearTimeout(pressTimer); });
       bubble.addEventListener('touchmove', function() { clearTimeout(pressTimer); });
-      bubble.addEventListener('contextmenu', function(e) { e.preventDefault(); toggleDeleteMode(); });
+      bubble.addEventListener('contextmenu', function(e) { showCtxMenu(e, cleanId, msgText); });
     });
   })();
   
@@ -4019,10 +4125,10 @@ async function porukeThreadReply(partner, displayName) {
 async function porukeRenderInbox() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
-  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
+  content.innerHTML = '<div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:50%;"></div><div class="skeleton-line" style="width:80%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:40%;"></div><div class="skeleton-line" style="width:70%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:75%;"></div></div></div>' ;
   porukeInbox = (await porukeFetchInbox()).filter(m => !isMsgDeleted(m.id));
   if (porukeInbox.length === 0) {
-    content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\u{1F4ED}</div>Nemate primljenih poruka</div>';
+    content.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Nemate primljenih poruka</div><div class="empty-state-hint">Poruke će se pojaviti ovde</div></div>';
     return;
   }
   let html = '';
@@ -4059,10 +4165,10 @@ async function porukeRenderInbox() {
 async function porukeRenderSent() {
   const content = document.getElementById('poruke-content');
   if (!content) return;
-  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">Ucitavanje...</div>';
+  content.innerHTML = '<div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:50%;"></div><div class="skeleton-line" style="width:80%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:40%;"></div><div class="skeleton-line" style="width:70%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:75%;"></div></div></div>' ;
   porukeSent = (await porukeFetchSent()).filter(m => !isMsgDeleted(m.id));
   if (porukeSent.length === 0) {
-    content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:12px;">\u{1F4E4}</div>Niste poslali nijednu poruku</div>';
+    content.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📤</div><div class="empty-state-text">Niste poslali nijednu poruku</div><div class="empty-state-hint">Idite na Nova da pošaljete</div></div>';
     return;
   }
   let html = '';
@@ -4109,7 +4215,7 @@ function porukeRenderCompose() {
     '<div style="padding:8px 0;">' +
     '<div style="font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:8px;">Nova poruka</div>' +
     '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">Primaoc:</div>' +
-    '<input type="text" id="poruke-search" placeholder="Pretraga po imenu..." oninput="porukeFilterContacts()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;background:var(--card);margin-bottom:8px;outline:none;">' +
+    '<input type="text" id="poruke-search" placeholder="Pretraga po imenu..." oninput="kmDebounce(porukeFilterContacts, 250)()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;background:var(--card);margin-bottom:8px;outline:none;">' +
     '<div id="poruke-contact-list" style="max-height:240px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--card);"></div>' +
     '<div id="poruke-selected-display" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--navy);color:white;border-radius:10px;margin-bottom:10px;font-size:0.85rem;">' +
     '<span id="poruke-selected-text"></span>' +
@@ -16959,7 +17065,7 @@ function renderImenik(data) {
   document.getElementById('imenik-count').textContent = data.length;
 
   if (!data.length) {
-    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:0.88rem;"><div style="font-size:2rem;">👥</div>Nema rezultata.</div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Nema rezultata</div><div class="empty-state-hint">Pokušajte sa drugim imenom ili brojem</div></div>';
     return;
   }
 
@@ -18937,7 +19043,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v204';
+const KM_VERSION = 'v205';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -19339,7 +19445,7 @@ async function adminCreateUser() {
 async function adminLoadLoginLogs(range) {
   const el = document.getElementById('admin-login-logs');
   if (!el) return;
-  el.innerHTML = '<div style="color:var(--muted);">Učitavanje...</div>';
+  el.innerHTML = '<div class="skeleton-card"><div class="skeleton-line" style="width:70%;"></div><div class="skeleton-line" style="width:90%;"></div><div class="skeleton-line" style="width:50%;"></div></div><div class="skeleton-card"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:85%;"></div><div class="skeleton-line" style="width:45%;"></div></div>';
   try {
     const res = await fetchWithFallback(KM_API_BASE + '/getLoginLogs', {
       method: 'POST',
