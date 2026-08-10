@@ -41,8 +41,18 @@ body {
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: -1;
-  background: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 30%, #0d0d1a 100%),
-    radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.05) 0%, transparent 50%);
+  background: 
+    radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 40%, #12122a 70%, #0d0d1a 100%);
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(212,175,55,0.008) 35px, rgba(212,175,55,0.008) 36px),
+    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(212,175,55,0.008) 35px, rgba(212,175,55,0.008) 36px);
+  pointer-events: none;
 }
 
 /* SCROLLBAR */
