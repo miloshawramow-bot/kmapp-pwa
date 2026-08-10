@@ -1,7 +1,7 @@
 {
-  "name": "Večna Arhiva",
-  "short_name": "Večna",
-  "description": "Digitalne čitulje i memorijal",
+  "name": "Ve\u010dna Arhiva",
+  "short_name": "Ve\u010dna",
+  "description": "Digitalne \u010ditulje i memorijal",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
