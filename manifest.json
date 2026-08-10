@@ -4,8 +4,8 @@
   "description": "Digitalne \u010ditulje i memorijal",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
+  "background_color": "#10131f",
+  "theme_color": "#10131f",
   "orientation": "portrait",
   "icons": [
     {
