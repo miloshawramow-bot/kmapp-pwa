@@ -3161,6 +3161,73 @@ function closeSideMenu() {
   });
 })();
 
+// ===== SWIPE NAVIGATION (left/right between bottom tabs) =====
+(function() {
+  var bottomTabs = ['dashboard', 'poruke', 'imenik', 'podesavanja'];
+  var swipeStartX = 0;
+  var swipeStartY = 0;
+  var swipeStartTime = 0;
+  var isTracking = false;
+
+  document.addEventListener('touchstart', function(e) {
+    if (!isLoggedIn()) return;
+    // Only track single-finger swipes
+    if (e.touches.length !== 1) { isTracking = false; return; }
+    var touch = e.touches[0];
+    swipeStartX = touch.clientX;
+    swipeStartY = touch.clientY;
+    swipeStartTime = Date.now();
+    isTracking = true;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (!isTracking || !isLoggedIn()) { isTracking = false; return; }
+    isTracking = false;
+
+    var touch = e.changedTouches[0];
+    if (!touch) return;
+
+    var dx = touch.clientX - swipeStartX;
+    var dy = touch.clientY - swipeStartY;
+    var dt = Date.now() - swipeStartTime;
+
+    // Must be a horizontal swipe: |dx| > 60, |dy| < 50, fast enough (< 500ms)
+    if (Math.abs(dx) < 60 || Math.abs(dy) > 50 || dt > 500) return;
+
+    // Don't trigger on interactive elements
+    var target = e.target;
+    var tag = target.tagName ? target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if (target.closest('button, a, .chat-input-wrap, .leaflet-container, .mapboxgl-canvas, [data-no-swipe]')) return;
+
+    // Find current tab
+    var currentTab = null;
+    document.querySelectorAll('[id^="tab-"]').forEach(function(t) {
+      if (t.classList.contains('active')) {
+        currentTab = t.id.replace('tab-', '');
+      }
+    });
+    if (!currentTab) return;
+
+    var idx = bottomTabs.indexOf(currentTab);
+    if (idx === -1) return; // current screen not in bottom tab order
+
+    var newIdx;
+    if (dx < 0) {
+      // Swipe left -> next tab
+      newIdx = idx + 1;
+    } else {
+      // Swipe right -> previous tab
+      newIdx = idx - 1;
+    }
+
+    if (newIdx < 0 || newIdx >= bottomTabs.length) return;
+
+    haptic('light');
+    switchTab(bottomTabs[newIdx]);
+  }, { passive: true });
+})();
+
 // ===== PORUKE / CHAT =====
 // Primary: Cloudflare D1 API (no credit limit), Fallback: Base44 backend
 const KM_API_BASE_CF = '/api';
