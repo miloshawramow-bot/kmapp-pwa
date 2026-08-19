@@ -1889,7 +1889,7 @@ document.addEventListener('click', function(e) {
       <div class="settings-row">
         <span class="s-icon">📱</span>
         <span class="s-label">Verzija</span>
-        <span class="s-val">2.0.1</span>
+        <span class="s-val">2.0.7</span>
       </div>
       <div class="settings-row">
         <span class="s-icon">📂</span>
@@ -3125,9 +3125,10 @@ function switchTab(name) {
       try { renderAdminAktiList(); } catch(e) { console.error(e); }
       try { (typeof loadServerPelceri === 'function' ? loadServerPelceri() : Promise.resolve()).then(renderAdminPelceriList).catch(()=>{}); } catch(e) { console.error(e); }
       try { (typeof loadServerUsers === 'function' ? loadServerUsers() : Promise.resolve()).then(() => adminRenderUsersList()).catch(()=>{}); } catch(e) { console.error(e); }
-  
+      // Fallback: re-check admin access after 200ms (in case DOM wasn't ready)
+      setTimeout(function() { try { checkAdminAccess(); } catch(e) {} }, 200);
     }
-    if (name === 'pelceri') { renderPelceri(pelceriData); loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); if (!document.getElementById('cesti-prekrsaji-list').innerHTML) renderCestiPrekrsaji(); }
+    if (name === 'pelceri') { renderPelceri(pelceriData); loadServerPelceri().then(() => renderPelceri(pelceriData)).catch(()=>{}); if (!document.getElementById('cesti-prekrsaji-list').innerHTML || document.getElementById('cesti-prekrsaji-list').innerHTML.trim() === '') renderCestiPrekrsaji(); }
     if (name === 'kamera') { initFolderSelect(); renderPhotos(); }
     if (name === 'imenik') initImenik();
     if (name === 'kalendar') renderCalendar();
@@ -19752,7 +19753,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v205';
+const KM_VERSION = 'v207';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -20325,15 +20326,17 @@ function filterAdminLogs() {
 function checkAdminAccess() {
   try {
     const role = getCurrentUserRole();
-    console.log('checkAdminAccess: role=', role, 'user=', localStorage.getItem(KM_CURRENT_USER));
+    console.log('[KMapp] checkAdminAccess: role=', role, 'user=', localStorage.getItem(KM_CURRENT_USER));
     const el = document.getElementById('acc-admin');
-    if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
+    if (!el) { console.error('[KMapp] acc-admin element not found!'); return; }
+    el.style.display = (role === 'admin') ? 'block' : 'none';
+    console.log('[KMapp] acc-admin display set to:', el.style.display);
     if (role === 'admin') {
       try { renderAdminAktiList(); } catch(e) { console.error('renderAdminAktiList:', e); }
       try { renderAdminPelceriList(); } catch(e) { console.error('renderAdminPelceriList:', e); }
       try { adminRenderUsersList(); } catch(e) { console.error('adminRenderUsersList:', e); }
     }
-  } catch(e) { console.error('checkAdminAccess:', e); }
+  } catch(e) { console.error('[KMapp] checkAdminAccess error:', e); }
 }
 
 function checkMapAdminAccess() {
