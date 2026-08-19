@@ -420,7 +420,6 @@
   #doc-title:focus { border-bottom-color: var(--accent); }
 
   #doc-editor {
-    flex: 1;
     min-height: 280px;
     padding: 14px 16px;
     font-size: 11pt;
@@ -1587,7 +1586,7 @@ document.addEventListener('click', function(e) {
   </div>
   </div>
 
-  <div id="view-editor" style="display:none; flex-direction:column; flex:1; overflow-y:auto; min-height:0;">
+  <div id="view-editor" style="display:none; flex-direction:column; min-height:100%;">
     <div class="doc-toolbar">
       <button class="tb-btn" onclick="fmt(&#39;bold&#39;)"><b>B</b></button>
       <button class="tb-btn" onclick="fmt(&#39;italic&#39;)"><i>I</i></button>
