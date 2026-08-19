@@ -16,7 +16,12 @@ export async function onRequestPost({ env }) {
     `CREATE TABLE IF NOT EXISTS pelceri (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), kategorija TEXT, naziv TEXT, tekst TEXT, created_date TEXT DEFAULT (datetime('now')), updated_date TEXT DEFAULT (datetime('now')));`,
     `CREATE TABLE IF NOT EXISTS akti (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), tip TEXT, naziv TEXT, broj TEXT, sadrzaj TEXT, created_date TEXT DEFAULT (datetime('now')), updated_date TEXT DEFAULT (datetime('now')));`,
     `CREATE TABLE IF NOT EXISTS login_logs (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), username TEXT NOT NULL, device TEXT, created_date TEXT DEFAULT (datetime('now')));`,
-    `CREATE TABLE IF NOT EXISTS push_subscriptions (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), username TEXT NOT NULL, endpoint TEXT, keys_auth TEXT, keys_p256dh TEXT, subscription TEXT, lastNotifiedDate TEXT, created_date TEXT DEFAULT (datetime('now')), updated_date TEXT DEFAULT (datetime('now')));`
+    `CREATE TABLE IF NOT EXISTS push_subscriptions (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), username TEXT NOT NULL, endpoint TEXT, keys_auth TEXT, keys_p256dh TEXT, subscription TEXT, lastNotifiedDate TEXT, created_date TEXT DEFAULT (datetime('now')), updated_date TEXT DEFAULT (datetime('now')));`,
+    `CREATE TABLE IF NOT EXISTS activity_logs (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), username TEXT NOT NULL, action TEXT NOT NULL, details TEXT, created_date TEXT DEFAULT (datetime('now')));`,
+    `CREATE INDEX IF NOT EXISTS idx_activity_username ON activity_logs(username);`,
+    `CREATE INDEX IF NOT EXISTS idx_activity_date ON activity_logs(created_date);`,
+    `CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_logs(action);`,
+    `CREATE TABLE IF NOT EXISTS shared_docs (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), downloadKey TEXT UNIQUE, title TEXT, fileContent TEXT, created_date TEXT DEFAULT (datetime('now')));`
   ];
 
   const results = [];

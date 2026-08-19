@@ -1437,7 +1437,8 @@ document.addEventListener('click', function(e) {
 
 <!-- More grid overlay -->
 <!-- ===== DASHBOARD / POCETNI EKRAN ===== -->
-<div class="screen" id="screen-dashboard" style="display: none; align-items: center; padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, rgba(13, 34, 64, 0.75) 0%, rgba(26, 74, 138, 0.55) 100%), url('assets/beograd-bg.png') center/cover;">
+<div id="km-offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e74c3c;color:white;padding:6px 12px;font-size:0.75rem;text-align:center;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.2);">📡 Offline režim — prikazani su sačuvani podaci</div>
+  <div class="screen" id="screen-dashboard" style="display: none; align-items: center; padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, rgba(13, 34, 64, 0.75) 0%, rgba(26, 74, 138, 0.55) 100%), url('assets/beograd-bg.png') center/cover;">
   <div class="dash-clock" id="dash-clock">--:--</div>
   <div class="dash-date" id="dash-date">--</div>
   <div class="dash-weather-card" id="dash-weather-card" onclick="openWeatherForecast()" style="cursor:pointer;">
@@ -1613,6 +1614,7 @@ document.addEventListener('click', function(e) {
     </div>
     <div class="doc-actions" style="border-top:none; padding-top:0;">
       <button class="btn-main btn-word" onclick="downloadDocx()" style="background:#1a6eb5;">📄 Preuzmi kao Word (.docx)</button>
+      <button class="btn-main" onclick="shareDocQR()" style="background:#8e44ad;color:white;">🔗 QR kod</button>
     </div>
   </div>
 </div>
@@ -1812,9 +1814,13 @@ document.addEventListener('click', function(e) {
             <button onclick="adminLoadLoginLogs('today')" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">🔄 Danas</button>
             <button onclick="adminLoadLoginLogs('all')" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📊 Istorija</button>
             <button onclick="exportLoginLogsCSV()" style="background:#27ae60;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">⬇️ CSV</button>
+            <button onclick="exportLoginLogsWord()" style="background:#2e7dd1;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📄 Word</button>
+            <button onclick="loadSessionTimes()" style="background:#8e44ad;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">⏱️ Vreme</button>
+            <button onclick="broadcastUpdateNotification()" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">📢 Obavesti sve</button>
           </div>
         </div>
-        <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);">Kliknite dugme da vidite ko se prijavio.</div>
+        <div id="admin-session-times" style="font-size:0.8rem;color:var(--muted);margin-top:8px;display:none;">Kliknite dugme da vidite koliko su korisnici proveli u aplikaciji.</div>
+        <div id="admin-login-logs" style="font-size:0.8rem;color:var(--muted);margin-top:8px;">Kliknite dugme da vidite ko se prijavio.</div>
       </div>
 
 
@@ -1931,6 +1937,7 @@ document.addEventListener('click', function(e) {
   </div>
   <div id="poruke-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;position:relative;">
     <div id="ptr-indicator">↻</div>
+    <div id="ptr-docs-indicator" style="position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-60px);z-index:9000;width:40px;height:40px;background:var(--card);border:1.5px solid var(--border);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:1.2rem;color:var(--navy);box-shadow:0 2px 12px rgba(0,0,0,0.15);transition:opacity 0.3s;opacity:0;pointer-events:none;">↻</div>
     <div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:50%;"></div><div class="skeleton-line" style="width:80%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:40%;"></div><div class="skeleton-line" style="width:70%;"></div></div></div><div class="skeleton-row"><div class="skeleton-avatar"></div><div style="flex:1;"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:75%;"></div></div></div>
   </div>
 </div>
@@ -3061,6 +3068,7 @@ function switchTab(name) {
   try {
     if (name === 'akti') filterAkti();
     if (name === 'podesavanja') {
+      try { kmCheckOffline(); } catch(e) {}
       try { checkAdminAccess(); } catch(e) { console.error(e); }
       try { updateSettings(); } catch(e) { console.error(e); }
       try { renderAdminAktiList(); } catch(e) { console.error(e); }
@@ -4817,6 +4825,10 @@ function doLogin() {
     localStorage.setItem(KM_DISPLAY_NAME, user.displayName || user.username);
     // Set login flag IMMEDIATELY — porukeCheckNew will pick it up
     localStorage.setItem('km_pendingLoginLog', navigator.userAgent.substring(0, 120));
+    // Directly save login log to server
+    try { fetch('/api/saveLoginLog', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: user.username, device: navigator.userAgent.substring(0, 120) }) }); } catch(e) {}
+    // Start session tracking
+    try { sessionStorage.setItem('km_session_start', Date.now()); fetch('/api/saveActivityLog', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: user.username, action: 'session_start', details: '' }) }); } catch(e) {}
     errEl.style.display = 'none';
     document.getElementById('login-password').value = '';
     var tabLogin = document.getElementById('tab-login'); if (tabLogin) tabLogin.style.display = 'none';
@@ -17226,6 +17238,7 @@ function closeImenikModal() {
   <div style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;z-index:10;">
     <button onclick="setMapLayer(&#39;standard&#39;)" id="btn-standard" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:white;cursor:pointer;">🗺️ Ulična</button>
     <button onclick="setMapLayer(&#39;satellite&#39;)" id="btn-satellite" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🛰️ Satelit</button>
+      <button onclick="setMapLayer(&#39;dark&#39;)" id="btn-dark" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🌙 Noć</button>
     <button onclick="locateMe()" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid #27ae60;background:#27ae60;color:white;cursor:pointer;">📍 Moja lok.</button>
     <button onclick="if(leafletMap){leafletMap.setView([44.8125,20.4573],13);if(mapMarker){leafletMap.removeLayer(mapMarker);mapMarker=null;}if(mapCircle){leafletMap.removeLayer(mapCircle);mapCircle=null;}var i=document.getElementById('map-info');if(i)i.style.display='none';}" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">🔄 Reset</button>
     <button onclick="toggleMapFullscreen()" id="btn-fullscreen" style="flex:1;padding:7px 4px;font-size:0.72rem;font-weight:700;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">⛶ Ceo</button>
@@ -18488,6 +18501,7 @@ async function sharePhotoGmail() {
 var leafletMap = null;
 var tileStandard = null;
 var tileSatellite = null;
+  tileDark = null;
 var mapMarker = null;
 var mapCircle = null;
 
@@ -18508,6 +18522,9 @@ function initLeafletMap() {
   tileSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: '© Esri', maxZoom: 19
   });
+  tileDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+    attribution: '© CARTO', maxZoom: 19
+  });
   setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 100);
   setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 300);
   setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 600);
@@ -18516,16 +18533,28 @@ function initLeafletMap() {
 
 function setMapLayer(layer) {
   currentLayer = layer;
+  // Auto-apply dark map if dark mode is on
+  if (document.body.classList.contains('dark-mode') && layer === 'standard') {
+    layer = 'dark';
+  }
   document.getElementById('btn-standard').style.background = layer === 'standard' ? 'var(--accent)' : 'white';
   document.getElementById('btn-standard').style.color = layer === 'standard' ? 'white' : 'var(--text)';
   document.getElementById('btn-satellite').style.background = layer === 'satellite' ? 'var(--accent)' : 'white';
   document.getElementById('btn-satellite').style.color = layer === 'satellite' ? 'white' : 'var(--text)';
+  var btnDark = document.getElementById('btn-dark');
+  if (btnDark) { btnDark.style.background = layer === 'dark' ? 'var(--accent)' : 'white'; btnDark.style.color = layer === 'dark' ? 'white' : 'var(--text)'; }
   if (!leafletMap) initLeafletMap();
   if (layer === 'satellite') {
     if (tileStandard && leafletMap.hasLayer(tileStandard)) leafletMap.removeLayer(tileStandard);
+    if (tileDark && leafletMap.hasLayer(tileDark)) leafletMap.removeLayer(tileDark);
     if (tileSatellite && !leafletMap.hasLayer(tileSatellite)) tileSatellite.addTo(leafletMap);
+  } else if (layer === 'dark' && tileDark) {
+    if (tileStandard && leafletMap.hasLayer(tileStandard)) leafletMap.removeLayer(tileStandard);
+    if (tileSatellite && leafletMap.hasLayer(tileSatellite)) leafletMap.removeLayer(tileSatellite);
+    if (!leafletMap.hasLayer(tileDark)) tileDark.addTo(leafletMap);
   } else {
     if (tileSatellite && leafletMap.hasLayer(tileSatellite)) leafletMap.removeLayer(tileSatellite);
+    if (tileDark && leafletMap.hasLayer(tileDark)) leafletMap.removeLayer(tileDark);
     if (tileStandard && !leafletMap.hasLayer(tileStandard)) tileStandard.addTo(leafletMap);
   }
 }
@@ -18914,6 +18943,143 @@ async function exportLoginLogsCSV() {
     showToast('✅ CSV preuzet (' + logs.length + ' zapisa)');
   } catch(e) {
     showToast('❌ Greška pri eksportu: ' + e.message);
+  }
+}
+async function exportLoginLogsWord() {
+  showToast('⏳ Pripremam Word izveštaj...');
+  try {
+    var logs = [];
+    if (KM_API_BASE) {
+      var res = await fetchWithFallback(KM_API_BASE + '/getLoginLogs', { method: 'POST' });
+      if (res && res.ok) {
+        var data = await res.json();
+        logs = Array.isArray(data) ? data : (data.logs || []);
+      }
+    }
+    if (!logs.length) {
+      showToast('⚠️ Nema login zapisa za eksport');
+      return;
+    }
+    
+    var now = new Date();
+    var dateStr = now.toLocaleDateString('sr-RS');
+    var timeStr = now.toLocaleTimeString('sr-RS');
+    
+    // Build HTML for Word (.doc)
+    var rows = '';
+    logs.forEach(function(log, idx) {
+      var ts = log.timestamp || log.created_date || log.date || '';
+      var date = ts ? new Date(ts).toLocaleDateString('sr-RS') : '';
+      var time = ts ? new Date(ts).toLocaleTimeString('sr-RS') : '';
+      var device = (log.device || '').substring(0, 80);
+      var username = log.username || '';
+      rows += '<tr>' +
+        '<td style="border:1px solid #999;padding:6px 10px;">' + (idx+1) + '</td>' +
+        '<td style="border:1px solid #999;padding:6px 10px;font-weight:bold;">' + username + '</td>' +
+        '<td style="border:1px solid #999;padding:6px 10px;">' + date + '</td>' +
+        '<td style="border:1px solid #999;padding:6px 10px;">' + time + '</td>' +
+        '<td style="border:1px solid #999;padding:6px 10px;font-size:0.85em;color:#555;">' + device + '</td>' +
+        '</tr>';
+    });
+    
+    var htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+      '<head><meta charset="utf-8"><style>' +
+      'body { font-family: "Segoe UI", Arial, sans-serif; margin: 40px; }' +
+      'h1 { color: #0d2240; font-size: 22px; margin-bottom: 4px; }' +
+      '.subtitle { color: #555; font-size: 13px; margin-bottom: 20px; }' +
+      '.info { font-size: 13px; color: #333; margin-bottom: 16px; }' +
+      'table { border-collapse: collapse; width: 100%; font-size: 12px; }' +
+      'th { background: #0d2240; color: white; border: 1px solid #0d2240; padding: 8px 10px; text-align: left; }' +
+      '.footer { margin-top: 20px; font-size: 11px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; }' +
+      '</style></head><body>' +
+      '<h1>KMapp — Izveštaj o prijavama korisnika</h1>' +
+      '<div class="subtitle">Komunalna aplikacija — Administracija</div>' +
+      '<div class="info"><b>Datum izveštaja:</b> ' + dateStr + ' u ' + timeStr + '<br>' +
+      '<b>Ukupno prijava:</b> ' + logs.length + '</div>' +
+      '<table><thead><tr>' +
+      '<th>#</th><th>Korisnik</th><th>Datum</th><th>Vreme</th><th>Uređaj</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="footer">Generisano automatski od strane KMapp aplikacije — ' + dateStr + '</div>' +
+      '</body></html>';
+    
+    var blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'kmapp_login_izvestaj_' + now.toISOString().slice(0,10) + '.doc';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ Word izveštaj preuzet (' + logs.length + ' zapisa)');
+  } catch(e) {
+    showToast('❌ Greška: ' + e.message);
+  }
+}
+async function loadSessionTimes() {
+  var el = document.getElementById('admin-session-times');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = '⏳ Učitavam...';
+  try {
+    var res = await fetchWithFallback(KM_API_BASE + '/getActivityLogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: 500 })
+    });
+    var data = await res.json();
+    var logs = data.logs || [];
+    if (!logs.length) {
+      el.innerHTML = '<div style="color:#999;">Nema zabeleženih sesija.</div>';
+      return;
+    }
+    
+    // Group by username: calculate total time from session pairs
+    var sessions = {};
+    var sessionStarts = {};
+    logs.forEach(function(log) {
+      var u = log.username;
+      if (!sessions[u]) sessions[u] = { totalSecs: 0, sessions: [], lastSeen: '' };
+      if (log.action === 'session_start') {
+        sessionStarts[u] = log.created_date;
+      } else if (log.action === 'session_end' || log.action === 'session_heartbeat') {
+        if (sessionStarts[u]) {
+          // Parse duration from details
+          var m = (log.details || '').match(/(\d+)m (\d+)s/);
+          if (m) {
+            var secs = parseInt(m[1]) * 60 + parseInt(m[2]);
+            sessions[u].totalSecs += secs;
+            sessions[u].sessions.push({ start: sessionStarts[u], end: log.created_date, duration: m[1] + 'm ' + m[2] + 's' });
+          }
+          sessions[u].lastSeen = log.created_date;
+          if (log.action === 'session_end') delete sessionStarts[u];
+        }
+      }
+    });
+    
+    // Build display
+    var html = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.78rem;">';
+    html += '<tr style="background:var(--navy);color:white;"><th style="padding:6px;border:1px solid var(--navy);text-align:left;">Korisnik</th>';
+    html += '<th style="padding:6px;border:1px solid var(--navy);text-align:left;">Ukupno vreme</th>';
+    html += '<th style="padding:6px;border:1px solid var(--navy);text-align:left;">Sesija</th>';
+    html += '<th style="padding:6px;border:1px solid var(--navy);text-align:left;">Poslednji put</th></tr>';
+    
+    var users = Object.keys(sessions).sort(function(a,b) { return sessions[b].totalSecs - sessions[a].totalSecs; });
+    users.forEach(function(u) {
+      var s = sessions[u];
+      var h = Math.floor(s.totalSecs / 3600);
+      var m = Math.floor((s.totalSecs % 3600) / 60);
+      var totalStr = (h > 0 ? h + 'h ' : '') + m + 'm';
+      var lastDate = s.lastSeen ? new Date(s.lastSeen + 'Z').toLocaleString('sr-RS') : '-';
+      html += '<tr><td style="padding:5px 6px;border:1px solid #ddd;font-weight:bold;">' + u + '</td>';
+      html += '<td style="padding:5px 6px;border:1px solid #ddd;">' + totalStr + '</td>';
+      html += '<td style="padding:5px 6px;border:1px solid #ddd;">' + s.sessions.length + '</td>';
+      html += '<td style="padding:5px 6px;border:1px solid #ddd;font-size:0.75em;color:#666;">' + lastDate + '</td></tr>';
+    });
+    html += '</table></div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div style="color:#c0392b;">Greška: ' + e.message + '</div>';
   }
 }
 
@@ -19509,10 +19675,11 @@ async function adminCreateUser() {
   }
 }
 
+let adminLoginLogsCache = [];
 async function adminLoadLoginLogs(range) {
   const el = document.getElementById('admin-login-logs');
   if (!el) return;
-  el.innerHTML = '<div class="skeleton-card"><div class="skeleton-line" style="width:70%;"></div><div class="skeleton-line" style="width:90%;"></div><div class="skeleton-line" style="width:50%;"></div></div><div class="skeleton-card"><div class="skeleton-line" style="width:60%;"></div><div class="skeleton-line" style="width:85%;"></div><div class="skeleton-line" style="width:45%;"></div></div>';
+  el.innerHTML = '<div class="skeleton-card"><div class="skeleton-line" style="width:70%;"></div><div class="skeleton-line" style="width:90%;"></div><div class="skeleton-line" style="width:50%;"></div></div>';
   try {
     const res = await fetchWithFallback(KM_API_BASE + '/getLoginLogs', {
       method: 'POST',
@@ -19521,19 +19688,73 @@ async function adminLoadLoginLogs(range) {
     });
     const data = await res.json();
     if (data.success && data.logs && data.logs.length > 0) {
-      el.innerHTML = data.logs.map(log => 
-        '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--card);">' +
-        '<div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;">' + (log.username || '?').charAt(0).toUpperCase() + '</div>' +
-        '<div style="flex:1;"><div style="font-size:0.78rem;font-weight:600;">' + (log.username || '') + '</div>' +
-        '<div style="font-size:0.66rem;color:var(--muted);">' + (log.device || log.timestamp || '').substring(0, 40) + '</div></div>' +
-        '</div>'
-      ).join('');
+      adminLoginLogsCache = data.logs;
+      renderAdminLoginLogs(data.logs);
     } else {
+      adminLoginLogsCache = [];
       el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px;">Nema prijava.</div>';
     }
   } catch(e) {
     el.innerHTML = '<div style="color:var(--danger);">Greška pri učitavanju.</div>';
   }
+}
+
+function renderAdminLoginLogs(logs) {
+  const el = document.getElementById('admin-login-logs');
+  if (!el) return;
+  
+  // Filter controls
+  var html = '<div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;">';
+  html += '<input type="text" id="admin-logs-filter" placeholder="Filtriraj po korisniku..." oninput="filterAdminLogs()" style="flex:1;min-width:120px;border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:0.78rem;outline:none;background:var(--card);color:var(--text);" />';
+  html += '<select id="admin-logs-sort" onchange="filterAdminLogs()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:0.78rem;outline:none;background:var(--card);color:var(--text);">';
+  html += '<option value="newest">Najnovije prvo</option>';
+  html += '<option value="oldest">Najstarije prvo</option>';
+  html += '<option value="username">Po korisniku</option>';
+  html += '</select>';
+  html += '</div>';
+  
+  if (!logs.length) {
+    html += '<div style="color:var(--muted);text-align:center;padding:12px;">Nema rezultata.</div>';
+    el.innerHTML = html;
+    return;
+  }
+  
+  html += '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:6px;">' + logs.length + ' zapisa</div>';
+  
+  html += logs.map(log => {
+    var ts = log.created_date || log.timestamp || '';
+    var dateStr = ts ? new Date(ts + (ts.includes('Z') ? '' : 'Z')).toLocaleString('sr-RS') : '';
+    var deviceShort = (log.device || '').substring(0, 50);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--card);">' +
+    '<div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;">' + (log.username || '?').charAt(0).toUpperCase() + '</div>' +
+    '<div style="flex:1;"><div style="font-size:0.78rem;font-weight:600;">' + (log.username || '') + '</div>' +
+    '<div style="font-size:0.66rem;color:var(--muted);">' + dateStr + '</div>' +
+    '<div style="font-size:0.62rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + deviceShort + '</div></div>' +
+    '</div>';
+  }).join('');
+  
+  el.innerHTML = html;
+}
+
+function filterAdminLogs() {
+  var q = (document.getElementById('admin-logs-filter') || {}).value || '';
+  q = q.toLowerCase();
+  var sort = (document.getElementById('admin-logs-sort') || {}).value || 'newest';
+  
+  var filtered = adminLoginLogsCache.filter(function(log) {
+    if (!q) return true;
+    return (log.username || '').toLowerCase().includes(q) || (log.device || '').toLowerCase().includes(q);
+  });
+  
+  if (sort === 'newest') {
+    filtered.sort(function(a,b) { return (b.created_date || '').localeCompare(a.created_date || ''); });
+  } else if (sort === 'oldest') {
+    filtered.sort(function(a,b) { return (a.created_date || '').localeCompare(b.created_date || ''); });
+  } else if (sort === 'username') {
+    filtered.sort(function(a,b) { return (a.username || '').localeCompare(b.username || ''); });
+  }
+  
+  renderAdminLoginLogs(filtered);
 }
 
 function checkAdminAccess() {
@@ -20111,6 +20332,231 @@ navigator.serviceWorker.addEventListener('message', function(event) {
     } catch(e) { console.log('Sound play failed:', e.message); }
   }
 });
+
+
+
+// ===== OFFLINE CACHE for messages & akti =====
+function kmSaveOfflineCache(key, data) {
+  try { localStorage.setItem('km_offline_' + key, JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+}
+function kmLoadOfflineCache(key, maxAgeMs) {
+  try {
+    var raw = localStorage.getItem('km_offline_' + key);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    if (maxAgeMs && (Date.now() - parsed.ts > maxAgeMs)) return null;
+    return parsed.data;
+  } catch(e) { return null; }
+}
+// Auto-save messages to offline cache when fetched
+function kmCacheMessages() {
+  try {
+    if (typeof porukeConversations !== 'undefined') kmSaveOfflineCache('conversations', porukeConversations);
+    if (typeof porukeInbox !== 'undefined') kmSaveOfflineCache('inbox', porukeInbox);
+  } catch(e) {}
+}
+// Check if online
+function kmIsOnline() { return navigator.onLine; }
+// Show offline banner
+function kmCheckOffline() {
+  var banner = document.getElementById('km-offline-banner');
+  if (!banner) return;
+  if (!navigator.onLine) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+window.addEventListener('online', function() { kmCheckOffline(); showToast('🌐 Povezan sa internetom — sinhronizacija...'); });
+window.addEventListener('offline', function() { kmCheckOffline(); showToast('📡 Nema interneta — offline režim aktivan'); });
+
+// === SESSION TIME TRACKING ===
+function kmEndSession() {
+  try {
+    var username = localStorage.getItem('km_currentUser');
+    var start = sessionStorage.getItem('km_session_start');
+    if (!username || !start) return;
+    var duration = Math.round((Date.now() - parseInt(start)) / 1000); // seconds
+    var mins = Math.floor(duration / 60);
+    var secs = duration % 60;
+    var details = mins + 'm ' + secs + 's';
+    var body = JSON.stringify({ username: username, action: 'session_end', details: details });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/saveActivityLog', new Blob([body], { type: 'application/json' }));
+    } else {
+      fetch('/api/saveActivityLog', { method: 'POST', headers: {'Content-Type':'application/json'}, body: body });
+    }
+    sessionStorage.removeItem('km_session_start');
+  } catch(e) {}
+}
+window.addEventListener('pagehide', kmEndSession);
+window.addEventListener('beforeunload', kmEndSession);
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    // Don't end session immediately - user might come back
+    // But send a heartbeat with current duration
+    try {
+      var username = localStorage.getItem('km_currentUser');
+      var start = sessionStorage.getItem('km_session_start');
+      if (username && start) {
+        var duration = Math.round((Date.now() - parseInt(start)) / 1000);
+        var mins = Math.floor(duration / 60);
+        var secs = duration % 60;
+        var body = JSON.stringify({ username: username, action: 'session_heartbeat', details: mins + 'm ' + secs + 's' });
+        if (navigator.sendBeacon) navigator.sendBeacon('/api/saveActivityLog', new Blob([body], { type: 'application/json' }));
+      }
+    } catch(e) {}
+  }
+});
+
+
+// ===== QR CODE for document sharing =====
+function shareDocQR() {
+  var title = document.getElementById('doc-title').value.trim() || 'Dokument';
+  var editorContent = document.getElementById('doc-editor').innerHTML;
+  
+  // Save to server for sharing
+  var textContent = editorContent.replace(/<[^>]+>/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  var shareData = { title: title, content: editorContent, text: textContent };
+  
+  // Store locally and create a share key
+  var shareKey = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+  try { localStorage.setItem('km_sharedoc_' + shareKey, JSON.stringify(shareData)); } catch(e) {}
+  
+  // Build share URL
+  var shareUrl = 'https://kmapp-n37.pages.dev/?doc=' + shareKey;
+  
+  // Generate QR using inline SVG API (free, no key needed)
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(shareUrl);
+  
+  // Show modal with QR
+  var modal = document.getElementById('modal-title');
+  var body = document.getElementById('modal-body');
+  if (!modal || !body) return;
+  
+  modal.textContent = '🔗 QR kod za deljenje';
+  body.innerHTML = 
+    '<div style="text-align:center;padding:10px;">' +
+    '<img src="' + qrUrl + '" alt="QR kod" style="width:220px;height:220px;border-radius:12px;border:2px solid var(--border);margin-bottom:12px;" />' +
+    '<div style="font-size:0.82rem;color:var(--muted);margin-bottom:8px;">Skeniraj QR kod da otvoriš dokument</div>' +
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;">' +
+    '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;">Direktni link:</div>' +
+    '<div style="font-size:0.78rem;word-break:break-all;color:var(--blue);">' + shareUrl + '</div>' +
+    '</div>' +
+    '<button onclick="navigator.clipboard.writeText(\'' + shareUrl + '\').then(()=>showToast(\'Link kopiran!\'))" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:10px 20px;font-size:0.85rem;font-weight:600;cursor:pointer;width:100%;">📋 Kopiraj link</button>' +
+    '</div>';
+  
+  // Show modal
+  var modalEl = document.getElementById('akt-modal');
+  if (modalEl) modalEl.style.display = 'flex';
+  
+  // Also save to server
+  try {
+    fetch('/api/saveSharedDoc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ downloadKey: shareKey, title: title, fileContent: textContent.substring(0, 50000) })
+    });
+  } catch(e) {}
+}
+
+
+// ===== PULL-TO-REFRESH for Documents =====
+(function() {
+  let ptrDocsStartY = 0;
+  let ptrDocsPulling = false;
+  let ptrDocsThreshold = 70;
+  let ptrDocsIndicator = null;
+  let ptrDocsContainer = null;
+
+  function initDocsPtr() {
+    ptrDocsContainer = document.getElementById('view-list');
+    ptrDocsIndicator = document.getElementById('ptr-docs-indicator');
+    if (!ptrDocsContainer || !ptrDocsIndicator) return;
+
+    ptrDocsContainer.addEventListener('touchstart', function(e) {
+      if (ptrDocsContainer.scrollTop <= 0) {
+        ptrDocsStartY = e.touches[0].clientY;
+        ptrDocsPulling = true;
+      } else { ptrDocsPulling = false; }
+    }, { passive: true });
+
+    ptrDocsContainer.addEventListener('touchmove', function(e) {
+      if (!ptrDocsPulling) return;
+      const pullDistance = e.touches[0].clientY - ptrDocsStartY;
+      if (pullDistance > 10 && ptrDocsContainer.scrollTop <= 0) {
+        const progress = Math.min(pullDistance / ptrDocsThreshold, 1);
+        ptrDocsIndicator.classList.add('ptr-visible');
+        ptrDocsIndicator.style.display = 'flex';
+        ptrDocsIndicator.style.transform = 'translateX(-50%) translateY(' + Math.min(pullDistance * 0.5, 40) + 'px) rotate(' + (progress * 360) + 'deg)';
+        ptrDocsIndicator.style.opacity = progress;
+        if (pullDistance >= ptrDocsThreshold) {
+          ptrDocsIndicator.style.background = 'var(--blue)';
+          ptrDocsIndicator.style.color = 'white';
+        } else {
+          ptrDocsIndicator.style.background = 'var(--card)';
+          ptrDocsIndicator.style.color = 'var(--navy)';
+        }
+      }
+    }, { passive: true });
+
+    ptrDocsContainer.addEventListener('touchend', async function(e) {
+      if (!ptrDocsPulling) return;
+      ptrDocsPulling = false;
+      var pullDist = parseInt((ptrDocsIndicator.style.transform.match(/translateY\((\d+)px/)||[,'0'])[1]) || 0;
+      if (pullDist >= ptrDocsThreshold) {
+        if (typeof haptic === 'function') haptic('medium');
+        ptrDocsIndicator.innerHTML = '⏳';
+        // Reload docs list
+        try { renderDocs(); } catch(e) {}
+        await new Promise(r => setTimeout(r, 600));
+        ptrDocsIndicator.innerHTML = '✓';
+        if (typeof haptic === 'function') haptic('light');
+        showToast('📄 Dokumenti osveženi');
+        setTimeout(() => {
+          ptrDocsIndicator.style.display = 'none';
+          ptrDocsIndicator.style.transform = '';
+          ptrDocsIndicator.style.opacity = '';
+          ptrDocsIndicator.innerHTML = '↻';
+        }, 600);
+      } else {
+        ptrDocsIndicator.style.display = 'none';
+        ptrDocsIndicator.style.transform = '';
+        ptrDocsIndicator.style.opacity = '';
+      }
+    }, { passive: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDocsPtr);
+  } else {
+    initDocsPtr();
+  }
+})();
+
+
+async function broadcastUpdateNotification() {
+  if (!confirm('Poslati push notifikaciju svim korisnicima o ažuriranju aplikacije?')) return;
+  showToast('📢 Slanje notifikacije svim korisnicima...');
+  try {
+    var res = await fetch('/api/broadcastPush', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'KMapp — Ažurirano!',
+        message: 'Aplikacija je ažurirana i radi bolje i stabilnije. Otvorite za novu verziju.'
+      })
+    });
+    var data = await res.json();
+    if (data.success) {
+      showToast('✅ Notifikacija poslata: ' + data.sent + ' korisnika, ' + (data.failed || 0) + ' greški');
+    } else {
+      showToast('⚠️ ' + (data.error || 'Greška pri slanju'));
+    }
+  } catch(e) {
+    showToast('❌ Greška: ' + e.message);
+  }
+}
 
 </script>
 </body></html>

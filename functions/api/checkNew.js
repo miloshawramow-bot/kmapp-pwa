@@ -6,6 +6,17 @@ export async function onRequestPost({ request, env }) {
     const { DB } = env;
     const username = body.username || '';
     const lastCheck = body.lastCheck || '1970-01-01';
+    
+    // Save login log if flagged
+    if (body.logLogin && username) {
+      try {
+        await DB.prepare('INSERT INTO login_logs (username, device) VALUES (?, ?)')
+          .bind(username, body.device || '').run();
+      } catch (logErr) {
+        console.error('Login log error:', logErr.message);
+      }
+    }
+    
     const result = await DB.prepare('SELECT COUNT(*) as count FROM messages WHERE recipient = ? AND read = 0 AND created_date > ?')
       .bind(username, lastCheck).first();
     const count = result ? result.count : 0;
