@@ -1587,7 +1587,7 @@ document.addEventListener('click', function(e) {
   </div>
   </div>
 
-  <div id="view-editor" style="display:none; flex-direction:column; flex:1;">
+  <div id="view-editor" style="display:none; flex-direction:column; flex:1; overflow-y:auto; min-height:0;">
     <div class="doc-toolbar">
       <button class="tb-btn" onclick="fmt(&#39;bold&#39;)"><b>B</b></button>
       <button class="tb-btn" onclick="fmt(&#39;italic&#39;)"><i>I</i></button>
@@ -1612,7 +1612,7 @@ document.addEventListener('click', function(e) {
       <button class="btn-main btn-viber" onclick="shareDoc(&#39;viber&#39;)">📲 Viber</button>
       <button class="btn-main btn-gmail" onclick="shareDoc(&#39;gmail&#39;)">✉️ Gmail</button>
     </div>
-    <div class="doc-actions" style="border-top:none; padding-top:0;">
+    <div class="doc-actions" style="border-top:none; padding-top:0; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));">
       <button class="btn-main btn-word" onclick="downloadDocx()" style="background:#1a6eb5;">📄 Preuzmi kao Word (.docx)</button>
       <button class="btn-main" onclick="shareDocQR()" style="background:#8e44ad;color:white;">🔗 QR kod</button>
     </div>
