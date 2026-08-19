@@ -1465,6 +1465,7 @@ document.addEventListener('click', function(e) {
       <div style="font-size:1.2rem;color:rgba(160,188,216,0.5);flex-shrink:0;">→</div>
     </div>
   </div>
+
 </div>
 
 <!-- ===== DOKUMENTI ===== -->
@@ -1561,6 +1562,14 @@ document.addEventListener('click', function(e) {
         📂 Uvezi Word
       </button>
     </div>
+    <div style="display:flex; gap:8px; margin:6px 12px 0;">
+      <button class="new-doc-btn" onclick="toggleCalendar()" style="margin:0; flex:1; background:#8e44ad;">
+        📅 Kalendar
+      </button>
+      <button class="new-doc-btn" onclick="autoPrijavaPhoto()" style="margin:0; flex:1; background:#c0392b;">
+        🚨 Prijava iz slike
+      </button>
+    </div>
     <input type="file" id="word-import" accept=".doc,.docx" style="display:none" onchange="importWord(event)">
     <div style="margin:8px 12px 0; padding:9px 12px; background:#e8f0fb; border-radius:8px; font-size:0.72rem; color:#1a4a8a; line-height:1.5;">
       💡 Uvezite .doc ili .docx fajl — tekst će biti učitan u editor
@@ -1586,6 +1595,19 @@ document.addEventListener('click', function(e) {
   </div>
   </div>
 
+  <div id="view-calendar" style="display:none; padding:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <button onclick="calPrev()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:1rem;cursor:pointer;">←</button>
+      <div id="cal-month-label" style="font-weight:700;font-size:1rem;color:var(--text);"></div>
+      <button onclick="calNext()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:1rem;cursor:pointer;">→</button>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="calAddEvent()" style="flex:1;padding:10px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;">➕ Novi termin</button>
+      <button onclick="backToList()" style="padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:0.85rem;cursor:pointer;">← Nazad</button>
+    </div>
+    <div id="cal-events" style="margin-bottom:20px;"></div>
+  </div>
   <div id="view-editor" style="display:none; flex-direction:column; min-height:100%;">
     <div class="doc-toolbar">
       <button class="tb-btn" onclick="fmt(&#39;bold&#39;)"><b>B</b></button>
@@ -1600,10 +1622,22 @@ document.addEventListener('click', function(e) {
       <button class="tb-btn" onclick="insertCameraPhoto()" style="font-size:0.9rem;">📷 Slika</button>
       <button class="tb-btn" onclick="document.getElementById('image-upload').click()" style="font-size:0.9rem;">🖼️ Uvoz</button>
       <button class="tb-btn" onclick="insertSavedPhoto()" style="font-size:0.9rem;">📁 Iz foto</button>
+      <button class="tb-btn" onclick="toggleVoiceDictation()" id="voice-btn" style="font-size:0.9rem;">🎤 Diktat</button>
+      <button class="tb-btn" onclick="autoPrijavaPhoto()" style="font-size:0.9rem;">🚨 Prijava</button>
+      <button class="tb-btn" onclick="ocrScan()" id="ocr-btn" style="font-size:0.9rem;">🔍 OCR</button>
+      <button class="tb-btn" onclick="toggleTemplatePicker()" style="font-size:0.9rem;">📋 Šablon</button>
       <button class="tb-btn" onclick="backToList()">← Nazad</button>
     </div>
     <input type="file" id="camera-capture" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event, true)">
     <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="handlePhoto(event, false)">
+    <div id="template-picker" style="display:none;flex-wrap:wrap;gap:6px;padding:8px 12px;background:var(--navy2);border-bottom:1px solid var(--border);">
+      <button onclick="applyTemplate('parkiranje')" style="padding:6px 10px;border-radius:8px;border:none;background:var(--accent);color:white;font-size:0.8rem;">🚗 Parkiranje</button>
+      <button onclick="applyTemplate('buka')" style="padding:6px 10px;border-radius:8px;border:none;background:#e67e22;color:white;font-size:0.8rem;">🔊 Buka</button>
+      <button onclick="applyTemplate('deponija')" style="padding:6px 10px;border-radius:8px;border:none;background:#27ae60;color:white;font-size:0.8rem;">🗑️ Deponija</button>
+      <button onclick="applyTemplate('tezge')" style="padding:6px 10px;border-radius:8px;border:none;background:#8e44ad;color:white;font-size:0.8rem;">🛒 Tezge</button>
+      <button onclick="applyTemplate('sluzbeno')" style="padding:6px 10px;border-radius:8px;border:none;background:var(--navy);color:var(--gold);font-size:0.8rem;border:1px solid var(--gold);">📝 Službena beleška</button>
+      <button onclick="applyTemplate('fotodok')" style="padding:6px 10px;border-radius:8px;border:none;background:#2c3e50;color:white;font-size:0.8rem;">📸 Fotodokumentacija</button>
+    </div>
     <input type="text" id="doc-title" placeholder="Naziv dokumenta...">
     <div id="doc-editor" contenteditable="true" spellcheck="true"></div>
     <div class="doc-actions">
@@ -1672,6 +1706,16 @@ document.addEventListener('click', function(e) {
         <label style="position:relative;display:inline-block;width:44px;height:24px;">
           <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
           <span id="dark-mode-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
+            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+          </span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <span class="s-icon" style="background:#1a1a2e;color:#e0e0e0;">🕐</span>
+        <span class="s-label">Auto dark (20h-7h)</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="auto-dark-toggle" onchange="toggleAutoDark()" style="opacity:0;width:0;height:0;">
+          <span id="auto-dark-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.3s;">
             <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
           </span>
         </label>
@@ -4882,6 +4926,8 @@ function doLogout() {
   function gateCheck() {
     try {
       initDarkMode();
+  if ('Notification' in window && Notification.permission === 'default') { Notification.requestPermission(); }
+  if (localStorage.getItem('km_pin') && localStorage.getItem('km_pin_user') === getCurrentUser()) { checkPINUnlock(); }
       if (!isLoggedIn()) {
         switchTab('login');
       } else {
@@ -4917,8 +4963,392 @@ function newDoc() {
   document.getElementById('doc-editor').focus();
 }
 
+// ===== DOCUMENT TEMPLATES =====
+const DOC_TEMPLATES = {
+  'parkiranje': {
+    title: 'Prijava nepravilnog parkiranja',
+    body: '<h2>PRIJAVA NEPRAVILNOG PARKIRANJA</h2><hr><p><b>Datum:</b> ' + new Date().toLocaleDateString('sr-RS') + '</p><p><b>Lokacija:</b> ____________</p><p><b>Vreme:</b> ____________</p><p><b>Registracija:</b> ____________</p><p><b>Opis:</b> Vozilo je parkirano na mestu gde je to zabranjeno.</p><p><b>Prijavio:</b> ' + (getCurrentUser()||'') + '</p>'
+  },
+  'buka': {
+    title: 'Prijava buke',
+    body: '<h2>PRIJAVA BUKE / NEMIRA</h2><hr><p><b>Datum:</b> ' + new Date().toLocaleDateString('sr-RS') + '</p><p><b>Adresa:</b> ____________</p><p><b>Vreme:</b> ____________</p><p><b>Opis:</b> ____________</p><p><b>Prijavio:</b> ' + (getCurrentUser()||'') + '</p>'
+  },
+  'deponija': {
+    title: 'Prijava divlje deponije',
+    body: '<h2>PRIJAVA DIVLJE DEPONIJE</h2><hr><p><b>Datum:</b> ' + new Date().toLocaleDateString('sr-RS') + '</p><p><b>Lokacija:</b> ____________</p><p><b>Vrsta otpada:</b> ____________</p><p><b>Količina:</b> ____________</p><p><b>Opis:</b> ____________</p><p><b>Prijavio:</b> ' + (getCurrentUser()||'') + '</p>'
+  },
+  'tezge': {
+    title: 'Prijava nereguliranih tezgi',
+    body: '<h2>PRIJAVA NEREGULIRANIH TEZGI</h2><hr><p><b>Datum:</b> ' + new Date().toLocaleDateString('sr-RS') + '</p><p><b>Lokacija:</b> ____________</p><p><b>Broj tezgi:</b> ____________</p><p><b>Opis:</b> ____________</p><p><b>Prijavio:</b> ' + (getCurrentUser()||'') + '</p>'
+  },
+  'sluzbeno': {
+    title: 'Službena beleška',
+    body: '<h2>SLUŽBENA BELEŠKA</h2><hr><p><b>Datum:</b> ' + new Date().toLocaleDateString('sr-RS') + '</p><p><b>Službenik:</b> ' + (getCurrentUser()||'') + '</p><br><p>___________</p>'
+  },
+  'fotodok': {
+    title: 'Fotodokumentacija',
+    body: '<h2>FOTODOKUMENTACIJA</h2><hr><p><b>Datum:</b> ' + new Date().toLocaleDateString('sr-RS') + '</p><p><b>Lokacija:</b> ____________</p><p><b>Opis:</b> ____________</p><br><p>[UMETNITE SLIKU OVDE]</p>'
+  }
+};
+
+function applyTemplate(key) {
+  const tpl = DOC_TEMPLATES[key];
+  if (!tpl) return;
+  document.getElementById('doc-title').value = tpl.title;
+  document.getElementById('doc-editor').innerHTML = tpl.body;
+  // Hide template picker
+  document.getElementById('template-picker').style.display = 'none';
+}
+
+function toggleTemplatePicker() {
+  const picker = document.getElementById('template-picker');
+  picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+}
+
+
+
+
+// ===== VOICE DICTATION =====
+let voiceRec = null;
+let voiceActive = false;
+
+function toggleVoiceDictation() {
+  if (voiceActive) {
+    stopVoiceDictation();
+  } else {
+    startVoiceDictation();
+  }
+}
+
+function startVoiceDictation() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('Vaš pregledač ne podržava glasovni diktat');
+    return;
+  }
+  voiceRec = new SR();
+  voiceRec.lang = 'sr-RS';
+  voiceRec.continuous = true;
+  voiceRec.interimResults = true;
+  
+  voiceRec.onresult = function(event) {
+    let final = '';
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        final += event.results[i][0].transcript;
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    if (final) {
+      document.execCommand('insertText', false, final + ' ');
+    }
+  };
+  
+  voiceRec.onerror = function(e) {
+    if (e.error === 'not-allowed') showToast('Dozvolite pristup mikrofonu');
+    stopVoiceDictation();
+  };
+  
+  voiceRec.onend = function() {
+    if (voiceActive) {
+      try { voiceRec.start(); } catch(e) {}
+    }
+  };
+  
+  voiceRec.start();
+  voiceActive = true;
+  const btn = document.getElementById('voice-btn');
+  if (btn) { btn.style.background = '#e74c3c'; btn.style.color = 'white'; btn.textContent = '🔴 Stop'; }
+  showToast('🎤 Slušam... govorite');
+}
+
+function stopVoiceDictation() {
+  if (voiceRec) {
+    voiceActive = false;
+    voiceRec.stop();
+    voiceRec = null;
+  }
+  const btn = document.getElementById('voice-btn');
+  if (btn) { btn.style.background = ''; btn.style.color = ''; btn.textContent = '🎤 Diktat'; }
+}
+
+
+// ===== AUTO PRIJAVA IZ FOTOGRAFIJE =====
+function autoPrijavaPhoto() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        // Compress
+        const canvas = document.createElement('canvas');
+        const maxW = 800, maxH = 1000;
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        if (h > maxH) { w = w * maxH / h; h = maxH; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('sr-RS');
+        const timeStr = now.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+        const user = getCurrentUser() || '';
+        const userName = getDisplayName() || user;
+        
+        // Build prijava document
+        let body = '<h2 style="color:#c0392b;">PRIJAVA IZ FOTOGRAFIJE</h2><hr>';
+        body += '<p><b>Datum:</b> ' + dateStr + '</p>';
+        body += '<p><b>Vreme:</b> ' + timeStr + '</p>';
+        body += '<p><b>Službenik:</b> ' + userName + '</p>';
+        body += '<p><b>Lokacija:</b> ____________</p>';
+        body += '<p><b>Opis prekršaja:</b> ____________</p>';
+        body += '<hr>';
+        body += '<p><b>Fotodokumentacija:</b></p>';
+        body += '<div style="text-align:center;margin:10px 0;"><img src="' + dataUrl + '" style="max-width:100%;border-radius:8px;border:1px solid #ccc;"></div>';
+        body += '<hr>';
+        body += '<p><i>Dokument generisan automatski ' + dateStr + ' u ' + timeStr + '</i></p>';
+        
+        // Set in editor
+        document.getElementById('doc-title').value = 'Prijava iz fotografije - ' + dateStr;
+        document.getElementById('doc-editor').innerHTML = body;
+        
+        // Try to get GPS and add to document
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(pos) {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lon = pos.coords.longitude.toFixed(6);
+            const mapsUrl = 'https://maps.google.com/maps?q=' + lat + ',' + lon;
+            const editor = document.getElementById('doc-editor');
+            const gpsP = editor.querySelector('p:nth-of-type(4)');
+            if (gpsP) {
+              gpsP.innerHTML = '<b>Lokacija:</b> <a href="' + mapsUrl + '" target="_blank">' + lat + ', ' + lon + ' (klikni za mapu)</a>';
+            }
+            showToast('📍 GPS lokacija dodata u prijavu');
+          }, function() {
+            showToast('📸 Prijava kreirana (GPS nedostupan)');
+          }, { timeout: 5000, enableHighAccuracy: true });
+        } else {
+          showToast('📸 Prijava kreirana');
+        }
+        
+        document.getElementById('doc-editor').focus();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+
+// ===== TERMINSKI KALENDAR =====
+let calCurrentDate = new Date();
+let calEvents = JSON.parse(localStorage.getItem('km_calendar_events') || '[]');
+
+function toggleCalendar() {
+  const cal = document.getElementById('view-calendar');
+  const list = document.getElementById('view-list');
+  const editor = document.getElementById('view-editor');
+  if (cal.style.display === 'none') {
+    list.style.display = 'none';
+    editor.style.display = 'none';
+    cal.style.display = 'block';
+    renderCalendar();
+  } else {
+    cal.style.display = 'none';
+    list.style.display = 'block';
+  }
+}
+
+function renderCalendar() {
+  const y = calCurrentDate.getFullYear();
+  const m = calCurrentDate.getMonth();
+  const months = ['Januar','Februar','Mart','April','Maj','Jun','Jul','Avgust','Septembar','Oktobar','Novembar','Decembar'];
+  document.getElementById('cal-month-label').textContent = months[m] + ' ' + y;
+  
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  
+  let grid = '';
+  ['P','U','S','Č','P','S','N'].forEach(d => {
+    grid += '<div style="text-align:center;font-size:0.7rem;font-weight:700;color:var(--muted);padding:4px;">' + d + '</div>';
+  });
+  
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  for (let i = 0; i < offset; i++) {
+    grid += '<div></div>';
+  }
+  
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const hasEvent = calEvents.some(e => e.date === dateStr);
+    const isToday = dateStr === todayStr;
+    grid += '<div onclick="calSelectDate(\''+ dateStr + '\')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:0.8rem;cursor:pointer;position:relative;' +
+      (isToday ? 'background:var(--navy);color:white;font-weight:700;' : 'background:var(--card);') +
+      (hasEvent ? 'border:2px solid var(--accent);' : 'border:1px solid var(--border);') +
+      '">' + d + (hasEvent ? '<div style="position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--accent);"></div>' : '') + '</div>';
+  }
+  
+  document.getElementById('cal-grid').innerHTML = grid;
+  renderCalEvents();
+}
+
+function renderCalEvents() {
+  const el = document.getElementById('cal-events');
+  if (calEvents.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:16px;">Nema zakazanih termina</div>';
+    return;
+  }
+  const sorted = [...calEvents].sort((a,b) => a.date.localeCompare(b.date));
+  el.innerHTML = '<div style="font-size:0.68rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:4px 2px 8px;">Zakazani termini</div>' +
+    sorted.map((e, i) => {
+      const urgent = e.urgent ? '🔴' : '🔵';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;' + (e.urgent ? 'border-left:3px solid #e74c3c;' : 'border-left:3px solid var(--accent);') + '">' +
+        '<div style="font-size:1.2rem;">' + urgent + '</div>' +
+        '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.85rem;color:var(--text);">' + e.title + '</div>' +
+        '<div style="font-size:0.72rem;color:var(--muted);">' + e.date + (e.time ? ' u ' + e.time : '') + '</div>' +
+        (e.note ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">' + e.note + '</div>' : '') + '</div>' +
+        '<button onclick="calDeleteEvent(' + i + ')" style="background:none;border:none;color:var(--danger);font-size:1rem;cursor:pointer;">🗑️</button>' +
+        '</div>';
+    }).join('');
+}
+
+function calSelectDate(dateStr) {
+  const title = prompt('Naziv termina:');
+  if (!title) return;
+  const time = prompt('Vreme (npr. 14:00) - prazno za ceo dan:') || '';
+  const urgent = confirm('Označiti kao hitno? (crveni indikator)');
+  const note = prompt('Napomena (opciono):') || '';
+  calEvents.push({ date: dateStr, time, title, urgent, note });
+  localStorage.setItem('km_calendar_events', JSON.stringify(calEvents));
+  // Schedule notification if urgent
+  if (urgent && 'Notification' in window && Notification.permission === 'granted') {
+    const evDate = new Date(dateStr + 'T' + (time || '08:00'));
+    const diff = evDate.getTime() - Date.now();
+    if (diff > 0 && diff < 86400000) {
+      setTimeout(() => {
+        new Notification('🚨 Hitan termin', { body: title + ' - ' + dateStr + ' ' + time, icon: 'icons/icon-192.png' });
+      }, diff);
+    }
+  }
+  renderCalendar();
+  showToast('✅ Termin zakazan');
+}
+
+function calAddEvent() {
+  const today = new Date();
+  const dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  calSelectDate(dateStr);
+}
+
+function calDeleteEvent(idx) {
+  calEvents.splice(idx, 1);
+  localStorage.setItem('km_calendar_events', JSON.stringify(calEvents));
+  renderCalendar();
+  showToast('Termin obrisan');
+}
+
+function calPrev() {
+  calCurrentDate.setMonth(calCurrentDate.getMonth() - 1);
+  renderCalendar();
+}
+
+function calNext() {
+  calCurrentDate.setMonth(calCurrentDate.getMonth() + 1);
+  renderCalendar();
+}
+
+
+// ===== OCR SKENIRANJE =====
+let tesseractLoaded = false;
+
+function loadTesseract() {
+  return new Promise(function(resolve, reject) {
+    if (tesseractLoaded && window.Tesseract) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = function() { tesseractLoaded = true; resolve(); };
+    s.onerror = function() { reject('Ne mogu da učitam OCR engine'); };
+    document.head.appendChild(s);
+  });
+}
+
+function ocrScan() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const btn = document.getElementById('ocr-btn');
+    if (btn) { btn.textContent = '⏳ OCR...'; btn.style.background = '#f39c12'; btn.style.color = 'white'; }
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const imgData = ev.target.result;
+      
+      // Show progress
+      showToast('🔍 Analiziram sliku...');
+      
+      loadTesseract().then(function() {
+        const worker = new Tesseract.Worker({
+          logger: function(m) {
+            if (m.status === 'recognizing text') {
+              const pct = Math.round(m.progress * 100);
+              if (btn) btn.textContent = '⏳ ' + pct + '%';
+            }
+          }
+        });
+        
+        worker.recognize(imgData, 'srp_latn+eng').then(function(result) {
+          const text = result.data.text.trim();
+          if (!text) {
+            showToast('Nema prepoznatog teksta');
+          } else {
+            // Insert OCR text into document editor
+            const now = new Date().toLocaleString('sr-RS');
+            let html = '<h3>🔍 OCR - prepoznat tekst</h3><hr>';
+            html += '<p><b>Skenirano:</b> ' + now + '</p>';
+            html += '<div style="white-space:pre-wrap;font-family:monospace;padding:12px;background:#f5f5f5;border-radius:8px;border:1px solid #ddd;">' + 
+              text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+            
+            // Insert at cursor or append
+            document.execCommand('insertHTML', false, html);
+            showToast('✅ Tekst prepoznat i ubačen u dokument');
+          }
+          
+          if (btn) { btn.textContent = '🔍 OCR'; btn.style.background = ''; btn.style.color = ''; }
+          worker.terminate();
+        }).catch(function(err) {
+          showToast('Greška pri OCR: ' + err);
+          if (btn) { btn.textContent = '🔍 OCR'; btn.style.background = ''; btn.style.color = ''; }
+        });
+      }).catch(function(err) {
+        showToast(err);
+        if (btn) { btn.textContent = '🔍 OCR'; btn.style.background = ''; btn.style.color = ''; }
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
 function backToList() {
   document.getElementById('view-editor').style.display = 'none';
+  const cal = document.getElementById('view-calendar');
+  if (cal) cal.style.display = 'none';
   document.getElementById('view-list').style.display = 'block';
   renderDocs();
 }
@@ -16975,8 +17405,45 @@ function toggleDarkMode() {
   }
 }
 
+function toggleAutoDark() {
+  const enabled = document.getElementById('auto-dark-toggle').checked;
+  localStorage.setItem('km_auto_dark', enabled ? '1' : '0');
+  const slider = document.getElementById('auto-dark-slider');
+  if (slider) {
+    slider.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+    slider.querySelector('span').style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+  }
+  if (enabled) applyAutoDark();
+}
+
+function applyAutoDark() {
+  if (localStorage.getItem('km_auto_dark') !== '1') return;
+  const hour = new Date().getHours();
+  const shouldBeDark = hour >= 20 || hour < 7;
+  const isDark = document.body.classList.contains('dark-mode');
+  if (shouldBeDark && !isDark) {
+    document.body.classList.add('dark-mode');
+    document.getElementById('watermark').style.display = 'none';
+    document.getElementById('watermark-dark').style.display = 'block';
+    const slider = document.getElementById('dark-mode-slider');
+    if (slider) { slider.style.background = 'var(--accent)'; slider.querySelector('span').style.transform = 'translateX(20px)'; }
+  } else if (!shouldBeDark && isDark && localStorage.getItem('km_auto_dark') === '1') {
+    document.body.classList.remove('dark-mode');
+    document.getElementById('watermark').style.display = 'block';
+    document.getElementById('watermark-dark').style.display = 'none';
+    const slider = document.getElementById('dark-mode-slider');
+    if (slider) { slider.style.background = 'var(--border)'; slider.querySelector('span').style.transform = 'translateX(0)'; }
+  }
+}
+
 function initDarkMode() {
-  if (localStorage.getItem('km_dark_mode') === '1') {
+  if (localStorage.getItem('km_auto_dark') === '1') {
+    const autoToggle = document.getElementById('auto-dark-toggle');
+    if (autoToggle) autoToggle.checked = true;
+    const autoSlider = document.getElementById('auto-dark-slider');
+    if (autoSlider) { autoSlider.style.background = 'var(--accent)'; autoSlider.querySelector('span').style.transform = 'translateX(20px)'; }
+    applyAutoDark();
+  } else if (localStorage.getItem('km_dark_mode') === '1') {
     document.body.classList.add('dark-mode');
     document.getElementById('watermark').style.display = 'none';
     document.getElementById('watermark-dark').style.display = 'block';
@@ -19490,6 +19957,73 @@ function closePwdModal() {
   document.getElementById('pwd-change-modal').style.display = 'none';
 }
 
+
+// ===== PIN QUICK UNLOCK =====
+function setupPIN() {
+  const pin = prompt('Unesite 4-cifreni PIN za brzo otključavanje:');
+  if (!pin || !/^\d{4}$/.test(pin)) { if (pin) showToast('PIN mora imati tačno 4 cifre'); return; }
+  localStorage.setItem('km_pin', btoa(pin));
+  localStorage.setItem('km_pin_user', getCurrentUser());
+  showToast('PIN uspešno postavljen! ✔️');
+}
+
+function removePIN() {
+  localStorage.removeItem('km_pin');
+  localStorage.removeItem('km_pin_user');
+  showToast('PIN uklonjen');
+}
+
+function checkPINUnlock() {
+  if (localStorage.getItem('km_pin') && localStorage.getItem('km_pin_user') === getCurrentUser()) {
+    showPINOverlay();
+  }
+}
+
+function showPINOverlay() {
+  let pinOverlay = document.getElementById('pin-overlay');
+  if (!pinOverlay) {
+    pinOverlay = document.createElement('div');
+    pinOverlay.id = 'pin-overlay';
+    pinOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,34,64,0.98);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;';
+    pinOverlay.innerHTML = `
+      <div style="font-size:3rem;">🔐</div>
+      <div style="color:var(--gold);font-size:1.1rem;font-weight:700;">Unesite PIN</div>
+      <input type="password" id="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*"
+        style="width:120px;height:50px;font-size:1.8rem;text-align:center;border-radius:12px;border:2px solid var(--gold);background:var(--card);color:var(--text);outline:none;letter-spacing:8px;">
+      <button onclick="submitPIN()" style="padding:10px 30px;border-radius:24px;border:none;background:var(--gold);color:var(--navy);font-weight:700;font-size:1rem;">Otključaj</button>
+      <button onclick="logoutFromPIN()" style="color:var(--accent);font-size:0.85rem;background:none;border:none;">Odjava</button>
+    `;
+    document.body.appendChild(pinOverlay);
+    const inp = pinOverlay.querySelector('#pin-input');
+    inp.addEventListener('keypress', e => { if (e.key === 'Enter') submitPIN(); });
+    inp.focus();
+  }
+  pinOverlay.style.display = 'flex';
+  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+
+function submitPIN() {
+  const input = document.getElementById('pin-input').value;
+  const saved = localStorage.getItem('km_pin');
+  if (saved && btoa(input) === saved) {
+    document.getElementById('pin-overlay').style.display = 'none';
+    showToast('Dobrodošli nazad! 👋');
+  } else {
+    showToast('Pogrešan PIN');
+    const inp = document.getElementById('pin-input');
+    inp.value = '';
+    inp.style.borderColor = '#e74c3c';
+    setTimeout(() => inp.style.borderColor = 'var(--gold)', 1000);
+  }
+}
+
+function logoutFromPIN() {
+  localStorage.removeItem('km_session');
+  localStorage.removeItem('km_token');
+  document.getElementById('pin-overlay').remove();
+  location.reload();
+}
+
 function changePassword() {
   const oldPwd = document.getElementById('pwd-old').value;
   const newPwd = document.getElementById('pwd-new').value;
@@ -20021,6 +20555,14 @@ async function adminDeletePelcer(id) {
       <button onclick="closePwdModal()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;background:var(--card);color:var(--text);">Otkaži</button>
       <button onclick="changePassword()" style="flex:1;padding:10px;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">Promeni</button>
     </div>
+      <div class="settings-row">
+        <span class="s-icon" style="background:#2d3436;color:#fff;">🔐</span>
+        <span class="s-label">PIN brzo otključavanje</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="setupPIN()" style="padding:6px 12px;border-radius:8px;border:none;background:var(--accent);color:white;font-size:0.8rem;">Postavi</button>
+          <button onclick="removePIN()" style="padding:6px 12px;border-radius:8px;border:none;background:#e74c3c;color:white;font-size:0.8rem;">Ukloni</button>
+        </div>
+      </div>
   </div>
 </div>
 
