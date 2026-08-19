@@ -3012,7 +3012,7 @@ function closeWeatherForecast() { closeWeatherModal(); }
 </script>
 <script>
 // ===== STATE =====
-let docs = [];
+var docs = [];
 try { docs = JSON.parse(localStorage.getItem('bk_docs') || '[]'); } catch(e) { docs = []; }
 let currentDocId = null;
 let currentAkt = null;
@@ -3290,9 +3290,9 @@ function closeSideMenu() {
 
 // ===== PORUKE / CHAT =====
 // Primary: Cloudflare D1 API (no credit limit), Fallback: Base44 backend
-const KM_API_BASE_CF = '/api';
-const KM_API_BASE_B44 = 'https://solas-799a3993.base44.app/functions';
-const KM_API_BASE = KM_API_BASE_CF;  // Default to Cloudflare
+var KM_API_BASE_CF = '/api';
+var KM_API_BASE_B44 = 'https://solas-799a3993.base44.app/functions';
+var KM_API_BASE = KM_API_BASE_CF;  // Default to Cloudflare
 let kmUseCloudflareAPI = true;
 const VAPID_PUBLIC_KEY = 'BO_VicJbLYfwhwCq48A6-cg4I-LHCbKLyN9BH6QvKM6RlUXzEMh74FleJ2fpQAsStTg0MhGiBe08mpieqLaoPwI';
 let porukeCurrentView = 'conversations';
@@ -4634,10 +4634,10 @@ function porukeReply(recipientUsername) {
 // ===== PRIJAVA / AUTENTIKACIJA =====
 // Napomena: ovo je jednostavna zaštita na nivou klijenta (fiksni korisnik/šifra),
 // dovoljna da spreči slučajan pristup, ali nije prava serverska autentikacija.
-const KM_AUTH_KEY = 'km_auth_v1';
-const KM_USERS_KEY = 'km_users_v1';
-const KM_CURRENT_USER = 'km_current_user';
-const KM_DISPLAY_NAME = 'km_display_name';
+var KM_AUTH_KEY = 'km_auth_v1';
+var KM_USERS_KEY = 'km_users_v1';
+var KM_CURRENT_USER = 'km_current_user';
+var KM_DISPLAY_NAME = 'km_display_name';
 
 // Get users from localStorage, seed with default if empty
 function transliterateSerbian(text) {
@@ -4667,8 +4667,8 @@ function getImenikUsers() {
   })).filter(u => u.username && u.password);
 }
 
-let serverUsers = [];
-let serverUsersLoaded = false;
+var serverUsers = [];
+var serverUsersLoaded = false;
 const SERVER_USERS_CACHE_KEY = 'km_server_users_cache';
 
 async function loadServerUsers() {
@@ -19753,7 +19753,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v207';
+const KM_VERSION = 'v208';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
