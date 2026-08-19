@@ -17344,7 +17344,7 @@ async function shareAkt(via) {
 
 // ===== PODEŠAVANJA =====
 function updateSettings() {
-  try { initWakeLock(); } catch(e) { console.error('WakeLock init:', e); }
+  // Wake Lock init moved to page load (see initWakeLock call at bottom)
   document.getElementById('doc-count').textContent = docs.length + ' doc.';
 }
 
@@ -19753,7 +19753,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v208';
+const KM_VERSION = 'v209';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -19791,6 +19791,8 @@ if ('serviceWorker' in navigator) {
     }).catch(err => {
       console.warn('SW registracija neuspešna:', err);
     });
+    // Initialize Wake Lock if previously enabled
+    try { initWakeLock(); } catch(e) { console.error("WakeLock init:", e); }
   });
 }
 
@@ -20089,67 +20091,58 @@ const WAKELOCK_AUTO_OFF_MS = 10 * 60 * 1000; // 10 minuta
 
 async function acquireWakeLock() {
   try {
-    if ('wakeLock' in navigator) {
-      // Release existing first
-      if (wakeLock) {
-        try { await wakeLock.release(); } catch(e) {}
-        wakeLock = null;
-      }
-      // Wake Lock requires visible page
-      if (document.visibilityState !== 'visible') {
-        console.log('Wake Lock: page not visible, skipping');
-        return false;
-      }
-      wakeLock = await navigator.wakeLock.request('screen');
-      // Release event handler - re-acquire if still wanted
-      if (wakeLock) {
-        wakeLock.addEventListener('release', function() {
-          console.log('Wake Lock: released by browser');
-          if (localStorage.getItem('km_wakelock') === '1' && document.visibilityState === 'visible') {
-            setTimeout(acquireWakeLock, 200);
-          }
-        });
-      }
-      console.log('Wake Lock: (re)aktiviran', new Date().toLocaleTimeString());
-      return true;
+    if (!("wakeLock" in navigator)) return false;
+    // Already active — no need to re-acquire
+    if (wakeLock) return true;
+    // Wake Lock requires visible page
+    if (document.visibilityState !== "visible") {
+      console.log("Wake Lock: page not visible, skipping");
+      return false;
     }
-  } catch(e) { console.error('Wake Lock greška:', e); }
+    wakeLock = await navigator.wakeLock.request("screen");
+    if (wakeLock) {
+      wakeLock.addEventListener("release", function() {
+        console.log("Wake Lock: released by browser");
+        if (localStorage.getItem("km_wakelock") === "1" && document.visibilityState === "visible") {
+          setTimeout(acquireWakeLock, 200);
+        }
+      });
+    }
+    console.log("Wake Lock: (re)aktiviran", new Date().toLocaleTimeString());
+    return true;
+  } catch(e) { console.error("Wake Lock greška:", e); }
   return false;
 }
 
 async function toggleWakeLock() {
-  const toggle = document.getElementById('wakelock-toggle');
-  const slider = document.getElementById('wakelock-slider');
-  const knob = slider ? slider.querySelector('span') : null;
+  const toggle = document.getElementById("wakelock-toggle");
+  const slider = document.getElementById("wakelock-slider");
+  const knob = slider ? slider.querySelector("span") : null;
   if (toggle.checked) {
     const ok = await acquireWakeLock();
     if (ok) {
-      localStorage.setItem('km_wakelock', '1');
-      if (slider) { slider.style.background = 'var(--blue)'; }
-      if (knob) { knob.style.left = '21px'; }
-      // Re-acquire every 30s — iOS Safari silently releases wake lock
+      localStorage.setItem("km_wakelock", "1");
+      if (slider) { slider.style.background = "var(--blue)"; }
+      if (knob) { knob.style.left = "21px"; }
       wakeLockInterval = setInterval(acquireWakeLock, 30000);
-      // Re-acquire on visibility change
-      document.addEventListener('visibilitychange', reacquireWakeLock);
-      // No auto-off — stays on until user turns it off
-      showToast('💡 Ekran uvek aktivan');
+      document.addEventListener("visibilitychange", reacquireWakeLock);
+      showToast("💡 Ekran uvek aktivan");
     } else {
       toggle.checked = false;
-      showToast('⚠️ Pregledač ne podržava Wake Lock');
+      showToast("⚠️ Pregledač ne podržava Wake Lock");
     }
   } else {
-    // Turn off
     if (wakeLock) {
       try { await wakeLock.release(); } catch(e) {}
       wakeLock = null;
     }
     if (wakeLockInterval) { clearInterval(wakeLockInterval); wakeLockInterval = null; }
     if (wakeLockTimeout) { clearTimeout(wakeLockTimeout); wakeLockTimeout = null; }
-    localStorage.removeItem('km_wakelock');
-    if (slider) { slider.style.background = 'var(--border)'; }
-    if (knob) { knob.style.left = '3px'; }
-    document.removeEventListener('visibilitychange', reacquireWakeLock);
-    console.log('Wake Lock: deaktiviran');
+    localStorage.removeItem("km_wakelock");
+    if (slider) { slider.style.background = "var(--border)"; }
+    if (knob) { knob.style.left = "3px"; }
+    document.removeEventListener("visibilitychange", reacquireWakeLock);
+    console.log("Wake Lock: deaktiviran");
   }
 }
 
