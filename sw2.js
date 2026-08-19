@@ -1,5 +1,5 @@
-// KMapp Service Worker v200 — improved offline caching + push notifications
-const CACHE = 'kmapp-v200';
+// KMapp Service Worker v207 — network-first for index.html
+const CACHE = 'kmapp-v207';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -19,7 +19,6 @@ const STATIC_ASSETS = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
 
-// API responses to cache for offline use (stale-while-revalidate)
 const CACHEABLE_API = ['/getInbox', '/getSent', '/getUsers'];
 const OFFLINE_FALLBACK = './index.html';
 
@@ -33,197 +32,96 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter(k => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-
-  // Skip non-http(s) requests
-  if (!url.protocol.startsWith('http')) return;
-
-  // Navigation requests (HTML pages) — network-first with offline fallback
-  if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const resClone = res.clone();
-            caches.open(CACHE).then((cache) => cache.put(req, resClone));
-          }
-          return res;
-        })
-        .catch(() => {
-          return caches.match('./index.html').then(r => r || caches.match(req)).then(r => r || new Response('Offline', { status: 503 }));
-        })
-    );
-    return;
-  }
-
-  // API requests — stale-while-revalidate for cacheable endpoints
-  if (url.pathname.includes('/api/')) {
-    const apiPath = '/' + url.pathname.split('/').pop();
-    if (CACHEABLE_API.includes(apiPath)) {
-      event.respondWith(
-        caches.open(CACHE).then(async (cache) => {
-          const cached = await cache.match(req);
-          const networkPromise = fetch(req).then(res => {
-            if (res && res.status === 200) cache.put(req, res.clone());
-            return res;
-          }).catch(() => cached);
-          return cached || networkPromise;
-        })
+    caches.keys().then(names => {
+      return Promise.all(
+        names.filter(n => n !== CACHE).map(n => caches.delete(n))
       );
-      return;
-    }
-    // Non-cacheable API — network only
-    event.respondWith(fetch(req).catch(() => new Response('{"error":"offline"}', { headers: { 'Content-Type': 'application/json' } })));
-    return;
-  }
-
-  // External resources (Leaflet CDN, OSM tiles, etc.) — cache-first
-  if (url.origin !== self.location.origin) {
-    event.respondWith(
-      caches.match(req).then(cached => {
-        if (cached) {
-          // Revalidate in background
-          fetch(req).then(res => {
-            if (res && res.status === 200) caches.open(CACHE).then(cache => cache.put(req, res));
-          }).catch(() => {});
-          return cached;
-        }
-        return fetch(req).then(res => {
-          if (!res || res.status !== 200) return res;
-          const clone = res.clone();
-          caches.open(CACHE).then(cache => cache.put(req, clone));
-          return res;
-        }).catch(() => cached || new Response('', { status: 503 }));
-      })
-    );
-    return;
-  }
-
-  // Same-origin static assets — stale-while-revalidate
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) {
-        fetch(req).then((res) => {
-          if (res && res.status === 200) {
-            caches.open(CACHE).then((cache) => cache.put(req, res));
-          }
-        }).catch(() => {});
-        return cached;
-      }
-      return fetch(req).then((res) => {
-        if (!res || res.status !== 200) return res;
-        const resClone = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(req, resClone));
-        return res;
-      }).catch(() => caches.match(OFFLINE_FALLBACK));
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// ===== BACKGROUND SYNC (retry failed sends when online) =====
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'retry-send-message') {
-    event.waitUntil(
-      self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
-        clients.forEach(c => c.postMessage({ type: 'RETRY_SEND' }));
+// Network-first for HTML, cache-first for static assets
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Skip non-GET
+  if (event.request.method !== 'GET') return;
+
+  // Network-first for index.html and navigation
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(event.request, copy));
+          return res;
+        })
+        .catch(() => caches.match(event.request).then(r => r || caches.match(OFFLINE_FALLBACK)))
+    );
+    return;
+  }
+
+  // Cache-first for static assets
+  if (STATIC_ASSETS.includes(url.pathname) || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/js/')) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        return cached || fetch(event.request).then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(event.request, copy));
+          return res;
+        });
       })
     );
+    return;
   }
+
+  // API: stale-while-revalidate
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        const fetchPromise = fetch(event.request).then(res => {
+          if (res.ok && CACHEABLE_API.some(a => url.pathname.includes(a))) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(event.request, copy));
+          }
+          return res;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // Default: try network, fallback to cache
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request).then(r => r || caches.match(OFFLINE_FALLBACK)))
+  );
 });
 
-// ===== PUSH NOTIFICATIONS =====
+// Push notifications
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push event received!', event);
-  
-  let data = { title: 'KMapp', body: 'Nova poruka', url: 'https://kmapp-n37.pages.dev/' };
-  try {
-    if (event.data) data = event.data.json();
-  } catch(e) {
-    if (event.data) data.body = event.data.text();
-  }
-  
-  // LOG to server: SW received the push event
-  var logPromise = fetch('https://kmapp-n37.pages.dev/api/pushLog', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'sw-log', event: 'push-received', detail: (data.title || '') + ': ' + (data.body || '').substring(0, 50) })
-  }).catch(function(e) { console.log('[SW] Log failed:', e); });
-  
-  // MINIMAL notification options — remove anything that might cause silent failure
-  var options = {
-    body: data.body || 'Nova poruka',
-    icon: './icons/icon-192.png',
-    tag: 'kmapp-push',
-    data: { url: data.url || 'https://kmapp-n37.pages.dev/' }
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch(e) { data = { body: event.data ? event.data.text() : '' }; }
+  const title = data.title || 'KMapp';
+  const options = {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-96.png',
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    data: { url: data.url || '/' }
   };
-  
-  console.log('[SW] Showing notification:', data.title || 'KMapp', options);
-  
-  // Show notification — catch any error and log it
-  var notifPromise = self.registration.showNotification(data.title || 'KMapp', options)
-    .then(function() {
-      console.log('[SW] Notification shown successfully');
-      // Log success
-      return fetch('https://kmapp-n37.pages.dev/api/pushLog', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'sw-log', event: 'notification-shown', detail: 'OK' })
-      }).catch(function() {});
-    })
-    .catch(function(err) {
-      console.error('[SW] showNotification FAILED:', err);
-      // Log failure
-      return fetch('https://kmapp-n37.pages.dev/api/pushLog', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'sw-log', event: 'showNotification-error', detail: String(err.message || err) })
-      }).catch(function() {});
-    });
-  
-  // Notify open clients
-  var clientPromise = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
-    clients.forEach(function(client) {
-      client.postMessage({ type: 'push-received', title: data.title, body: data.body });
-    });
-  });
-  
-  event.waitUntil(Promise.all([notifPromise, logPromise, clientPromise]));
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Clear badge when notification is clicked
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  // Clear badge
-  try {
-    if (self.clearAppBadge) { self.clearAppBadge(); }
-    else if (self.registration.clearAppBadge) { self.registration.clearAppBadge(); }
-  } catch(e) {}
-  const targetUrl = (event.notification.data && event.notification.data.url) || 'https://kmapp-n37.pages.dev/';
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes('kmapp') && 'focus' in client) {
-          client.postMessage({ type: 'NOTIFICATION_CLICK', url: targetUrl });
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window' }).then(clientList => {
+      if (clientList.length > 0) {
+        return clientList[0].focus();
       }
-      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+      return clients.openWindow('/');
     })
   );
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
-  if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: CACHE });
-  }
 });
