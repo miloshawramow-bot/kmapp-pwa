@@ -1766,6 +1766,14 @@ document.addEventListener('click', function(e) {
         <span class="s-label">Odjava</span>
         <span class="s-val">↗</span>
       </div>
+      <div class="settings-row">
+        <span class="s-icon" style="background:#2d3436;color:#fff;">🔐</span>
+        <span class="s-label">PIN brzo otključavanje</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="setupPIN()" style="padding:6px 12px;border-radius:8px;border:none;background:var(--accent);color:white;font-size:0.8rem;">Postavi</button>
+          <button onclick="removePIN()" style="padding:6px 12px;border-radius:8px;border:none;background:#e74c3c;color:white;font-size:0.8rem;">Ukloni</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -18617,8 +18625,10 @@ document.getElementById('modal-bg').addEventListener('click', function(e) {
 });
 
 // ===== KAMERA / FOTOGRAFIJE =====
-let photos = JSON.parse(localStorage.getItem('bk_photos') || '[]');
-let folders = JSON.parse(localStorage.getItem('bk_folders') || '["Opšte"]');
+let photos = [];
+try { photos = JSON.parse(localStorage.getItem('bk_photos') || '[]'); if (!Array.isArray(photos)) photos = []; } catch(e) { photos = []; localStorage.removeItem('bk_photos'); }
+let folders = [];
+try { folders = JSON.parse(localStorage.getItem('bk_folders') || '["Opšte"]'); if (!Array.isArray(folders)) folders = ['Opšte']; } catch(e) { folders = ['Opšte']; }
 let currentPhotoIndex = null;
 
 function initFolderSelect() {
@@ -20084,7 +20094,21 @@ async function acquireWakeLock() {
         try { await wakeLock.release(); } catch(e) {}
         wakeLock = null;
       }
+      // Wake Lock requires visible page
+      if (document.visibilityState !== 'visible') {
+        console.log('Wake Lock: page not visible, skipping');
+        return false;
+      }
       wakeLock = await navigator.wakeLock.request('screen');
+      // Release event handler - re-acquire if still wanted
+      if (wakeLock) {
+        wakeLock.addEventListener('release', function() {
+          console.log('Wake Lock: released by browser');
+          if (localStorage.getItem('km_wakelock') === '1' && document.visibilityState === 'visible') {
+            setTimeout(acquireWakeLock, 200);
+          }
+        });
+      }
       console.log('Wake Lock: (re)aktiviran', new Date().toLocaleTimeString());
       return true;
     }
@@ -20106,14 +20130,8 @@ async function toggleWakeLock() {
       wakeLockInterval = setInterval(acquireWakeLock, 30000);
       // Re-acquire on visibility change
       document.addEventListener('visibilitychange', reacquireWakeLock);
-      // Auto-off after 10 minutes
-      wakeLockTimeout = setTimeout(() => {
-        console.log('Wake Lock: 10 min isteklo, auto-off');
-        toggle.checked = false;
-        toggleWakeLock();
-        showToast('⏰ Ekran je bio aktivan 10 min. Dodirnite za produženje.');
-      }, WAKELOCK_AUTO_OFF_MS);
-      showToast('💡 Ekran aktivan 10 minuta');
+      // No auto-off — stays on until user turns it off
+      showToast('💡 Ekran uvek aktivan');
     } else {
       toggle.checked = false;
       showToast('⚠️ Pregledač ne podržava Wake Lock');
@@ -20145,7 +20163,21 @@ function initWakeLock() {
   if (!toggle) return;
   if (localStorage.getItem('km_wakelock') === '1') {
     toggle.checked = true;
-    toggleWakeLock();
+    // Wake Lock requires user gesture — try immediately, then on first interaction
+    acquireWakeLock().then(function(ok) {
+      if (!ok) {
+        // Will acquire on first user interaction
+        var wakeOnce = function() {
+          if (localStorage.getItem('km_wakelock') === '1') {
+            toggleWakeLock();
+          }
+          document.removeEventListener('click', wakeOnce);
+          document.removeEventListener('touchstart', wakeOnce);
+        };
+        document.addEventListener('click', wakeOnce, { once: true });
+        document.addEventListener('touchstart', wakeOnce, { once: true });
+      }
+    });
   }
 }
 
@@ -20293,13 +20325,13 @@ function filterAdminLogs() {
 function checkAdminAccess() {
   try {
     const role = getCurrentUserRole();
+    console.log('checkAdminAccess: role=', role, 'user=', localStorage.getItem(KM_CURRENT_USER));
     const el = document.getElementById('acc-admin');
     if (el) el.style.display = (role === 'admin') ? 'block' : 'none';
     if (role === 'admin') {
       try { renderAdminAktiList(); } catch(e) { console.error('renderAdminAktiList:', e); }
       try { renderAdminPelceriList(); } catch(e) { console.error('renderAdminPelceriList:', e); }
       try { adminRenderUsersList(); } catch(e) { console.error('adminRenderUsersList:', e); }
-
     }
   } catch(e) { console.error('checkAdminAccess:', e); }
 }
@@ -20555,14 +20587,6 @@ async function adminDeletePelcer(id) {
       <button onclick="closePwdModal()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;background:var(--card);color:var(--text);">Otkaži</button>
       <button onclick="changePassword()" style="flex:1;padding:10px;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;background:var(--navy);color:white;">Promeni</button>
     </div>
-      <div class="settings-row">
-        <span class="s-icon" style="background:#2d3436;color:#fff;">🔐</span>
-        <span class="s-label">PIN brzo otključavanje</span>
-        <div style="display:flex;gap:6px;">
-          <button onclick="setupPIN()" style="padding:6px 12px;border-radius:8px;border:none;background:var(--accent);color:white;font-size:0.8rem;">Postavi</button>
-          <button onclick="removePIN()" style="padding:6px 12px;border-radius:8px;border:none;background:#e74c3c;color:white;font-size:0.8rem;">Ukloni</button>
-        </div>
-      </div>
   </div>
 </div>
 
