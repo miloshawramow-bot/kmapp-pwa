@@ -5426,7 +5426,7 @@ var pomocnikHistory = [];
 
 function pomocnikSearchAkti(question) {
   var q = question.toLowerCase();
-  var stopWords = ['sta','staje','kako','gde','koji','koja','koje','da','ne','je','su','za','od','u','na','i','ili','clan','lan','odluka','zakon','o','srbije','beogradu','beograda','kaze','kazuje','pise','pise','koliko','iznosi','nova','novca','koja','sta','stoje'];
+  var stopWords = ['sta','staje','kako','gde','koji','koja','koje','da','ne','je','su','za','od','u','na','i','ili','clan','lan','odluka','zakon','o','srbije','beogradu','beograda','kaze','kazuje','pise','pise','koliko','iznosi','nova','novca','koja','sta','stoje','nepropisno','nepropisan','propisno','propisan'];
   var words = q.replace(/[^a-zA-ZčćžšđČĆŽŠĐ\s]/g, ' ').split(/\s+/).filter(function(w) { return w.length > 2 && stopWords.indexOf(w) === -1; });
 
   var results = [];
@@ -5435,14 +5435,19 @@ function pomocnikSearchAkti(question) {
     var sadrzajLower = akt.sadrzaj.toLowerCase();
     var nazivLower = akt.naziv.toLowerCase();
     var score = 0;
-    var matchedWords = [];
+    var matchedCount = 0;
     for (var j = 0; j < words.length; j++) {
       var count = (sadrzajLower.match(new RegExp(words[j], 'g')) || []).length;
-      if (count > 0) { score += count; matchedWords.push(words[j]); }
-      // Name match = HUGE boost
-      if (nazivLower.indexOf(words[j]) !== -1) score += 100;
+      if (count > 0) { score += count; matchedCount++; }
+      if (nazivLower.indexOf(words[j]) !== -1) score += 200;
     }
-    // Boost odluke over zakoni for practical questions
+    // Must match ALL keywords (if more than 1)
+    if (words.length > 1 && matchedCount < words.length) continue;
+    // Name stem match: "parkiranje" → "parkir" matches "parkirališta"
+    for (var j2 = 0; j2 < words.length; j2++) {
+      var stem = words[j2].substring(0, Math.min(6, words[j2].length));
+      if (stem.length >= 5 && nazivLower.indexOf(stem) !== -1) score += 500;
+    }
     if (akt.tip === 'odluka') score = Math.round(score * 1.5);
     if (score > 0) {
       var sections = pomocnikExtractSections(akt.sadrzaj, words);
@@ -5450,7 +5455,7 @@ function pomocnikSearchAkti(question) {
     }
   }
   results.sort(function(a, b) { return b.score - a.score; });
-  return results.slice(0, 4);
+  return results.slice(0, 2);
 }
 
 function pomocnikExtractSections(text, keywords) {
@@ -5466,12 +5471,27 @@ function pomocnikExtractSections(text, keywords) {
       var c = (contentLower.match(new RegExp(keywords[k], 'g')) || []).length;
       densityScore += c;
     }
-    if (matchCount > 0) {
+    // Require ALL keywords to match in section
+    if (matchCount >= keywords.length) {
       sections.push({ text: section.replace(/^\*+/,'').trim(), score: matchCount * 100 + densityScore });
     }
   }
+  // If no sections match all keywords, fall back to any match
+  if (sections.length === 0) {
+    for (var i2 = 1; i2 < parts.length; i2++) {
+      var section2 = parts[i2].substring(0, 1000);
+      var cl2 = section2.toLowerCase();
+      var mc2 = 0;
+      for (var k2 = 0; k2 < keywords.length; k2++) {
+        if (cl2.indexOf(keywords[k2]) !== -1) mc2++;
+      }
+      if (mc2 > 0) {
+        sections.push({ text: section2.replace(/^\*+/,'').trim(), score: mc2 * 100 });
+      }
+    }
+  }
   sections.sort(function(a, b) { return b.score - a.score; });
-  return sections.slice(0, 5).map(function(s) { return s.text; });
+  return sections.slice(0, 3).map(function(s) { return s.text; });
 }
 
 function pomocnikExtractPenaltySections(aktNaziv) {
@@ -5495,27 +5515,32 @@ function pomocnikExtractPenaltySections(aktNaziv) {
 
 function formatPomocnikReply(matched) {
   var lines = [];
-  for (var i = 0; i < Math.min(matched.length, 3); i++) {
+  for (var i = 0; i < Math.min(matched.length, 2); i++) {
     var a = matched[i];
     var header = (a.tip === 'odluka' ? 'ODLUKA' : 'ZAKON') + ': ' + a.naziv;
     if (a.broj) header += ' (' + a.broj + ')';
     lines.push(header);
     lines.push('');
     if (a.sections && a.sections.length > 0) {
-      for (var s = 0; s < Math.min(a.sections.length, 2); s++) {
-        lines.push(a.sections[s]);
-        lines.push('');
-      }
+      lines.push(a.sections[0]);
+      lines.push('');
     }
     var penalties = pomocnikExtractPenaltySections(a.naziv);
     if (penalties.length > 0) {
-      lines.push('KAZNENE ODREDBE:');
-      for (var p = 0; p < Math.min(penalties.length, 2); p++) {
-        lines.push(penalties[p]);
-        lines.push('');
+      // Find penalty that references the material član
+      var clanMatch = (a.sections && a.sections[0]) ? (a.sections[0].match(/[ČC]lan\s+(\d+)/i) || [])[1] : null;
+      var bestPenalty = null;
+      for (var p = 0; p < penalties.length; p++) {
+        if (clanMatch && penalties[p].indexOf('lan ' + clanMatch) !== -1) {
+          bestPenalty = penalties[p];
+          break;
+        }
       }
+      lines.push('KAZNENA ODREDBA:');
+      lines.push(bestPenalty || penalties[0]);
+      lines.push('');
     }
-    if (i < Math.min(matched.length, 3) - 1) lines.push('---');
+    if (i < Math.min(matched.length, 2) - 1) lines.push('---');
   }
   return lines.join('\n').trim();
 }
@@ -20226,7 +20251,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v232';
+const KM_VERSION = 'v233';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
