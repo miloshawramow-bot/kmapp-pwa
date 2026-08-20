@@ -5424,6 +5424,75 @@ function aiDescribePhoto() {
 // ===== LICNI POMOCNIK (AI CHAT) =====
 var pomocnikHistory = [];
 
+function pomocnikSearchAkti(question) {
+  var q = question.toLowerCase();
+  var stopWords = ['sta','staje','kako','gde','koji','koja','koje','da','ne','je','su','za','od','u','na','i','ili','clan','lan','odluka','zakon','o','srbije','beogradu','beograda','kaze','kazuje','pise','pise','koliko','iznosi','nova','novca','koja','sta','stoje'];
+  var words = q.replace(/[^a-zA-ZčćžšđČĆŽŠĐ\s]/g, ' ').split(/\s+/).filter(function(w) { return w.length > 2 && stopWords.indexOf(w) === -1; });
+
+  var results = [];
+  for (var i = 0; i < aktiData.length; i++) {
+    var akt = aktiData[i];
+    var sadrzajLower = akt.sadrzaj.toLowerCase();
+    var nazivLower = akt.naziv.toLowerCase();
+    var score = 0;
+    var matchedWords = [];
+    for (var j = 0; j < words.length; j++) {
+      var count = (sadrzajLower.match(new RegExp(words[j], 'g')) || []).length;
+      if (count > 0) { score += count; matchedWords.push(words[j]); }
+      // Name match = HUGE boost
+      if (nazivLower.indexOf(words[j]) !== -1) score += 100;
+    }
+    // Boost odluke over zakoni for practical questions
+    if (akt.tip === 'odluka') score = Math.round(score * 1.5);
+    if (score > 0) {
+      var sections = pomocnikExtractSections(akt.sadrzaj, words);
+      results.push({ tip: akt.tip, naziv: akt.naziv, broj: akt.broj, score: score, sections: sections });
+    }
+  }
+  results.sort(function(a, b) { return b.score - a.score; });
+  return results.slice(0, 4);
+}
+
+function pomocnikExtractSections(text, keywords) {
+  var sections = [];
+  var parts = text.split(/(?=[ČC]lan\s+\d+)/i);
+  for (var i = 1; i < parts.length; i++) {
+    var section = parts[i].substring(0, 1000);
+    var contentLower = section.toLowerCase();
+    var matchCount = 0;
+    var densityScore = 0;
+    for (var k = 0; k < keywords.length; k++) {
+      if (contentLower.indexOf(keywords[k]) !== -1) matchCount++;
+      var c = (contentLower.match(new RegExp(keywords[k], 'g')) || []).length;
+      densityScore += c;
+    }
+    if (matchCount > 0) {
+      sections.push({ text: section.replace(/^\*+/,'').trim(), score: matchCount * 100 + densityScore });
+    }
+  }
+  sections.sort(function(a, b) { return b.score - a.score; });
+  return sections.slice(0, 5).map(function(s) { return s.text; });
+}
+
+function pomocnikExtractPenaltySections(aktNaziv) {
+  for (var i = 0; i < aktiData.length; i++) {
+    if (aktiData[i].naziv === aktNaziv) {
+      var text = aktiData[i].sadrzaj;
+      var sections = [];
+      var parts = text.split(/(?=[ČC]lan\s+\d+)/i);
+      for (var j = 1; j < parts.length; j++) {
+        var section = parts[j].substring(0, 800);
+        var cl = section.toLowerCase();
+        if (cl.indexOf('kazn') !== -1 || cl.indexOf('prekr') !== -1 || cl.indexOf('novčan') !== -1) {
+          sections.push(section.replace(/^\*+/,'').trim());
+        }
+      }
+      return sections.slice(0, 4);
+    }
+  }
+  return [];
+}
+
 function pomocnikSend() {
   var input = document.getElementById('pomocnik-input');
   if (!input) return;
@@ -5433,32 +5502,87 @@ function pomocnikSend() {
   var btn = document.getElementById('pomocnik-send-btn');
   if (btn) { btn.textContent = '⏳'; btn.style.opacity = '0.6'; }
 
-  // Add user bubble
   pomocnikAddBubble(q, 'user');
 
-  // Add loading bubble
   var loadingId = 'pom-load-' + Date.now();
-  pomocnikAddBubble('🤖 Razmišljam...', 'ai', loadingId);
+  pomocnikAddBubble('🔍 Pretražujem akte...', 'ai', loadingId);
+
+  // Search aktiData locally
+  var matched = pomocnikSearchAkti(q);
+  var context = '';
+  if (matched.length > 0) {
+    var parts = [];
+    var totalLen = 0;
+    for (var ai = 0; ai < matched.length && totalLen < 5000; ai++) {
+      var a = matched[ai];
+      var header = (a.tip === 'odluka' ? 'Odluka' : 'Zakon') + ': ' + a.naziv + ' (' + a.broj + ')';
+      var aktText = header + '\n';
+      // Extract material član numbers
+      var clanNums = [];
+      if (a.sections.length > 0) {
+        for (var si = 0; si < a.sections.length; si++) {
+          var cm = a.sections[si].match(/[ČC]lan\s+(\d+)/i);
+          if (cm) clanNums.push(cm[1]);
+        }
+        aktText += 'MATERIJALNA ODREDBA:\n' + a.sections.slice(0, 3).join('\n\n');
+      }
+      // Extract penalty sections, prioritizing ones that reference material član
+      var penaltySections = pomocnikExtractPenaltySections(a.naziv);
+      if (penaltySections.length > 0) {
+        // Sort: penalties that reference material član go first
+        var linked = [];
+        var other = [];
+        for (var pi = 0; pi < penaltySections.length; pi++) {
+          var isLinked = false;
+          for (var ci = 0; ci < clanNums.length; ci++) {
+            if (penaltySections[pi].indexOf('lan ' + clanNums[ci]) !== -1 || penaltySections[pi].indexOf('clanu ' + clanNums[ci]) !== -1 || penaltySections[pi].indexOf('l. ' + clanNums[ci]) !== -1) {
+              isLinked = true;
+              break;
+            }
+          }
+          if (isLinked) linked.push(penaltySections[pi]);
+          else other.push(penaltySections[pi]);
+        }
+        // Put linked penalties first, then others
+        var sorted = linked.concat(other);
+        aktText += '\n\nKAZNENE ODREDBE (za prekršaj iz gornjeg člana):\n' + sorted.join('\n\n');
+      }
+      if (totalLen + aktText.length > 5000) {
+        aktText = aktText.substring(0, 5000 - totalLen);
+      }
+      parts.push(aktText);
+      totalLen += aktText.length;
+    }
+    context = parts.join('\n\n---\n\n');
+  }
+  }
+
+  // Update loading message
+  var loadEl = document.getElementById(loadingId);
+  if (loadEl) {
+    if (matched.length > 0) loadEl.textContent = '🤖 Analiziram ' + matched.length + ' relevantna akta...';
+    else loadEl.textContent = '🤖 Nema direktne preskoke, pokušavam AI...';
+  }
 
   fetch('/api/aiChat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question: q, history: pomocnikHistory })
+    body: JSON.stringify({ question: q, context: context, history: pomocnikHistory })
   }).then(function(r) { return r.json(); }).then(function(data) {
-    var loadEl = document.getElementById(loadingId);
-    if (loadEl) loadEl.remove();
+    var loadEl2 = document.getElementById(loadingId);
+    if (loadEl2) loadEl2.remove();
     if (data.success && data.reply) {
       pomocnikAddBubble(data.reply, 'ai');
       pomocnikHistory.push({ role: 'user', content: q });
       pomocnikHistory.push({ role: 'assistant', content: data.reply });
       if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
     } else {
-      pomocnikAddBubble('⚠️ AI nije dostupan. ' + (data.error || ''), 'ai error');
+      pomocnikAddBubble('⚠️ ' + (data.error || 'AI nije dostupan.'), 'ai error');
     }
   }).catch(function() {
-    var loadEl = document.getElementById(loadingId);
-    if (loadEl) loadEl.remove();
-    pomocnikAddBubble('⚠️ Greška pri povezivanju sa AI.', 'ai error');
+    var loadEl3 = document.getElementById(loadingId);
+    if (loadEl3) loadEl3.remove();
+    pomocnikAddBubble('⚠️ Greška pri povezivanju.', 'ai error');
   }).finally(function() {
     if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
   });
@@ -20091,7 +20215,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v221';
+const KM_VERSION = 'v229';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
