@@ -1639,6 +1639,12 @@ document.addEventListener('click', function(e) {
       <button onclick="applyTemplate('fotodok')" style="padding:6px 10px;border-radius:8px;border:none;background:#2c3e50;color:white;font-size:0.8rem;">📸 Fotodokumentacija</button>
     </div>
     <input type="text" id="doc-title" placeholder="Naziv dokumenta...">
+    <div id="dictation-bar" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--navy2);border-bottom:1px solid var(--border);min-height:38px;">
+      <button id="dictate-btn" onclick="toggleDictation()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:2px solid var(--gold);background:var(--navy);color:var(--gold);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">
+        <span id="dictate-icon">🎤</span><span id="dictate-label">Diktuj</span>
+      </button>
+      <span id="dictate-status" style="font-size:0.75rem;color:var(--text-muted);flex:1;"></span>
+    </div>
     <div id="doc-editor" contenteditable="true" spellcheck="true"></div>
     <div class="doc-actions">
       <button class="btn-main btn-save" onclick="saveDoc()">💾 Sačuvaj</button>
@@ -19753,7 +19759,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v210';
+const KM_VERSION = 'v211';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -20560,6 +20566,129 @@ async function adminDeletePelcer(id) {
   }
 }
 
+
+// ===== GOVORNI DIKTAT (Web Speech API) =====
+(function() {
+  var recognition = null;
+  var isDictating = false;
+
+  window.toggleDictation = function() {
+    if (isDictating) {
+      stopDictation();
+      return;
+    }
+    startDictation();
+  };
+
+  function startDictation() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      showToast('⚠️ Pregledač ne podržava govorni diktat. Probajte Chrome na Androidu.');
+      return;
+    }
+
+    var editor = document.getElementById('doc-editor');
+    if (!editor) return;
+
+    recognition = new SR();
+    recognition.lang = 'sr-RS';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    var baseText = '';
+    var baseHTML = editor.innerHTML;
+
+    recognition.onstart = function() {
+      isDictating = true;
+      baseText = editor.innerText || '';
+      var btn = document.getElementById('dictate-btn');
+      var icon = document.getElementById('dictate-icon');
+      var label = document.getElementById('dictate-label');
+      var status = document.getElementById('dictate-status');
+      if (btn) { btn.style.background = '#e74c3c'; btn.style.color = '#fff'; btn.style.borderColor = '#e74c3c'; }
+      if (icon) icon.textContent = '⏹️';
+      if (label) label.textContent = 'Zaustavi';
+      if (status) status.textContent = '🔊 Slušam...';
+      try { navigator.vibrate(50); } catch(e) {}
+    };
+
+    recognition.onresult = function(event) {
+      var interim = '';
+      var final = '';
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        var transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      if (final) {
+        // Append final text to editor
+        var p = document.createElement('p');
+        p.textContent = (baseText ? '\n' : '') + final.trim();
+        p.style.margin = '0 0 4px 0';
+        editor.appendChild(p);
+        baseText += (baseText ? '\n' : '') + final.trim();
+        baseHTML = editor.innerHTML;
+      }
+      // Show interim text in status
+      var status = document.getElementById('dictate-status');
+      if (status && interim) {
+        status.textContent = '🔊 ' + interim;
+      }
+    };
+
+    recognition.onerror = function(event) {
+      var status = document.getElementById('dictate-status');
+      var msg = 'Greška';
+      if (event.error === 'no-speech') msg = 'Nema govora...';
+      else if (event.error === 'not-allowed') msg = '⚠️ Mikrofon nije odobren';
+      else if (event.error === 'network') msg = '⚠️ Mrežna greška';
+      else msg = '⚠️ ' + (event.error || 'greška');
+      if (status) status.textContent = msg;
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        stopDictation();
+      }
+    };
+
+    recognition.onend = function() {
+      // Auto-restart if still dictating (Chrome stops after silence)
+      if (isDictating) {
+        try { recognition.start(); } catch(e) { stopDictation(); }
+      } else {
+        resetButton();
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch(e) {
+      showToast('⚠️ Greška pri pokretanju diktaža: ' + e.message);
+      isDictating = false;
+    }
+  }
+
+  function stopDictation() {
+    isDictating = false;
+    if (recognition) {
+      try { recognition.stop(); } catch(e) {}
+      recognition = null;
+    }
+    resetButton();
+  }
+
+  function resetButton() {
+    var btn = document.getElementById('dictate-btn');
+    var icon = document.getElementById('dictate-icon');
+    var label = document.getElementById('dictate-label');
+    var status = document.getElementById('dictate-status');
+    if (btn) { btn.style.background = 'var(--navy)'; btn.style.color = 'var(--gold)'; btn.style.borderColor = 'var(--gold)'; }
+    if (icon) icon.textContent = '🎤';
+    if (label) label.textContent = 'Diktuj';
+    if (status) status.textContent = '';
+  }
+})();
 </script>
 
 
