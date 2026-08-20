@@ -5471,12 +5471,16 @@ function pomocnikExtractSections(text, keywords) {
       var c = (contentLower.match(new RegExp(keywords[k], 'g')) || []).length;
       densityScore += c;
     }
-    // Require ALL keywords to match in section
-    if (matchCount >= keywords.length) {
-      sections.push({ text: section.replace(/^\*+/,'').trim(), score: matchCount * 100 + densityScore });
+    // Boost sections with prohibition keywords
+    var boost = 0;
+    if (contentLower.indexOf('zabranjeno') !== -1 || contentLower.indexOf('zabranjuje') !== -1) boost += 500;
+    if (contentLower.indexOf('ne sme') !== -1 || contentLower.indexOf('ne može') !== -1) boost += 200;
+    if (contentLower.indexOf('obavezan') !== -1 || contentLower.indexOf('dužan') !== -1) boost += 100;
+    if (matchCount >= keywords.length || (matchCount > 0 && boost > 0)) {
+      sections.push({ text: section.replace(/^\*+/,'').trim(), score: matchCount * 100 + densityScore + boost });
     }
   }
-  // If no sections match all keywords, fall back to any match
+  // Fallback: any match
   if (sections.length === 0) {
     for (var i2 = 1; i2 < parts.length; i2++) {
       var section2 = parts[i2].substring(0, 1000);
@@ -5507,10 +5511,102 @@ function pomocnikExtractPenaltySections(aktNaziv) {
           sections.push(section.replace(/^\*+/,'').trim());
         }
       }
-      return sections.slice(0, 4);
+      return sections.slice(0, 8);
     }
   }
   return [];
+}
+
+function pomocnikBuildAnswer(matched) {
+  var lines = [];
+  for (var i = 0; i < Math.min(matched.length, 2); i++) {
+    var a = matched[i];
+    // Find best prohibition section (contains "zabran" or keyword)
+    var zabrana = null;
+    var zabranaClan = null;
+    if (a.sections) {
+      for (var s = 0; s < a.sections.length; s++) {
+        var sl = a.sections[s].toLowerCase();
+        var cm = a.sections[s].match(/[ČC]lan\s+(\d+[a-zčćžšđ]?)/i);
+        if (sl.indexOf('zabranjeno') !== -1 || sl.indexOf('zabranjuje') !== -1 || sl.indexOf('zabranjeno je') !== -1) {
+          zabrana = a.sections[s];
+          if (cm) zabranaClan = cm[1];
+          break;
+        }
+      }
+      // If no "zabranjeno" found, use first section
+      if (!zabrana && a.sections.length > 0) {
+        zabrana = a.sections[0];
+        var cm2 = a.sections[0].match(/[ČC]lan\s+(\d+[a-zčćžšđ]?)/i);
+        if (cm2) zabranaClan = cm2[1];
+      }
+    }
+    // Find matching penalty section (references the prohibition član)
+    var kazna = null;
+    var penalties = pomocnikExtractPenaltySections(a.naziv);
+    // 1) Try explicit član reference match (član/člana/članu/čl. + number)
+    if (penalties.length > 0 && zabranaClan) {
+      var clanRe = new RegExp('lan[a-z]?\.?\\s+' + zabranaClan.replace(/[^0-9a-z]/gi, '') + '[\\.\\s,;]', 'i');
+      for (var p = 0; p < penalties.length; p++) {
+        if (clanRe.test(penalties[p])) {
+          kazna = penalties[p];
+          break;
+        }
+      }
+    }
+    // 2) Try keyword overlap between prohibition and penalty
+    if (!kazna && penalties.length > 0 && zabrana) {
+      var zabLower = zabrana.toLowerCase();
+      for (var p3 = 0; p3 < penalties.length; p3++) {
+        var pl3 = penalties[p3].toLowerCase();
+        var overlap = 0;
+        // Check if penalty repeats key phrases from prohibition
+        if (zabLower.indexOf('parkiran') !== -1 && pl3.indexOf('parkir') !== -1) overlap++;
+        if (zabLower.indexOf('buk') !== -1 && pl3.indexOf('buk') !== -1) overlap++;
+        if (zabLower.indexOf('otpad') !== -1 && pl3.indexOf('otpad') !== -1) overlap++;
+        if (zabLower.indexOf('trotoar') !== -1 && pl3.indexOf('trotoar') !== -1) overlap++;
+        if (zabLower.indexOf('zelen') !== -1 && pl3.indexOf('zelen') !== -1) overlap++;
+        if (zabLower.indexOf('građevin') !== -1 && pl3.indexOf('građevin') !== -1) overlap++;
+        if (zabLower.indexOf('životinj') !== -1 && pl3.indexOf('životinj') !== -1) overlap++;
+        if (overlap > 0 && (pl3.indexOf('novčan') !== -1 || pl3.indexOf('kazn') !== -1)) {
+          kazna = penalties[p3];
+          break;
+        }
+      }
+    }
+    // 3) Fallback: first penalty with amount
+    if (!kazna && penalties.length > 0) {
+      for (var p2 = 0; p2 < penalties.length; p2++) {
+        if (penalties[p2].toLowerCase().indexOf('novčan') !== -1 || penalties[p2].toLowerCase().indexOf('kazn') !== -1) {
+          kazna = penalties[p2];
+          break;
+        }
+      }
+    }
+    // Build output
+    var header = (a.tip === 'odluka' ? '📋 ODLUKA' : '📋 ZAKON') + ': ' + a.naziv;
+    if (a.broj) header += ' (' + a.broj + ')';
+    lines.push(header);
+    lines.push('');
+    if (zabrana) {
+      lines.push('🚫 ZABRANA:');
+      lines.push(zabrana.substring(0, 600));
+      lines.push('');
+    }
+    if (kazna) {
+      lines.push('💰 KAZNA:');
+      lines.push(kazna.substring(0, 600));
+      lines.push('');
+    }
+    if (!zabrana && !kazna) {
+      if (a.sections && a.sections.length > 0) {
+        lines.push(a.sections[0].substring(0, 500));
+        lines.push('');
+      }
+    }
+    if (i < Math.min(matched.length, 2) - 1) lines.push('─────────────');
+  }
+  return lines.join('\n').trim();
 }
 
 function formatPomocnikReply(matched) {
@@ -5608,44 +5704,20 @@ function pomocnikSend() {
     context = parts.join('\n\n---\n\n');
   }
 
-  // Send to AI with matched context for precise extraction
+  // Direct extraction — no AI, precise matching
   var loadEl = document.getElementById(loadingId);
-  if (loadEl) {
-    if (matched.length > 0) loadEl.textContent = '🤖 Analiziram ' + matched.length + ' relevantna akta...';
-    else loadEl.textContent = '🤖 Pretražujem bazu...';
-  }
+  if (loadEl) loadEl.remove();
 
-  fetch('/api/aiChat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question: q, context: context, history: pomocnikHistory })
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    var loadEl2 = document.getElementById(loadingId);
-    if (loadEl2) loadEl2.remove();
-    if (data.success && data.reply) {
-      pomocnikAddBubble(data.reply, 'ai');
-      pomocnikHistory.push({ role: 'user', content: q });
-      pomocnikHistory.push({ role: 'assistant', content: data.reply });
-      if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
-    } else {
-      // Fallback: show raw matched sections
-      if (matched.length > 0) {
-        pomocnikAddBubble(formatPomocnikReply(matched), 'ai');
-      } else {
-        pomocnikAddBubble('⚠️ ' + (data.error || 'Nema rezultata za ovo pitanje.'), 'ai error');
-      }
-    }
-  }).catch(function() {
-    var loadEl3 = document.getElementById(loadingId);
-    if (loadEl3) loadEl3.remove();
-    if (matched.length > 0) {
-      pomocnikAddBubble(formatPomocnikReply(matched), 'ai');
-    } else {
-      pomocnikAddBubble('⚠️ Greška pri povezivanju.', 'ai error');
-    }
-  }).finally(function() {
-    if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
-  });
+  if (matched.length === 0) {
+    pomocnikAddBubble('Nema rezultata za: "' + q + '"\n\nPokušajte sa: parkiranje, buka, otpad, trotoar, građevina...', 'ai');
+  } else {
+    var reply = pomocnikBuildAnswer(matched);
+    pomocnikAddBubble(reply, 'ai');
+    pomocnikHistory.push({ role: 'user', content: q });
+    pomocnikHistory.push({ role: 'assistant', content: reply });
+    if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
+  }
+  if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
 }
 
 function pomocnikAddBubble(text, type, id) {
@@ -20275,7 +20347,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v234';
+const KM_VERSION = 'v235';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
