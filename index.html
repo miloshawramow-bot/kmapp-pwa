@@ -5608,20 +5608,44 @@ function pomocnikSend() {
     context = parts.join('\n\n---\n\n');
   }
 
-  // Format matched sections directly — no AI, no hallucination
+  // Send to AI with matched context for precise extraction
   var loadEl = document.getElementById(loadingId);
-  if (loadEl) loadEl.remove();
-
-  if (matched.length === 0) {
-    pomocnikAddBubble('Nema rezultata za: "' + q + '".\n\nPokušajte sa konkretnim terminima: parkiranje, buka, otpad, trotoar, građevina,Tabla...', 'ai');
-  } else {
-    var reply = formatPomocnikReply(matched);
-    pomocnikAddBubble(reply, 'ai');
-    pomocnikHistory.push({ role: 'user', content: q });
-    pomocnikHistory.push({ role: 'assistant', content: reply });
-    if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
+  if (loadEl) {
+    if (matched.length > 0) loadEl.textContent = '🤖 Analiziram ' + matched.length + ' relevantna akta...';
+    else loadEl.textContent = '🤖 Pretražujem bazu...';
   }
-  if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
+
+  fetch('/api/aiChat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question: q, context: context, history: pomocnikHistory })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var loadEl2 = document.getElementById(loadingId);
+    if (loadEl2) loadEl2.remove();
+    if (data.success && data.reply) {
+      pomocnikAddBubble(data.reply, 'ai');
+      pomocnikHistory.push({ role: 'user', content: q });
+      pomocnikHistory.push({ role: 'assistant', content: data.reply });
+      if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
+    } else {
+      // Fallback: show raw matched sections
+      if (matched.length > 0) {
+        pomocnikAddBubble(formatPomocnikReply(matched), 'ai');
+      } else {
+        pomocnikAddBubble('⚠️ ' + (data.error || 'Nema rezultata za ovo pitanje.'), 'ai error');
+      }
+    }
+  }).catch(function() {
+    var loadEl3 = document.getElementById(loadingId);
+    if (loadEl3) loadEl3.remove();
+    if (matched.length > 0) {
+      pomocnikAddBubble(formatPomocnikReply(matched), 'ai');
+    } else {
+      pomocnikAddBubble('⚠️ Greška pri povezivanju.', 'ai error');
+    }
+  }).finally(function() {
+    if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
+  });
 }
 
 function pomocnikAddBubble(text, type, id) {
@@ -20251,7 +20275,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v233';
+const KM_VERSION = 'v234';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
