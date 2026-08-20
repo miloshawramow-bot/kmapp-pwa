@@ -5164,7 +5164,7 @@ function autoPrijavaPhoto() {
         body += '<p><b>Vreme:</b> ' + timeStr + '</p>';
         body += '<p><b>Službenik:</b> ' + userName + '</p>';
         body += '<p id="ai-gps"><b>Lokacija:</b> ____________</p>';
-        body += '<p id="ai-opis"><b>Opis:</b> <span style="color:#999;">🤖 AI analizira sliku...</span></p>';
+        body += '<div id="ai-opis" style="background:#f0f4ff;border:2px solid #3498db;border-radius:10px;padding:12px 14px;margin:8px 0;font-size:1.05rem;line-height:1.6;"><b style="color:#2980b9;">🤖 AI analiza:</b> <span style="color:#7f8c8d;font-style:italic;">Analizira sliku...</span></div>';
         body += '<hr>';
         body += '<p><b>Fotodokumentacija:</b></p>';
         body += '<div style="text-align:center;margin:10px 0;"><img src="' + dataUrl + '" style="max-width:100%;border-radius:8px;border:1px solid #ccc;"></div>';
@@ -5201,17 +5201,17 @@ function autoPrijavaPhoto() {
           var opisP = document.getElementById('ai-opis');
           if (opisP) {
             if (data.success && data.description) {
-              opisP.innerHTML = '<b>Opis (AI):</b> ' + data.description;
+              opisP.innerHTML = '<b style="color:#2980b9;">🤖 AI analiza:</b><br>' + data.description;
               showToast('✅ AI opis generisan');
             } else {
-              opisP.innerHTML = '<b>Opis:</b> ____________';
+              opisP.innerHTML = '<b style="color:#e74c3c;">🤖 AI analiza:</b> <span style="color:#999;">AI nije uspeo — popuni ručno ispod</span>'
               showToast('⚠️ AI nije uspeo — popuni ručno');
             }
           }
         }).catch(function() {
           var opisP = document.getElementById('ai-opis');
           if (opisP) {
-            opisP.innerHTML = '<b>Opis:</b> ____________';
+            opisP.innerHTML = '<b style="color:#e74c3c;">🤖 AI analiza:</b> <span style="color:#999;">AI nije uspeo — popuni ručno ispod</span>'
             showToast('⚠️ AI nedostupan — popuni ručno');
           }
         });
@@ -5261,7 +5261,7 @@ function aiDescribePhoto() {
     if (btn) { btn.textContent = '🤖 AI'; btn.style.background = ''; }
     if (data.success && data.description) {
       // Append AI description at the end of the document
-      var descHtml = '<hr><p><b>AI analiza slike:</b> ' + data.description + '</p>';
+      var descHtml = '<hr><div style="background:#f0f4ff;border:2px solid #3498db;border-radius:10px;padding:12px 14px;margin:8px 0;font-size:1.05rem;line-height:1.6;"><b style="color:#2980b9;">🤖 AI analiza slike:</b><br>' + data.description + '</div>';
       editor.innerHTML += descHtml;
       showToast('✅ AI opis dodat u dokument');
     } else {
@@ -19866,7 +19866,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v216';
+const KM_VERSION = 'v217';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
