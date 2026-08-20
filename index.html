@@ -419,15 +419,16 @@
   }
   #doc-title:focus { border-bottom-color: var(--accent); }
 
+  /* #doc-editor replaced below */
   #doc-editor {
-    min-height: 280px;
+    min-height: 200px; flex: 1;
     padding: 14px 16px;
     font-size: 11pt;
     font-family: Tahoma, sans-serif;
     line-height: 1.7;
     outline: none;
     background:var(--card);
-    overflow-y: auto;
+    overflow-y: visible;
     color: var(--text);
   }
   #doc-editor:empty:before {
@@ -1608,7 +1609,7 @@ document.addEventListener('click', function(e) {
     </div>
     <div id="cal-events" style="margin-bottom:20px;"></div>
   </div>
-  <div id="view-editor" style="display:none; flex-direction:column; min-height:100%;">
+  <div id="view-editor" style="display:none; flex-direction:column; min-height:100%; overflow-y:auto; flex:1;">
     <div class="doc-toolbar">
       <button class="tb-btn" onclick="fmt(&#39;bold&#39;)"><b>B</b></button>
       <button class="tb-btn" onclick="fmt(&#39;italic&#39;)"><i>I</i></button>
@@ -1639,12 +1640,6 @@ document.addEventListener('click', function(e) {
       <button onclick="applyTemplate('fotodok')" style="padding:6px 10px;border-radius:8px;border:none;background:#2c3e50;color:white;font-size:0.8rem;">📸 Fotodokumentacija</button>
     </div>
     <input type="text" id="doc-title" placeholder="Naziv dokumenta...">
-    <div id="dictation-bar" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--navy2);border-bottom:1px solid var(--border);min-height:38px;">
-      <button id="dictate-btn" onclick="toggleDictation()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:2px solid var(--gold);background:var(--navy);color:var(--gold);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">
-        <span id="dictate-icon">🎤</span><span id="dictate-label">Diktuj</span>
-      </button>
-      <span id="dictate-status" style="font-size:0.75rem;color:var(--text-muted);flex:1;"></span>
-    </div>
     <div id="doc-editor" contenteditable="true" spellcheck="true"></div>
     <div class="doc-actions">
       <button class="btn-main btn-save" onclick="saveDoc()">💾 Sačuvaj</button>
@@ -5035,6 +5030,43 @@ function toggleVoiceDictation() {
   }
 }
 
+// Latin-to-Cyrillic converter
+function _toCyrillic(text) {
+  return text
+    .replace(/Lj/g, 'Љ').replace(/NJ/g, 'Њ').replace(/Dž/g, 'Џ')
+    .replace(/lj/g, 'љ').replace(/nj/g, 'њ').replace(/dž/g, 'џ')
+    .replace(/LJ/g, 'Љ').replace(/DŽ/g, 'Џ')
+    .replace(/[aA]/g, function(m){return m==='a'?'а':'А'})
+    .replace(/[bB]/g, function(m){return m==='b'?'б':'Б'})
+    .replace(/[vV]/g, function(m){return m==='v'?'в':'В'})
+    .replace(/[gG]/g, function(m){return m==='g'?'г':'Г'})
+    .replace(/[dD]/g, function(m){return m==='d'?'д':'Д'})
+    .replace(/[đĐ]/g, function(m){return m==='đ'?'ђ':'Ђ'})
+    .replace(/[eE]/g, function(m){return m==='e'?'е':'Е'})
+    .replace(/[žŽ]/g, function(m){return m==='ž'?'ж':'Ж'})
+    .replace(/[zZ]/g, function(m){return m==='z'?'з':'З'})
+    .replace(/[iI]/g, function(m){return m==='i'?'и':'И'})
+    .replace(/[jJ]/g, function(m){return m==='j'?'ј':'Ј'})
+    .replace(/[kK]/g, function(m){return m==='k'?'к':'К'})
+    .replace(/[lL]/g, function(m){return m==='l'?'л':'Л'})
+    .replace(/[mM]/g, function(m){return m==='m'?'м':'М'})
+    .replace(/[nN]/g, function(m){return m==='n'?'н':'Н'})
+    .replace(/[oO]/g, function(m){return m==='o'?'о':'О'})
+    .replace(/[pP]/g, function(m){return m==='p'?'п':'П'})
+    .replace(/[rR]/g, function(m){return m==='r'?'р':'Р'})
+    .replace(/[sS]/g, function(m){return m==='s'?'с':'С'})
+    .replace(/[tT]/g, function(m){return m==='t'?'т':'Т'})
+    .replace(/[ćĆ]/g, function(m){return m==='ć'?'ћ':'Ћ'})
+    .replace(/[uU]/g, function(m){return m==='u'?'у':'У'})
+    .replace(/[fF]/g, function(m){return m==='f'?'ф':'Ф'})
+    .replace(/[hH]/g, function(m){return m==='h'?'х':'Х'})
+    .replace(/[cC]/g, function(m){return m==='c'?'ц':'Ц'})
+    .replace(/[čČ]/g, function(m){return m==='č'?'ч':'Ч'})
+    .replace(/[šŠ]/g, function(m){return m==='š'?'ш':'Ш'});
+}
+
+var _voiceLastFinal = -1;
+
 function startVoiceDictation() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
@@ -5042,53 +5074,59 @@ function startVoiceDictation() {
     return;
   }
   voiceRec = new SR();
-  voiceRec.lang = 'sr-RS';
+  voiceRec.lang = 'sr-Cyrl-RS';
   voiceRec.continuous = true;
   voiceRec.interimResults = true;
-  
+  _voiceLastFinal = -1;
+
   voiceRec.onresult = function(event) {
-    let final = '';
-    let interim = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
+    var finalText = '';
+    var interim = '';
+    for (var i = event.resultIndex; i < event.results.length; i++) {
+      var transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
-        final += event.results[i][0].transcript;
+        if (i > _voiceLastFinal) {
+          finalText += transcript;
+          _voiceLastFinal = i;
+        }
       } else {
-        interim += event.results[i][0].transcript;
+        interim += transcript;
       }
     }
-    if (final) {
-      document.execCommand('insertText', false, final + ' ');
+    if (finalText) {
+      finalText = _toCyrillic(finalText.trim()) + ' ';
+      document.execCommand('insertText', false, finalText);
     }
   };
-  
+
   voiceRec.onerror = function(e) {
     if (e.error === 'not-allowed') showToast('Dozvolite pristup mikrofonu');
     stopVoiceDictation();
   };
-  
+
   voiceRec.onend = function() {
     if (voiceActive) {
+      _voiceLastFinal = -1;
       try { voiceRec.start(); } catch(e) {}
     }
   };
-  
+
   voiceRec.start();
   voiceActive = true;
-  const btn = document.getElementById('voice-btn');
-  if (btn) { btn.style.background = '#e74c3c'; btn.style.color = 'white'; btn.textContent = '🔴 Stop'; }
-  showToast('🎤 Slušam... govorite');
+  var btn = document.getElementById('voice-btn');
+  if (btn) { btn.style.background = '#e74c3c'; btn.style.color = 'white'; btn.textContent = '⏹️ Stop'; }
+  showToast('🎤 Слушам... говорите');
 }
 
 function stopVoiceDictation() {
+  voiceActive = false;
   if (voiceRec) {
-    voiceActive = false;
-    voiceRec.stop();
+    try { voiceRec.stop(); } catch(e) {}
     voiceRec = null;
   }
-  const btn = document.getElementById('voice-btn');
+  var btn = document.getElementById('voice-btn');
   if (btn) { btn.style.background = ''; btn.style.color = ''; btn.textContent = '🎤 Diktat'; }
 }
-
 
 // ===== AUTO PRIJAVA IZ FOTOGRAFIJE =====
 function autoPrijavaPhoto() {
@@ -19759,7 +19797,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v212';
+const KM_VERSION = 'v213';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -20567,186 +20605,6 @@ async function adminDeletePelcer(id) {
 }
 
 
-// ===== GOVORNI DIKTAT (Web Speech API) =====
-(function() {
-  var recognition = null;
-  var isDictating = false;
-  var lastFinalIndex = -1;
-
-  // Latin-to-Cyrillic converter (fallback if browser ignores sr-Cyrl-RS)
-  var latToCyr = {
-    'a':'а','b':'б','v':'в','g':'г','d':'д','đ':'ђ','e':'е','ž':'ж',
-    'z':'з','i':'и','j':'ј','k':'к','l':'л','lj':'љ','m':'м','n':'н',
-    'nj':'њ','o':'о','p':'п','r':'р','s':'с','t':'т','ć':'ћ','u':'у',
-    'f':'ф','h':'х','c':'ц','č':'ч','dž':'џ','š':'ш',
-    'A':'А','B':'Б','V':'В','G':'Г','D':'Д','Đ':'Ђ','E':'Е','Ž':'Ж',
-    'Z':'З','I':'И','J':'Ј','K':'К','L':'Л','Lj':'Љ','M':'М','N':'Н',
-    'Nj':'Њ','O':'О','P':'П','R':'Р','S':'С','T':'Т','Ć':'Ћ','U':'У',
-    'F':'Ф','H':'Х','C':'Ц','Č':'Ч','Dž':'Џ','Š':'Ш'
-  };
-
-  function toCyrillic(text) {
-    // Handle digraphs first (lj, nj, dž), then single chars
-    return text
-      .replace(/Lj/g, 'Љ').replace(/NJ/g, 'Њ').replace(/Dž/g, 'Џ')
-      .replace(/lj/g, 'љ').replace(/nj/g, 'њ').replace(/dž/g, 'џ')
-      .replace(/LJ/g, 'Љ').replace(/DŽ/g, 'Џ')
-      .replace(/[aA]/g, function(m){return latToCyr[m]})
-      .replace(/[bB]/g, function(m){return latToCyr[m]})
-      .replace(/[vV]/g, function(m){return latToCyr[m]})
-      .replace(/[gG]/g, function(m){return latToCyr[m]})
-      .replace(/[dD]/g, function(m){return latToCyr[m]})
-      .replace(/[đĐ]/g, function(m){return latToCyr[m]})
-      .replace(/[eE]/g, function(m){return latToCyr[m]})
-      .replace(/[žŽ]/g, function(m){return latToCyr[m]})
-      .replace(/[zZ]/g, function(m){return latToCyr[m]})
-      .replace(/[iI]/g, function(m){return latToCyr[m]})
-      .replace(/[jJ]/g, function(m){return latToCyr[m]})
-      .replace(/[kK]/g, function(m){return latToCyr[m]})
-      .replace(/[lL]/g, function(m){return latToCyr[m]})
-      .replace(/[mM]/g, function(m){return latToCyr[m]})
-      .replace(/[nN]/g, function(m){return latToCyr[m]})
-      .replace(/[oO]/g, function(m){return latToCyr[m]})
-      .replace(/[pP]/g, function(m){return latToCyr[m]})
-      .replace(/[rR]/g, function(m){return latToCyr[m]})
-      .replace(/[sS]/g, function(m){return latToCyr[m]})
-      .replace(/[tT]/g, function(m){return latToCyr[m]})
-      .replace(/[ćĆ]/g, function(m){return latToCyr[m]})
-      .replace(/[uU]/g, function(m){return latToCyr[m]})
-      .replace(/[fF]/g, function(m){return latToCyr[m]})
-      .replace(/[hH]/g, function(m){return latToCyr[m]})
-      .replace(/[cC]/g, function(m){return latToCyr[m]})
-      .replace(/[čČ]/g, function(m){return latToCyr[m]})
-      .replace(/[šŠ]/g, function(m){return latToCyr[m]});
-  }
-
-  window.toggleDictation = function() {
-    if (isDictating) {
-      stopDictation();
-      return;
-    }
-    startDictation();
-  };
-
-  function startDictation() {
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      showToast('⚠️ Pregledač ne podržava govorni diktat. Probajte Chrome na Androidu.');
-      return;
-    }
-
-    var editor = document.getElementById('doc-editor');
-    if (!editor) return;
-
-    recognition = new SR();
-    recognition.lang = 'sr-Cyrl-RS';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    lastFinalIndex = -1;
-
-    recognition.onstart = function() {
-      isDictating = true;
-      var btn = document.getElementById('dictate-btn');
-      var icon = document.getElementById('dictate-icon');
-      var label = document.getElementById('dictate-label');
-      var status = document.getElementById('dictate-status');
-      if (btn) { btn.style.background = '#e74c3c'; btn.style.color = '#fff'; btn.style.borderColor = '#e74c3c'; }
-      if (icon) icon.textContent = '⏹️';
-      if (label) label.textContent = 'Zaustavi';
-      if (status) status.textContent = '🔊 Слушам...';
-      try { navigator.vibrate(50); } catch(e) {}
-    };
-
-    recognition.onresult = function(event) {
-      var interim = '';
-      var finalText = '';
-
-      for (var i = event.resultIndex; i < event.results.length; i++) {
-        var transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          // Only process each final result ONCE
-          if (i > lastFinalIndex) {
-            finalText += transcript;
-            lastFinalIndex = i;
-          }
-        } else {
-          interim += transcript;
-        }
-      }
-
-      if (finalText) {
-        // Convert to Cyrillic in case browser returned Latin
-        finalText = toCyrillic(finalText.trim());
-        var p = document.createElement('p');
-        p.textContent = finalText;
-        p.style.margin = '0 0 4px 0';
-        editor.appendChild(p);
-        // Move cursor to end
-        var range = document.createRange();
-        range.selectNodeContents(editor);
-        range.collapse(false);
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
-
-      var status = document.getElementById('dictate-status');
-      if (status && interim) {
-        status.textContent = '🔊 ' + toCyrillic(interim);
-      }
-    };
-
-    recognition.onerror = function(event) {
-      var status = document.getElementById('dictate-status');
-      var msg = 'Грешка';
-      if (event.error === 'no-speech') msg = 'Нема говора...';
-      else if (event.error === 'not-allowed') msg = '⚠️ Микрофон није одобрен';
-      else if (event.error === 'network') msg = '⚠️ Мрежна грешка';
-      else msg = '⚠️ ' + (event.error || 'грешка');
-      if (status) status.textContent = msg;
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        stopDictation();
-      }
-    };
-
-    recognition.onend = function() {
-      if (isDictating) {
-        // Auto-restart (Chrome stops after silence)
-        lastFinalIndex = -1;
-        try { recognition.start(); } catch(e) { stopDictation(); }
-      } else {
-        resetButton();
-      }
-    };
-
-    try {
-      recognition.start();
-    } catch(e) {
-      showToast('⚠️ Грешка при покретању диктажа: ' + e.message);
-      isDictating = false;
-    }
-  }
-
-  function stopDictation() {
-    isDictating = false;
-    if (recognition) {
-      try { recognition.stop(); } catch(e) {}
-      recognition = null;
-    }
-    resetButton();
-  }
-
-  function resetButton() {
-    var btn = document.getElementById('dictate-btn');
-    var icon = document.getElementById('dictate-icon');
-    var label = document.getElementById('dictate-label');
-    var status = document.getElementById('dictate-status');
-    if (btn) { btn.style.background = 'var(--navy)'; btn.style.color = 'var(--gold)'; btn.style.borderColor = 'var(--gold)'; }
-    if (icon) icon.textContent = '🎤';
-    if (label) label.textContent = 'Diktuj';
-    if (status) status.textContent = '';
-  }
-})();
 </script>
 
 
