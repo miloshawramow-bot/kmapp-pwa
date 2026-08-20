@@ -5462,7 +5462,7 @@ function pomocnikExtractSections(text, keywords) {
   var sections = [];
   var parts = text.split(/(?=[ČC]lan\s+\d+)/i);
   for (var i = 1; i < parts.length; i++) {
-    var section = parts[i].substring(0, 1000);
+    var section = parts[i];
     var contentLower = section.toLowerCase();
     var matchCount = 0;
     var densityScore = 0;
@@ -5590,12 +5590,12 @@ function pomocnikBuildAnswer(matched) {
     lines.push('');
     if (zabrana) {
       lines.push('🚫 ZABRANA:');
-      lines.push(zabrana.substring(0, 3000));
+      lines.push(zabrana);
       lines.push('');
     }
     if (kazna) {
       lines.push('💰 KAZNA:');
-      lines.push(kazna.substring(0, 3000));
+      lines.push(kazna);
       lines.push('');
     }
     if (!zabrana && !kazna) {
@@ -20347,7 +20347,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v237';
+const KM_VERSION = 'v238';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
