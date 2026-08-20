@@ -1626,6 +1626,7 @@ document.addEventListener('click', function(e) {
       <button class="tb-btn" onclick="toggleVoiceDictation()" id="voice-btn" style="font-size:0.9rem;">🎤 Diktat</button>
       <button class="tb-btn" onclick="autoPrijavaPhoto()" style="font-size:0.9rem;">🚨 Prijava</button>
       <button class="tb-btn" onclick="ocrScan()" id="ocr-btn" style="font-size:0.9rem;">🔍 OCR</button>
+      <button class="tb-btn" onclick="aiDescribePhoto()" id="ai-desc-btn" style="font-size:0.9rem;">🤖 AI</button>
       <button class="tb-btn" onclick="toggleTemplatePicker()" style="font-size:0.9rem;">📋 Šablon</button>
       <button class="tb-btn" onclick="backToList()">← Nazad</button>
     </div>
@@ -5157,13 +5158,13 @@ function autoPrijavaPhoto() {
         const user = getCurrentUser() || '';
         const userName = getDisplayName() || user;
         
-        // Build prijava document
+        // Build prijava document with AI loading placeholder
         let body = '<h2 style="color:#c0392b;">PRIJAVA IZ FOTOGRAFIJE</h2><hr>';
         body += '<p><b>Datum:</b> ' + dateStr + '</p>';
         body += '<p><b>Vreme:</b> ' + timeStr + '</p>';
         body += '<p><b>Službenik:</b> ' + userName + '</p>';
-        body += '<p><b>Lokacija:</b> ____________</p>';
-        body += '<p><b>Opis prekršaja:</b> ____________</p>';
+        body += '<p id="ai-gps"><b>Lokacija:</b> ____________</p>';
+        body += '<p id="ai-opis"><b>Opis:</b> <span style="color:#999;">🤖 AI analizira sliku...</span></p>';
         body += '<hr>';
         body += '<p><b>Fotodokumentacija:</b></p>';
         body += '<div style="text-align:center;margin:10px 0;"><img src="' + dataUrl + '" style="max-width:100%;border-radius:8px;border:1px solid #ccc;"></div>';
@@ -5173,6 +5174,7 @@ function autoPrijavaPhoto() {
         // Set in editor
         document.getElementById('doc-title').value = 'Prijava iz fotografije - ' + dateStr;
         document.getElementById('doc-editor').innerHTML = body;
+        showToast('📸 Slika dodata, AI analizira...');
         
         // Try to get GPS and add to document
         if (navigator.geolocation) {
@@ -5180,18 +5182,39 @@ function autoPrijavaPhoto() {
             const lat = pos.coords.latitude.toFixed(6);
             const lon = pos.coords.longitude.toFixed(6);
             const mapsUrl = 'https://maps.google.com/maps?q=' + lat + ',' + lon;
-            const editor = document.getElementById('doc-editor');
-            const gpsP = editor.querySelector('p:nth-of-type(4)');
+            const gpsP = document.getElementById('ai-gps');
             if (gpsP) {
               gpsP.innerHTML = '<b>Lokacija:</b> <a href="' + mapsUrl + '" target="_blank">' + lat + ', ' + lon + ' (klikni za mapu)</a>';
             }
-            showToast('📍 GPS lokacija dodata u prijavu');
-          }, function() {
-            showToast('📸 Prijava kreirana (GPS nedostupan)');
-          }, { timeout: 5000, enableHighAccuracy: true });
-        } else {
-          showToast('📸 Prijava kreirana');
+          }, function() {}, { timeout: 5000, enableHighAccuracy: true });
         }
+        
+        // Send to AI for image description
+        fetch('/api/aiDescribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: dataUrl,
+            prompt: 'Opiši šta je na ovoj slici na srpskom jeziku (ćirilica). Fokusiraj se na: šta se vidi (objekti, vozila, lica, priroda, zgrade), eventualne prekršaje ili nepravilnosti (nelegalno parkiranje, deponija, buka, oštećena infrastruktura), i opšte stanje okoline. Odgovor u 2-3 kratke rečenice, bez uvoda.'
+          })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          var opisP = document.getElementById('ai-opis');
+          if (opisP) {
+            if (data.success && data.description) {
+              opisP.innerHTML = '<b>Opis (AI):</b> ' + data.description;
+              showToast('✅ AI opis generisan');
+            } else {
+              opisP.innerHTML = '<b>Opis:</b> ____________';
+              showToast('⚠️ AI nije uspeo — popuni ručno');
+            }
+          }
+        }).catch(function() {
+          var opisP = document.getElementById('ai-opis');
+          if (opisP) {
+            opisP.innerHTML = '<b>Opis:</b> ____________';
+            showToast('⚠️ AI nedostupan — popuni ručno');
+          }
+        });
         
         document.getElementById('doc-editor').focus();
       };
@@ -5203,6 +5226,52 @@ function autoPrijavaPhoto() {
 }
 
 
+// AI opis slike iz editora
+function aiDescribePhoto() {
+  var editor = document.getElementById('doc-editor');
+  if (!editor) return;
+  var imgs = editor.querySelectorAll('img');
+  if (!imgs.length) {
+    showToast('📸 Prvo dodaj sliku u dokument');
+    return;
+  }
+  var btn = document.getElementById('ai-desc-btn');
+  if (btn) { btn.textContent = '⏳...'; btn.style.background = '#f39c12'; }
+  showToast('🤖 AI analizira sliku...');
+
+  // Use the first image, compress it first
+  var img = imgs[0];
+  var canvas = document.createElement('canvas');
+  var maxW = 800, maxH = 1000;
+  var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  if (w > maxW) { h = h * maxW / w; w = maxW; }
+  if (h > maxH) { w = w * maxH / h; h = maxH; }
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+  fetch('/api/aiDescribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image: dataUrl,
+      prompt: 'Opiši šta je na ovoj slici na srpskom jeziku (ćirilica). Fokusiraj se na: šta se vidi (objekti, vozila, lica, priroda, zgrade), eventualne prekršaje ili nepravilnosti (nelegalno parkiranje, deponija, buka, oštećena infrastruktura), i opšte stanje okoline. Odgovor u 2-3 kratke rečenice, bez uvoda.'
+    })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (btn) { btn.textContent = '🤖 AI'; btn.style.background = ''; }
+    if (data.success && data.description) {
+      // Append AI description at the end of the document
+      var descHtml = '<hr><p><b>AI analiza slike:</b> ' + data.description + '</p>';
+      editor.innerHTML += descHtml;
+      showToast('✅ AI opis dodat u dokument');
+    } else {
+      showToast('⚠️ AI nije uspeo: ' + (data.error || 'greška'));
+    }
+  }).catch(function() {
+    if (btn) { btn.textContent = '🤖 AI'; btn.style.background = ''; }
+    showToast('⚠️ AI nedostupan');
+  });
+}
 // ===== TERMINSKI KALENDAR =====
 let calCurrentDate = new Date();
 let calEvents = JSON.parse(localStorage.getItem('km_calendar_events') || '[]');
@@ -19797,7 +19866,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v213';
+const KM_VERSION = 'v214';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
