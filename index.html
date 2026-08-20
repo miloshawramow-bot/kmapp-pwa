@@ -5483,7 +5483,7 @@ function pomocnikExtractSections(text, keywords) {
   // Fallback: any match
   if (sections.length === 0) {
     for (var i2 = 1; i2 < parts.length; i2++) {
-      var section2 = parts[i2].substring(0, 1000);
+      var section2 = parts[i2];
       var cl2 = section2.toLowerCase();
       var mc2 = 0;
       for (var k2 = 0; k2 < keywords.length; k2++) {
@@ -5505,7 +5505,7 @@ function pomocnikExtractPenaltySections(aktNaziv) {
       var sections = [];
       var parts = text.split(/(?=[ČC]lan\s+\d+)/i);
       for (var j = 1; j < parts.length; j++) {
-        var section = parts[j].substring(0, 800);
+        var section = parts[j];
         var cl = section.toLowerCase();
         if (cl.indexOf('kazn') !== -1 || cl.indexOf('prekr') !== -1 || cl.indexOf('novčan') !== -1) {
           sections.push(section.replace(/^\*+/,'').trim());
@@ -5600,7 +5600,7 @@ function pomocnikBuildAnswer(matched) {
     }
     if (!zabrana && !kazna) {
       if (a.sections && a.sections.length > 0) {
-        lines.push(a.sections[0].substring(0, 500));
+        lines.push(a.sections[0]);
         lines.push('');
       }
     }
@@ -20347,7 +20347,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v238';
+const KM_VERSION = 'v239';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
