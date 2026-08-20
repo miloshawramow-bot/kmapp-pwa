@@ -19759,7 +19759,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v211';
+const KM_VERSION = 'v212';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -20571,6 +20571,54 @@ async function adminDeletePelcer(id) {
 (function() {
   var recognition = null;
   var isDictating = false;
+  var lastFinalIndex = -1;
+
+  // Latin-to-Cyrillic converter (fallback if browser ignores sr-Cyrl-RS)
+  var latToCyr = {
+    'a':'а','b':'б','v':'в','g':'г','d':'д','đ':'ђ','e':'е','ž':'ж',
+    'z':'з','i':'и','j':'ј','k':'к','l':'л','lj':'љ','m':'м','n':'н',
+    'nj':'њ','o':'о','p':'п','r':'р','s':'с','t':'т','ć':'ћ','u':'у',
+    'f':'ф','h':'х','c':'ц','č':'ч','dž':'џ','š':'ш',
+    'A':'А','B':'Б','V':'В','G':'Г','D':'Д','Đ':'Ђ','E':'Е','Ž':'Ж',
+    'Z':'З','I':'И','J':'Ј','K':'К','L':'Л','Lj':'Љ','M':'М','N':'Н',
+    'Nj':'Њ','O':'О','P':'П','R':'Р','S':'С','T':'Т','Ć':'Ћ','U':'У',
+    'F':'Ф','H':'Х','C':'Ц','Č':'Ч','Dž':'Џ','Š':'Ш'
+  };
+
+  function toCyrillic(text) {
+    // Handle digraphs first (lj, nj, dž), then single chars
+    return text
+      .replace(/Lj/g, 'Љ').replace(/NJ/g, 'Њ').replace(/Dž/g, 'Џ')
+      .replace(/lj/g, 'љ').replace(/nj/g, 'њ').replace(/dž/g, 'џ')
+      .replace(/LJ/g, 'Љ').replace(/DŽ/g, 'Џ')
+      .replace(/[aA]/g, function(m){return latToCyr[m]})
+      .replace(/[bB]/g, function(m){return latToCyr[m]})
+      .replace(/[vV]/g, function(m){return latToCyr[m]})
+      .replace(/[gG]/g, function(m){return latToCyr[m]})
+      .replace(/[dD]/g, function(m){return latToCyr[m]})
+      .replace(/[đĐ]/g, function(m){return latToCyr[m]})
+      .replace(/[eE]/g, function(m){return latToCyr[m]})
+      .replace(/[žŽ]/g, function(m){return latToCyr[m]})
+      .replace(/[zZ]/g, function(m){return latToCyr[m]})
+      .replace(/[iI]/g, function(m){return latToCyr[m]})
+      .replace(/[jJ]/g, function(m){return latToCyr[m]})
+      .replace(/[kK]/g, function(m){return latToCyr[m]})
+      .replace(/[lL]/g, function(m){return latToCyr[m]})
+      .replace(/[mM]/g, function(m){return latToCyr[m]})
+      .replace(/[nN]/g, function(m){return latToCyr[m]})
+      .replace(/[oO]/g, function(m){return latToCyr[m]})
+      .replace(/[pP]/g, function(m){return latToCyr[m]})
+      .replace(/[rR]/g, function(m){return latToCyr[m]})
+      .replace(/[sS]/g, function(m){return latToCyr[m]})
+      .replace(/[tT]/g, function(m){return latToCyr[m]})
+      .replace(/[ćĆ]/g, function(m){return latToCyr[m]})
+      .replace(/[uU]/g, function(m){return latToCyr[m]})
+      .replace(/[fF]/g, function(m){return latToCyr[m]})
+      .replace(/[hH]/g, function(m){return latToCyr[m]})
+      .replace(/[cC]/g, function(m){return latToCyr[m]})
+      .replace(/[čČ]/g, function(m){return latToCyr[m]})
+      .replace(/[šŠ]/g, function(m){return latToCyr[m]});
+  }
 
   window.toggleDictation = function() {
     if (isDictating) {
@@ -20591,16 +20639,13 @@ async function adminDeletePelcer(id) {
     if (!editor) return;
 
     recognition = new SR();
-    recognition.lang = 'sr-RS';
+    recognition.lang = 'sr-Cyrl-RS';
     recognition.continuous = true;
     recognition.interimResults = true;
-
-    var baseText = '';
-    var baseHTML = editor.innerHTML;
+    lastFinalIndex = -1;
 
     recognition.onstart = function() {
       isDictating = true;
-      baseText = editor.innerText || '';
       var btn = document.getElementById('dictate-btn');
       var icon = document.getElementById('dictate-icon');
       var label = document.getElementById('dictate-label');
@@ -20608,44 +20653,56 @@ async function adminDeletePelcer(id) {
       if (btn) { btn.style.background = '#e74c3c'; btn.style.color = '#fff'; btn.style.borderColor = '#e74c3c'; }
       if (icon) icon.textContent = '⏹️';
       if (label) label.textContent = 'Zaustavi';
-      if (status) status.textContent = '🔊 Slušam...';
+      if (status) status.textContent = '🔊 Слушам...';
       try { navigator.vibrate(50); } catch(e) {}
     };
 
     recognition.onresult = function(event) {
       var interim = '';
-      var final = '';
+      var finalText = '';
+
       for (var i = event.resultIndex; i < event.results.length; i++) {
         var transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          final += transcript;
+          // Only process each final result ONCE
+          if (i > lastFinalIndex) {
+            finalText += transcript;
+            lastFinalIndex = i;
+          }
         } else {
           interim += transcript;
         }
       }
-      if (final) {
-        // Append final text to editor
+
+      if (finalText) {
+        // Convert to Cyrillic in case browser returned Latin
+        finalText = toCyrillic(finalText.trim());
         var p = document.createElement('p');
-        p.textContent = (baseText ? '\n' : '') + final.trim();
+        p.textContent = finalText;
         p.style.margin = '0 0 4px 0';
         editor.appendChild(p);
-        baseText += (baseText ? '\n' : '') + final.trim();
-        baseHTML = editor.innerHTML;
+        // Move cursor to end
+        var range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
       }
-      // Show interim text in status
+
       var status = document.getElementById('dictate-status');
       if (status && interim) {
-        status.textContent = '🔊 ' + interim;
+        status.textContent = '🔊 ' + toCyrillic(interim);
       }
     };
 
     recognition.onerror = function(event) {
       var status = document.getElementById('dictate-status');
-      var msg = 'Greška';
-      if (event.error === 'no-speech') msg = 'Nema govora...';
-      else if (event.error === 'not-allowed') msg = '⚠️ Mikrofon nije odobren';
-      else if (event.error === 'network') msg = '⚠️ Mrežna greška';
-      else msg = '⚠️ ' + (event.error || 'greška');
+      var msg = 'Грешка';
+      if (event.error === 'no-speech') msg = 'Нема говора...';
+      else if (event.error === 'not-allowed') msg = '⚠️ Микрофон није одобрен';
+      else if (event.error === 'network') msg = '⚠️ Мрежна грешка';
+      else msg = '⚠️ ' + (event.error || 'грешка');
       if (status) status.textContent = msg;
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         stopDictation();
@@ -20653,8 +20710,9 @@ async function adminDeletePelcer(id) {
     };
 
     recognition.onend = function() {
-      // Auto-restart if still dictating (Chrome stops after silence)
       if (isDictating) {
+        // Auto-restart (Chrome stops after silence)
+        lastFinalIndex = -1;
         try { recognition.start(); } catch(e) { stopDictation(); }
       } else {
         resetButton();
@@ -20664,7 +20722,7 @@ async function adminDeletePelcer(id) {
     try {
       recognition.start();
     } catch(e) {
-      showToast('⚠️ Greška pri pokretanju diktaža: ' + e.message);
+      showToast('⚠️ Грешка при покретању диктажа: ' + e.message);
       isDictating = false;
     }
   }
