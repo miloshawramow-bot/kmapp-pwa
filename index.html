@@ -5506,12 +5506,12 @@ function pomocnikExtractPenaltySections(aktNaziv) {
       var parts = text.split(/(?=[ČC]lan\s+\d+)/i);
       for (var j = 1; j < parts.length; j++) {
         var section = parts[j];
-        var cl = section.toLowerCase();
-        if (cl.indexOf('kazn') !== -1 || cl.indexOf('prekr') !== -1 || cl.indexOf('novčan') !== -1) {
+        var cl = section.toLowerCase().substring(0, 150);
+        if (cl.indexOf('novčanom kaznom') !== -1 || cl.indexOf('kazniće se') !== -1) {
           sections.push(section.replace(/^\*+/,'').trim());
         }
       }
-      return sections.slice(0, 8);
+      return sections.slice(0, 10);
     }
   }
   return [];
@@ -20347,7 +20347,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v239';
+const KM_VERSION = 'v240';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
