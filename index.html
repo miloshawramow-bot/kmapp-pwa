@@ -1594,8 +1594,8 @@ document.addEventListener('click', function(e) {
 </div>
 
 <!-- ===== LICNI POMOCNIK (AI CHAT) ===== -->
-<div class="screen" id="screen-pomocnik" style="display:none;flex-direction:column;flex:1;overflow:hidden;background:linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.78) 100%), url('assets/beograd-bg.png') top center/cover;">
-  <div style="padding:12px 14px 8px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+<div class="screen" id="screen-pomocnik" style="display:none;flex-direction:column;flex:1;overflow:hidden;padding-bottom:0;background:linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.78) 100%), url('assets/beograd-bg.png') top center/cover;">
+  <div id="pomocnik-header" style="position:fixed;top:0;left:0;right:0;z-index:50;padding:12px 14px 8px;display:flex;align-items:center;gap:10px;background:rgba(13,34,64,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(200,168,75,0.2);">
     <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🤖</div>
     <div>
       <div style="font-size:0.95rem;font-weight:700;color:#fff;">Lični pomoćnik</div>
@@ -1603,9 +1603,9 @@ document.addEventListener('click', function(e) {
     </div>
     <button onclick="pomocnikShareSMS()" style="margin-left:auto;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:4px;">💬 SMS</button>
   </div>
-  <div id="pomocnik-messages" style="flex:1;min-height:0;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;"></div>
-  <div style="padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px));display:flex;gap:8px;background:rgba(13,34,64,0.95);border-top:1px solid rgba(200,168,75,0.2);flex-shrink:0;">
-    <input id="pomocnik-input" type="text" placeholder="Postavi pitanje..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;color:#fff;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')pomocnikSend()">
+  <div id="pomocnik-messages" style="flex:1;min-height:0;overflow-y:auto;padding:60px 14px 80px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;"></div>
+  <div id="pomocnik-input-bar" style="position:fixed;bottom:56px;left:0;right:0;z-index:50;padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px));display:flex;gap:8px;background:rgba(13,34,64,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid rgba(200,168,75,0.2);">
+    <input id="pomocnik-input" type="text" placeholder="Postavi pitanje..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;color:#fff;font-size:16px;outline:none;-webkit-appearance:none;" onkeydown="if(event.key==='Enter')pomocnikSend()">
     <button onclick="pomocnikSend()" id="pomocnik-send-btn" style="background:var(--gold);color:var(--navy);border:none;border-radius:12px;padding:0 16px;font-size:1.1rem;font-weight:700;cursor:pointer;flex-shrink:0;">➤</button>
   </div>
 </div>
@@ -20091,7 +20091,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v219';
+const KM_VERSION = 'v220';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
