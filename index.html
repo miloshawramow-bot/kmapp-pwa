@@ -1594,7 +1594,7 @@ document.addEventListener('click', function(e) {
 </div>
 
 <!-- ===== LICNI POMOCNIK (AI CHAT) ===== -->
-<div class="screen" id="screen-pomocnik" style="display:none;flex-direction:column;flex:1;overflow:hidden;padding-bottom:0;background:linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.78) 100%), url('assets/beograd-bg.png') top center/cover;">
+<div class="screen" id="screen-pomocnik" style="display:none;flex-direction:column;flex:1;overflow-y:auto;padding-bottom:0;background:linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.78) 100%), url('assets/beograd-bg.png') top center/cover;">
   <div id="pomocnik-header" style="position:fixed;top:0;left:0;right:0;z-index:50;padding:12px 14px 8px;display:flex;align-items:center;gap:10px;background:rgba(13,34,64,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(200,168,75,0.2);">
     <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🤖</div>
     <div>
@@ -3298,7 +3298,7 @@ function switchTab(name) {
       if (pm && pm.children.length === 0) {
         var w = document.createElement('div');
         w.style.cssText = 'align-self:center;color:rgba(160,188,216,0.5);font-size:0.82rem;text-align:center;padding:40px 20px;line-height:1.6;';
-        w.innerHTML = '🤖 <b style="color:var(--gold);">Lični pomoćnik</b><br><br>Postavi pitanje o propisima, odlukama ili komunalnim pitanjima. AI će odgovoriti uz citiranje članova iz baze akata.';
+        w.innerHTML = '🤖 <b style="color:var(--gold);">Lični pomoćnik</b>';
         pm.appendChild(w);
       }
     }
@@ -20214,7 +20214,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v230';
+const KM_VERSION = 'v231';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
@@ -21051,7 +21051,7 @@ async function adminDeletePelcer(id) {
 <!-- ===== ADMIN PANEL SCREEN ===== -->
 <!-- ===== KALENDAR ===== -->
 <!-- ===== AI ASISTENT ===== -->
-<div class="screen" id="screen-ai" style="display:none;flex-direction:column;flex:1;background:var(--bg);overflow:hidden;padding-bottom:calc(56px + env(safe-area-inset-bottom, 0px));">
+<div class="screen" id="screen-ai" style="display:none;flex-direction:column;flex:1;background:var(--bg);overflow-y:auto;padding-bottom:calc(56px + env(safe-area-inset-bottom, 0px));">
   <div style="flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;" id="ai-chat-area">
     <div style="text-align:center;padding:20px 16px 12px;">
       <div style="width:48px;height:48px;margin:0 auto 8px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(13,34,64,0.3);">
