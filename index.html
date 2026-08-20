@@ -5493,6 +5493,33 @@ function pomocnikExtractPenaltySections(aktNaziv) {
   return [];
 }
 
+function formatPomocnikReply(matched) {
+  var lines = [];
+  for (var i = 0; i < Math.min(matched.length, 3); i++) {
+    var a = matched[i];
+    var header = (a.tip === 'odluka' ? 'ODLUKA' : 'ZAKON') + ': ' + a.naziv;
+    if (a.broj) header += ' (' + a.broj + ')';
+    lines.push(header);
+    lines.push('');
+    if (a.sections && a.sections.length > 0) {
+      for (var s = 0; s < Math.min(a.sections.length, 2); s++) {
+        lines.push(a.sections[s]);
+        lines.push('');
+      }
+    }
+    var penalties = pomocnikExtractPenaltySections(a.naziv);
+    if (penalties.length > 0) {
+      lines.push('KAZNENE ODREDBE:');
+      for (var p = 0; p < Math.min(penalties.length, 2); p++) {
+        lines.push(penalties[p]);
+        lines.push('');
+      }
+    }
+    if (i < Math.min(matched.length, 3) - 1) lines.push('---');
+  }
+  return lines.join('\n').trim();
+}
+
 function pomocnikSend() {
   var input = document.getElementById('pomocnik-input');
   if (!input) return;
@@ -5556,35 +5583,20 @@ function pomocnikSend() {
     context = parts.join('\n\n---\n\n');
   }
 
-  // Update loading message
+  // Format matched sections directly — no AI, no hallucination
   var loadEl = document.getElementById(loadingId);
-  if (loadEl) {
-    if (matched.length > 0) loadEl.textContent = '🤖 Analiziram ' + matched.length + ' relevantna akta...';
-    else loadEl.textContent = '🤖 Nema direktne preskoke, pokušavam AI...';
-  }
+  if (loadEl) loadEl.remove();
 
-  fetch('/api/aiChat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question: q, context: context, history: pomocnikHistory })
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    var loadEl2 = document.getElementById(loadingId);
-    if (loadEl2) loadEl2.remove();
-    if (data.success && data.reply) {
-      pomocnikAddBubble(data.reply, 'ai');
-      pomocnikHistory.push({ role: 'user', content: q });
-      pomocnikHistory.push({ role: 'assistant', content: data.reply });
-      if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
-    } else {
-      pomocnikAddBubble('⚠️ ' + (data.error || 'AI nije dostupan.'), 'ai error');
-    }
-  }).catch(function() {
-    var loadEl3 = document.getElementById(loadingId);
-    if (loadEl3) loadEl3.remove();
-    pomocnikAddBubble('⚠️ Greška pri povezivanju.', 'ai error');
-  }).finally(function() {
-    if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
-  });
+  if (matched.length === 0) {
+    pomocnikAddBubble('Nema rezultata za: "' + q + '".\n\nPokušajte sa konkretnim terminima: parkiranje, buka, otpad, trotoar, građevina,Tabla...', 'ai');
+  } else {
+    var reply = formatPomocnikReply(matched);
+    pomocnikAddBubble(reply, 'ai');
+    pomocnikHistory.push({ role: 'user', content: q });
+    pomocnikHistory.push({ role: 'assistant', content: reply });
+    if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
+  }
+  if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
 }
 
 function pomocnikAddBubble(text, type, id) {
@@ -20214,7 +20226,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v231';
+const KM_VERSION = 'v232';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
