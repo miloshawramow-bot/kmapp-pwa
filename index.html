@@ -5447,10 +5447,10 @@ function pomocnikSend() {
   }).then(function(r) { return r.json(); }).then(function(data) {
     var loadEl = document.getElementById(loadingId);
     if (loadEl) loadEl.remove();
-    if (data.success && data.answer) {
-      pomocnikAddBubble(data.answer, 'ai');
+    if (data.success && data.reply) {
+      pomocnikAddBubble(data.reply, 'ai');
       pomocnikHistory.push({ role: 'user', content: q });
-      pomocnikHistory.push({ role: 'assistant', content: data.answer });
+      pomocnikHistory.push({ role: 'assistant', content: data.reply });
       if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
     } else {
       pomocnikAddBubble('⚠️ AI nije dostupan. ' + (data.error || ''), 'ai error');
@@ -20091,7 +20091,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v220';
+const KM_VERSION = 'v221';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
