@@ -1137,6 +1137,128 @@
     background: rgba(0,0,0,0.15);
     animation: fadeIn 0.1s ease-out;
   }
+
+  /* ===== VISUAL REDESIGN v218 ===== */
+  /* Glassmorphism cards */
+  .doc-card, .akt-card, .settings-section, .search-bar, .doc-toolbar {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  /* Modern bottom nav */
+  nav {
+    background: rgba(13, 34, 64, 0.88) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(200, 168, 75, 0.25) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+  nav button {
+    transition: color 0.25s ease, transform 0.2s ease !important;
+    font-size: 0.55rem !important;
+  }
+  nav button.active {
+    color: var(--gold) !important;
+    border-top-color: transparent !important;
+  }
+  nav button.active .nav-icon-svg {
+    transform: translateY(-2px) scale(1.1);
+    transition: transform 0.25s ease;
+  }
+  nav button.active .nav-icon-svg svg {
+    filter: drop-shadow(0 0 6px rgba(200, 168, 75, 0.6)) drop-shadow(0 2px 4px rgba(200, 168, 75, 0.3));
+  }
+  nav button:not(.active) .nav-icon-svg {
+    opacity: 0.55;
+    transition: opacity 0.25s ease;
+  }
+  nav button:not(.active):active .nav-icon-svg {
+    opacity: 0.85;
+  }
+
+  /* Screen slide animation */
+  .screen.active {
+    animation: screenSlideIn 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+  }
+  @keyframes screenSlideIn {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Header glassmorphism */
+  header {
+    background: rgba(13, 34, 64, 0.75) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(200, 168, 75, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Card hover/active effects */
+  .doc-card, .akt-card {
+    border-radius: 14px !important;
+    transition: box-shadow 0.25s ease, transform 0.15s ease !important;
+  }
+  .doc-card:active, .akt-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 2px var(--gold) !important;
+  }
+
+  /* Buttons */
+  .btn-main, .new-doc-btn {
+    border-radius: 12px !important;
+    transition: opacity 0.2s ease, transform 0.15s ease !important;
+  }
+  .btn-main:active, .new-doc-btn:active {
+    transform: scale(0.97);
+    opacity: 0.88;
+  }
+
+  /* Pomoćnik chat styling */
+  #screen-pomocnik { -webkit-overflow-scrolling: touch; }
+  #pomocnik-messages::-webkit-scrollbar { width: 3px; }
+  #pomocnik-messages::-webkit-scrollbar-thumb { background: rgba(200,168,75,0.3); border-radius: 3px; }
+  #pomocnik-messages::-webkit-scrollbar-track { background: transparent; }
+  
+  /* Settings card glassmorphism */
+  .settings-section {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+    transition: box-shadow 0.25s ease;
+  }
+  
+  /* Quick action buttons */
+  .dash-quick-btn {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, background 0.25s ease !important;
+  }
+  .dash-quick-btn:active {
+    transform: scale(0.92) !important;
+    background: rgba(200, 168, 75, 0.18) !important;
+  }
+  
+  /* Weather card */
+  .dash-weather-card {
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* More overlay glassmorphism */
+  .more-overlay {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(13, 34, 64, 0.92) !important;
+  }
+  .more-grid-item {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.2s ease, transform 0.15s ease !important;
+  }
+  .more-grid-item:active {
+    transform: scale(0.93);
+  }
 </style>
   <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1422,6 +1544,8 @@ document.addEventListener('click', function(e) {
 <nav>
   <button class="active" onclick="switchTab('dashboard')" id="tab-dashboard">
     <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></span>Početna
+  <button onclick="switchTab('pomocnik')" id="tab-pomocnik">
+    <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 8H4m16 0h-4M12 4V2m0 12v-2"/><rect x="8" y="14" width="8" height="6" rx="2"/></svg></span>Pomoćnik
   </button>
   <button onclick="switchTab('poruke')" id="tab-poruke" style="position:relative;">
     <span class="nav-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Poruke
@@ -1469,6 +1593,22 @@ document.addEventListener('click', function(e) {
 
 </div>
 
+<!-- ===== LICNI POMOCNIK (AI CHAT) ===== -->
+<div class="screen" id="screen-pomocnik" style="display:none;flex-direction:column;flex:1;background:linear-gradient(180deg, rgba(13,34,64,0.92) 0%, rgba(13,34,64,0.78) 100%), url('assets/beograd-bg.png') top center/cover;">
+  <div style="padding:12px 14px 8px;display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🤖</div>
+    <div>
+      <div style="font-size:0.95rem;font-weight:700;color:#fff;">Lični pomoćnik</div>
+      <div style="font-size:0.68rem;color:rgba(200,168,75,0.8);">AI asistent · poznanik pravnih akata</div>
+    </div>
+    <button onclick="pomocnikShareSMS()" style="margin-left:auto;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:4px;">💬 SMS</button>
+  </div>
+  <div id="pomocnik-messages" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;"></div>
+  <div style="padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px));display:flex;gap:8px;background:rgba(13,34,64,0.95);border-top:1px solid rgba(200,168,75,0.2);">
+    <input id="pomocnik-input" type="text" placeholder="Postavi pitanje..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;color:#fff;font-size:0.9rem;outline:none;" onkeydown="if(event.key==='Enter')pomocnikSend()">
+    <button onclick="pomocnikSend()" id="pomocnik-send-btn" style="background:var(--gold);color:var(--navy);border:none;border-radius:12px;padding:0 16px;font-size:1.1rem;font-weight:700;cursor:pointer;flex-shrink:0;">➤</button>
+  </div>
+</div>
 <!-- ===== DOKUMENTI ===== -->
 <!-- ===== LOGIN / PRIJAVA ===== -->
 <div class="screen" id="screen-login" style="display: none;background:
@@ -5272,6 +5412,82 @@ function aiDescribePhoto() {
     showToast('⚠️ AI nedostupan');
   });
 }
+// ===== LICNI POMOCNIK (AI CHAT) =====
+var pomocnikHistory = [];
+
+function pomocnikSend() {
+  var input = document.getElementById('pomocnik-input');
+  if (!input) return;
+  var q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  var btn = document.getElementById('pomocnik-send-btn');
+  if (btn) { btn.textContent = '⏳'; btn.style.opacity = '0.6'; }
+
+  // Add user bubble
+  pomocnikAddBubble(q, 'user');
+
+  // Add loading bubble
+  var loadingId = 'pom-load-' + Date.now();
+  pomocnikAddBubble('🤖 Razmišljam...', 'ai', loadingId);
+
+  fetch('/api/aiChat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question: q, history: pomocnikHistory })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var loadEl = document.getElementById(loadingId);
+    if (loadEl) loadEl.remove();
+    if (data.success && data.answer) {
+      pomocnikAddBubble(data.answer, 'ai');
+      pomocnikHistory.push({ role: 'user', content: q });
+      pomocnikHistory.push({ role: 'assistant', content: data.answer });
+      if (pomocnikHistory.length > 20) pomocnikHistory = pomocnikHistory.slice(-12);
+    } else {
+      pomocnikAddBubble('⚠️ AI nije dostupan. ' + (data.error || ''), 'ai error');
+    }
+  }).catch(function() {
+    var loadEl = document.getElementById(loadingId);
+    if (loadEl) loadEl.remove();
+    pomocnikAddBubble('⚠️ Greška pri povezivanju sa AI.', 'ai error');
+  }).finally(function() {
+    if (btn) { btn.textContent = '➤'; btn.style.opacity = '1'; }
+  });
+}
+
+function pomocnikAddBubble(text, type, id) {
+  var container = document.getElementById('pomocnik-messages');
+  if (!container) return;
+  var div = document.createElement('div');
+  if (id) div.id = id;
+  div.style.cssText = 'max-width:85%;padding:10px 14px;border-radius:14px;font-size:0.88rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap;' +
+    (type === 'user'
+      ? 'align-self:flex-end;background:var(--gold);color:var(--navy);border-bottom-right-radius:4px;font-weight:500;'
+      : type === 'error'
+      ? 'align-self:flex-start;background:rgba(192,57,43,0.15);color:#e74c3c;border:1px solid rgba(192,57,43,0.3);border-bottom-left-radius:4px;'
+      : 'align-self:flex-start;background:rgba(255,255,255,0.08);color:#e8f0fa;border:1px solid rgba(255,255,255,0.1);border-bottom-left-radius:4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);');
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function pomocnikShareSMS() {
+  var lastAi = document.querySelectorAll('#pomocnik-messages > div');
+  var lastText = '';
+  for (var i = lastAi.length - 1; i >= 0; i--) {
+    if (lastAi[i].style.alignSelf === 'flex-start' && !lastAi[i].id) {
+      lastText = lastAi[i].textContent;
+      break;
+    }
+  }
+  if (!lastText) { showToast('Nema odgovora za deljenje'); return; }
+  var smsBody = encodeURIComponent('🤖 KMapp Pomoćnik:\n\n' + lastText.substring(0, 500));
+  // SMS number will be set by user - placeholder for now
+  var smsNumber = localStorage.getItem('km_sms_share') || '';
+  var url = smsNumber ? 'sms:' + smsNumber + '?body=' + smsBody : 'sms:?body=' + smsBody;
+  window.location.href = url;
+}
+
 // ===== TERMINSKI KALENDAR =====
 let calCurrentDate = new Date();
 let calEvents = JSON.parse(localStorage.getItem('km_calendar_events') || '[]');
@@ -19866,7 +20082,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v217';
+const KM_VERSION = 'v218';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
