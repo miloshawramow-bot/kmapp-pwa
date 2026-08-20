@@ -5590,12 +5590,12 @@ function pomocnikBuildAnswer(matched) {
     lines.push('');
     if (zabrana) {
       lines.push('🚫 ZABRANA:');
-      lines.push(zabrana.substring(0, 1500));
+      lines.push(zabrana.substring(0, 3000));
       lines.push('');
     }
     if (kazna) {
       lines.push('💰 KAZNA:');
-      lines.push(kazna.substring(0, 1500));
+      lines.push(kazna.substring(0, 3000));
       lines.push('');
     }
     if (!zabrana && !kazna) {
@@ -20347,7 +20347,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v236';
+const KM_VERSION = 'v237';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
