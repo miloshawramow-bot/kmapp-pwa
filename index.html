@@ -19735,6 +19735,7 @@ function goTo(lat, lon, name) {
       mapMarker.bindPopup(name).openPopup();
       var info = document.getElementById('map-info');
       if (info) { document.getElementById('map-info-text').textContent = '📍 ' + name; info.style.display = 'block'; }
+      showNavButton(lat, lon);
     }
   }
 }
@@ -19782,7 +19783,10 @@ async function searchAddress() {
       var results = await resp.json();
       if (results.length > 0) {
         var r = results[0];
-        goTo(parseFloat(r.lat), parseFloat(r.lon), r.display_name.split(',')[0]);
+        var lat = parseFloat(r.lat);
+        var lon = parseFloat(r.lon);
+        goTo(lat, lon, r.display_name.split(',')[0]);
+        showNavButton(lat, lon);
         showToast('✅ Adresa pronađena!');
       } else {
         showToast('❌ Adresa nije pronađena');
@@ -20393,7 +20397,10 @@ function showStreetOnMap(streetName) {
         .then(function(results) {
           if (results.length > 0) {
             var r = results[0];
-            goTo(parseFloat(r.lat), parseFloat(r.lon), streetName);
+            var lat = parseFloat(r.lat);
+            var lon = parseFloat(r.lon);
+            goTo(lat, lon, streetName);
+            showNavButton(lat, lon);
             showToast('✅ ' + streetName);
           } else {
             showToast('❌ ' + streetName + ' nije pronađena');
@@ -20494,7 +20501,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v241';
+const KM_VERSION = 'v242';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
