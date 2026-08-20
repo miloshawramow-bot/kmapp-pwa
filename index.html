@@ -5555,7 +5555,6 @@ function pomocnikSend() {
     }
     context = parts.join('\n\n---\n\n');
   }
-  }
 
   // Update loading message
   var loadEl = document.getElementById(loadingId);
@@ -20215,7 +20214,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v229';
+const KM_VERSION = 'v230';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
