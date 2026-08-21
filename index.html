@@ -2166,42 +2166,12 @@ document.addEventListener('click', function(e) {
   <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Brzi linkovi</div>
 
   <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-    <a href="https://www.pravno-informativni-sistem.rs/SluzbeniListSR/Frontend/InternetCEK/UNP/UNP.aspx" target="_blank" style="text-decoration:none;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
-        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🏛️</div>
-        <div style="flex:1;">
-          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Pravno-informativni sistem</div>
-          <div style="font-size:0.72rem;color:var(--muted);">Službeni glasnik RS — zvanična baza</div>
-        </div>
-        <span style="color:var(--accent);font-size:1rem;">›</span>
-      </div>
-    </a>
     <a href="https://www.paragraf.rs/propisi.html" target="_blank" style="text-decoration:none;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
         <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">📚</div>
         <div style="flex:1;">
           <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Paragraf Lex — propisi</div>
           <div style="font-size:0.72rem;color:var(--muted);">Besplatna pretraga zakona</div>
-        </div>
-        <span style="color:var(--accent);font-size:1rem;">›</span>
-      </div>
-    </a>
-    <a href="https://www.pravno-informativni-sistem.rs/" target="_blank" style="text-decoration:none;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
-        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">⚖️</div>
-        <div style="flex:1;">
-          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">PIS — Pravno-informativni sistem</div>
-          <div style="font-size:0.72rem;color:var(--muted);">Zvanična pravna baza RS</div>
-        </div>
-        <span style="color:var(--accent);font-size:1rem;">›</span>
-      </div>
-    </a>
-    <a href="https://www.srbija.gov.rs" target="_blank" style="text-decoration:none;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
-        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🇷🇸</div>
-        <div style="flex:1;">
-          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Vlada Republike Srbije</div>
-          <div style="font-size:0.72rem;color:var(--muted);">Propisi i akti Vlade</div>
         </div>
         <span style="color:var(--accent);font-size:1rem;">›</span>
       </div>
@@ -20458,7 +20428,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v245';
+const KM_VERSION = 'v246';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
