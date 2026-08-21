@@ -1471,6 +1471,14 @@ document.addEventListener('click', function(e) {
       </div>
       <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
+    <div class="side-menu-item" onclick="switchTab('glasnik'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
+      <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
+      <div class="side-menu-label">
+        <span class="side-menu-title">Službeni glasnik</span>
+        <span class="side-menu-desc">Propisi i zakoni RS</span>
+      </div>
+      <svg class="side-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
     <div class="side-menu-item" onclick="switchTab('mapa'); document.querySelectorAll('.side-menu-item').forEach(function(i){i.classList.remove('side-menu-active');}); this.classList.add('side-menu-active'); closeSideMenu();">
       <div class="side-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
       <div class="side-menu-label">
@@ -2137,6 +2145,86 @@ document.addEventListener('click', function(e) {
 </div>
 
 <!-- ===== LINKOVI ===== -->
+<div class="screen" id="screen-glasnik" style="display: none;flex-direction:column;flex:1;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px calc(56px + env(safe-area-inset-bottom, 0px));">
+
+  <div style="background:linear-gradient(135deg,var(--navy),var(--navy-dark));border-radius:14px;padding:18px 16px;margin-bottom:14px;color:white;">
+    <div style="font-size:1.1rem;font-weight:800;margin-bottom:4px;">📋 Službeni glasnik RS</div>
+    <div style="font-size:0.8rem;opacity:0.8;">Pretraga propisa, zakona i podzakonskih akata</div>
+  </div>
+
+  <!-- Pretraga -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+    <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:8px;">🔍 Pretraži propis</div>
+    <div style="display:flex;gap:8px;">
+      <input id="glasnik-search" type="text" placeholder="Unesi naziv propisa (npr. Zakon o komunalnoj policiji)..." style="flex:1;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;outline:none;" onkeydown="if(event.key==='Enter')searchGlasnik()">
+      <button onclick="searchGlasnik()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:0 16px;font-size:0.85rem;font-weight:700;cursor:pointer;">Traži</button>
+    </div>
+    <div id="glasnik-results" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- Brzi linkovi -->
+  <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Brzi linkovi</div>
+
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+    <a href="https://www.pravno-informativni-sistem.rs/SluzbeniListSR/Frontend/InternetCEK/UNP/UNP.aspx" target="_blank" style="text-decoration:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🏛️</div>
+        <div style="flex:1;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Pravno-informativni sistem</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Službeni glasnik RS — zvanična baza</div>
+        </div>
+        <span style="color:var(--accent);font-size:1rem;">›</span>
+      </div>
+    </a>
+    <a href="https://www.paragraf.rs/propisi.html" target="_blank" style="text-decoration:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">📚</div>
+        <div style="flex:1;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Paragraf Lex — propisi</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Besplatna pretraga zakona</div>
+        </div>
+        <span style="color:var(--accent);font-size:1rem;">›</span>
+      </div>
+    </a>
+    <a href="https://www.pravno-informativni-sistem.rs/" target="_blank" style="text-decoration:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">⚖️</div>
+        <div style="flex:1;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">PIS — Pravno-informativni sistem</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Zvanična pravna baza RS</div>
+        </div>
+        <span style="color:var(--accent);font-size:1rem;">›</span>
+      </div>
+    </a>
+    <a href="https://www.srbija.gov.rs" target="_blank" style="text-decoration:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🇷🇸</div>
+        <div style="flex:1;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Vlada Republike Srbije</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Propisi i akti Vlade</div>
+        </div>
+        <span style="color:var(--accent);font-size:1rem;">›</span>
+      </div>
+    </a>
+    <a href="https://www.paragraf.rs/pregled-zakona.html" target="_blank" style="text-decoration:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">📖</div>
+        <div style="flex:1;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Paragraf — pregled zakona</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Hronološki pregled svih zakona</div>
+        </div>
+        <span style="color:var(--accent);font-size:1rem;">›</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Napomena -->
+  <div style="background:rgba(200,168,75,0.08);border:1px solid rgba(200,168,75,0.2);border-radius:10px;padding:10px 12px;font-size:0.72rem;color:var(--muted);line-height:1.5;">
+    💡 Linkovi otvaraju zvanične sajtove u novom prozoru. Za detaljnu pretragu koristite pretragu iznad.
+  </div>
+
+</div>
+
 <div class="screen" id="screen-linkovi" style="display: none;">
   <div style="padding:14px 12px;">
 
@@ -20239,6 +20327,17 @@ function insertSavedPhotoIntoDoc(index) {
   showToast('✅ Fotografija ubačena u dokument');
 }
 
+
+function searchGlasnik() {
+  var q = document.getElementById('glasnik-search').value.trim();
+  if (!q) return;
+  var results = document.getElementById('glasnik-results');
+  results.innerHTML = '<div style="text-align:center;padding:12px;color:var(--muted);font-size:0.82rem;">🔍 Pretraga na Paragraf Lex...</div>';
+  // Open Paragraf search in new tab
+  window.open('https://www.paragraf.rs/pregled-zakona.html?q=' + encodeURIComponent(q), '_blank');
+  results.innerHTML = '<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);border-radius:8px;padding:10px;font-size:0.78rem;color:#27ae60;">✅ Otvorena pretraga na Paragraf Lex sajt u novom prozoru.</div>';
+}
+
 function showStreetOnMap(streetName) {
   if (!streetName) return;
   showToast('📍 Tražim: ' + streetName + '...');
@@ -20359,7 +20458,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v244';
+const KM_VERSION = 'v245';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
