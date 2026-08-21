@@ -1260,13 +1260,9 @@
     transform: scale(0.93);
   }
 </style>
-  <!-- Leaflet (fallback) + Mapbox GL JS (primary) -->
+  <!-- Leaflet for maps + GPS tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.2/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.2/mapbox-gl.js"></script>
-  <script src="https://api.mapbox.com/mapbox-gl-plugins/v3.5.2/mapbox-gl-directions/v4.3.1/mapbox-gl-directions.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-plugins/v3.5.2/mapbox-gl-directions/v4.3.1/mapbox-gl-directions.css" rel="stylesheet" />
 </head>
 <body>
 <div id="offline-indicator" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e74c3c;color:white;text-align:center;padding:6px;font-size:0.75rem;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.3);">📶 Nema interneta — KMapp radi offline (podaci su kesirani)</div>
@@ -1830,15 +1826,7 @@ document.addEventListener('click', function(e) {
     <span style="flex:1;">Uključi notifikacije</span>
     <span style="font-size:0.7rem;opacity:0.7;">Dozvoli push</span>
   </div>
-  <!-- Mapbox Token -->
-  <div class="settings-row" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
-    <div style="width:32px;height:32px;background:rgba(200,168,75,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">🗺️</div>
-    <div style="flex:1;">
-      <div>Mapbox Token</div>
-      <input id="mapbox-token-input" type="text" placeholder="pk.eyJ..." style="width:100%;margin-top:6px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.8rem;font-weight:400;outline:none;" onkeydown="if(event.key==='Enter')saveMapboxToken()">
-    </div>
-    <button onclick="saveMapboxToken()" style="background:var(--navy);color:white;border:none;border-radius:8px;padding:8px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;">Sačuvaj</button>
-  </div>
+
 
   <!-- 🔍 Global Search trigger -->
   <div class="settings-row" onclick="openGlobalSearch()" style="cursor:pointer;background:var(--navy);color:white;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;margin-bottom:0;">
@@ -3291,8 +3279,6 @@ function switchTab(name) {
     if (name === 'mapa') {
       checkMapAdminAccess();
       setTimeout(function() { initMap(); }, 100);
-  setTimeout(function() { if (isMapboxActive() && mapboxMap) mapboxMap.resize(); else if (leafletMap) leafletMap.invalidateSize(); }, 400);
-  setTimeout(function() { if (isMapboxActive() && mapboxMap) mapboxMap.resize(); else if (leafletMap) leafletMap.invalidateSize(); }, 800);
       setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 400);
       setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 800);
     }
@@ -3424,7 +3410,7 @@ function closeSideMenu() {
     var target = e.target;
     var tag = target.tagName ? target.tagName.toLowerCase() : '';
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-    if (target.closest('button, a, .chat-input-wrap, .leaflet-container, .mapboxgl-canvas, [data-no-swipe]')) return;
+    if (target.closest('button, a, .chat-input-wrap, .leaflet-container, [data-no-swipe]')) return;
 
     // Find current tab
     var currentTab = null;
@@ -3461,7 +3447,6 @@ var KM_API_BASE_B44 = 'https://solas-799a3993.base44.app/functions';
 var KM_API_BASE = KM_API_BASE_CF;  // Default to Cloudflare
 let kmUseCloudflareAPI = true;
 const VAPID_PUBLIC_KEY = 'BO_VicJbLYfwhwCq48A6-cg4I-LHCbKLyN9BH6QvKM6RlUXzEMh74FleJ2fpQAsStTg0MhGiBe08mpieqLaoPwI';
-var MAPBOX_TOKEN = localStorage.getItem('km_mapbox_token') || '';
 let porukeCurrentView = 'conversations';
 
 // ===== GRACEFUL DEGRADATION =====
@@ -5089,7 +5074,6 @@ function doLogout() {
 
 // Hide nav initially if not logged in
 (function() {
-  var mbInput = document.getElementById('mapbox-token-input'); if (mbInput) mbInput.value = MAPBOX_TOKEN || '';
   if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
     var n = document.querySelector('nav'); if (n) n.style.display = 'none';
   }
@@ -19586,8 +19570,6 @@ async function sharePhotoGmail() {
 
 // ===== MAPA =====
 // ===== LEAFLET MAP + GPS TRACKING =====
-// ===== MAP ENGINE (Mapbox GL JS primary, Leaflet fallback) =====
-var mapboxMap = null;
 var leafletMap = null;
 var tileStandard = null;
 var tileSatellite = null;
@@ -19595,56 +19577,10 @@ var tileDark = null;
 var mapMarker = null;
 var mapCircle = null;
 var currentLayer = "standard";
-var currentStyle = "streets-v12";
 
-function saveMapboxToken() {
-  var input = document.getElementById('mapbox-token-input');
-  if (!input || !input.value.trim()) { showToast('⚠️ Unesi token'); return; }
-  var token = input.value.trim();
-  localStorage.setItem('km_mapbox_token', token);
-  MAPBOX_TOKEN = token;
-  showToast('✅ Mapbox token sačuvan! Otvori mapu ponovo.');
-  if (mapboxMap) { mapboxMap.remove(); mapboxMap = null; }
-  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-  initMap();
-}
-
-function isMapboxActive() {
-  return MAPBOX_TOKEN && MAPBOX_TOKEN.startsWith('pk.');
-}
 
 function initMap() {
-  if (isMapboxActive()) {
-    initMapboxMap();
-  } else {
-    initLeafletMap();
-  }
-}
-
-function initMapboxMap() {
-  if (mapboxMap) return;
-  var mapEl = document.getElementById('leaflet-map');
-  if (!mapEl) return;
-  mapEl.innerHTML = '';
-  mapboxgl.accessToken = MAPBOX_TOKEN;
-  var darkMode = document.body.classList.contains('dark-mode');
-  currentStyle = darkMode ? 'dark-v11' : 'streets-v12';
-  mapboxMap = new mapboxgl.Map({
-    container: 'leaflet-map',
-    style: 'mapbox://styles/mapbox/' + currentStyle,
-    center: [20.4573, 44.8125],
-    zoom: 12,
-    attributionControl: true
-  });
-  mapboxMap.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-  mapboxMap.addControl(new mapboxgl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true },
-    trackUserLocation: false,
-    showUserLocation: true
-  }), 'top-right');
-  mapboxMap.on('load', function() {
-    console.log('[KMapp] Mapbox map loaded');
-  });
+  initLeafletMap();
 }
 
 function initLeafletMap() {
@@ -19679,20 +19615,6 @@ function setMapLayer(layer) {
   document.getElementById('btn-satellite').style.background = layer === 'satellite' ? 'var(--accent)' : 'white';
   document.getElementById('btn-satellite').style.color = layer === 'satellite' ? 'white' : 'var(--text)';
   var btnDark = document.getElementById('btn-dark');
-  if (btnDark) {
-    btnDark.style.background = layer === 'dark' ? 'var(--accent)' : 'white';
-    btnDark.style.color = layer === 'dark' ? 'white' : 'var(--text)';
-  }
-  // Switch Mapbox style if active
-  if (isMapboxActive() && mapboxMap) {
-    var styleMap = { 'standard': 'streets-v12', 'satellite': 'satellite-v9', 'dark': 'dark-v11' };
-    var newStyle = styleMap[layer] || 'streets-v12';
-    if (newStyle !== currentStyle) {
-      currentStyle = newStyle;
-      mapboxMap.setStyle('mapbox://styles/mapbox/' + newStyle);
-    }
-    return;
-  }
   if (btnDark) { btnDark.style.background = layer === 'dark' ? 'var(--accent)' : 'white'; btnDark.style.color = layer === 'dark' ? 'white' : 'var(--text)'; }
   if (!leafletMap) initLeafletMap();
   if (layer === 'satellite') {
@@ -19711,46 +19633,25 @@ function setMapLayer(layer) {
 }
 
 function goTo(lat, lon, name) {
-  if (isMapboxActive()) {
-    if (!mapboxMap) initMapboxMap();
-    if (!mapboxMap) return;
-    mapboxMap.flyTo({ center: [lon, lat], zoom: 15, duration: 1000 });
-    if (mapMarker && mapMarker.remove) mapMarker.remove();
-    mapMarker = new mapboxgl.Marker({ color: '#c8a84b' })
-      .setLngLat([lon, lat])
-      .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(name || ''))
-      .addTo(mapboxMap);
-    if (name) {
-      mapMarker.togglePopup();
-      var info = document.getElementById('map-info');
-      if (info) { document.getElementById('map-info-text').textContent = '📍 ' + name; info.style.display = 'block'; }
-    }
-  } else {
-    if (!leafletMap) initLeafletMap();
-    if (!leafletMap) return;
-    leafletMap.setView([lat, lon], 15);
-    if (mapMarker) leafletMap.removeLayer(mapMarker);
-    mapMarker = L.marker([lat, lon]).addTo(leafletMap);
-    if (name) {
-      mapMarker.bindPopup(name).openPopup();
-      var info = document.getElementById('map-info');
-      if (info) { document.getElementById('map-info-text').textContent = '📍 ' + name; info.style.display = 'block'; }
-      showNavButton(lat, lon);
-    }
+  if (!leafletMap) initLeafletMap();
+  if (!leafletMap) return;
+  leafletMap.setView([lat, lon], 15);
+  if (mapMarker) leafletMap.removeLayer(mapMarker);
+  mapMarker = L.marker([lat, lon]).addTo(leafletMap);
+  if (name) {
+    mapMarker.bindPopup(name).openPopup();
+    var info = document.getElementById('map-info');
+    if (info) { document.getElementById('map-info-text').textContent = '📍 ' + name; info.style.display = 'block'; }
+    showNavButton(lat, lon);
   }
 }
 
 function resetMapView() {
-  if (isMapboxActive() && mapboxMap) {
-    mapboxMap.flyTo({ center: [20.4573, 44.8125], zoom: 12, duration: 800 });
-    if (mapMarker && mapMarker.remove) mapMarker.remove();
-    mapMarker = null;
-    var i = document.getElementById('map-info'); if (i) i.style.display = 'none';
-  } else if (leafletMap) {
+  if (leafletMap) {
     leafletMap.setView([44.8125, 20.4573], 13);
     if (mapMarker) { leafletMap.removeLayer(mapMarker); mapMarker = null; }
     if (mapCircle) { leafletMap.removeLayer(mapCircle); mapCircle = null; }
-    var i2 = document.getElementById('map-info'); if (i2) i2.style.display = 'none';
+    var i = document.getElementById('map-info'); if (i) i.style.display = 'none';
   }
 }
 
@@ -19759,38 +19660,17 @@ async function searchAddress() {
   if (!q) return;
   showToast('🔍 Tražim adresu...');
   try {
-    if (isMapboxActive()) {
-      // Mapbox Geocoding API
-      var query = encodeURIComponent(q + ', Beograd, Serbia');
-      var resp = await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + query + '.json?access_token=' + MAPBOX_TOKEN + '&limit=1&language=sr');
-      var data = await resp.json();
-      if (data.features && data.features.length > 0) {
-        var f = data.features[0];
-        var lon = f.center[0];
-        var lat = f.center[1];
-        var name = f.text || f.place_name.split(',')[0];
-        goTo(lat, lon, name);
-        // Add navigation button
-        showNavButton(lat, lon);
-        showToast('✅ ' + name);
-      } else {
-        showToast('❌ Adresa nije pronađena');
-      }
+    var query = encodeURIComponent(q + ', Beograd, Srbija');
+    var resp = await fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1');
+    var results = await resp.json();
+    if (results.length > 0) {
+      var r = results[0];
+      var lat = parseFloat(r.lat);
+      var lon = parseFloat(r.lon);
+      goTo(lat, lon, r.display_name.split(',')[0]);
+      showToast('✅ Adresa pronađena!');
     } else {
-      // Nominatim fallback
-      var query = encodeURIComponent(q + ', Beograd, Srbija');
-      var resp = await fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1');
-      var results = await resp.json();
-      if (results.length > 0) {
-        var r = results[0];
-        var lat = parseFloat(r.lat);
-        var lon = parseFloat(r.lon);
-        goTo(lat, lon, r.display_name.split(',')[0]);
-        showNavButton(lat, lon);
-        showToast('✅ Adresa pronađena!');
-      } else {
-        showToast('❌ Adresa nije pronađena');
-      }
+      showToast('❌ Adresa nije pronađena');
     }
   } catch(e) {
     showToast('❌ Greška u pretrazi');
@@ -20366,49 +20246,27 @@ function showStreetOnMap(streetName) {
   var c = STREET_COORDS[streetName];
   if (c) {
     goTo(c.lat, c.lon, streetName);
-    showNavButton(c.lat, c.lon);
     showToast('✅ ' + streetName);
     return;
   }
-  if (isMapboxActive()) {
-    // Mapbox geocoding for streets not in hardcoded list
+  try {
     var cleanName = streetName.replace(/\s+ulica$/i, '').replace(/\s+i\s+.+$/i, '');
-    var query = encodeURIComponent(cleanName + ', Beograd, Serbia');
-    fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + query + '.json?access_token=' + MAPBOX_TOKEN + '&limit=1&language=sr')
+    var query = encodeURIComponent(cleanName + ' Beograd');
+    fetch('https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&limit=1')
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.features && data.features.length > 0) {
-          var f = data.features[0];
-          goTo(f.center[1], f.center[0], streetName);
-          showNavButton(f.center[1], f.center[0]);
+      .then(function(results) {
+        if (results.length > 0) {
+          var r = results[0];
+          var lat = parseFloat(r.lat);
+          var lon = parseFloat(r.lon);
+          goTo(lat, lon, streetName);
           showToast('✅ ' + streetName);
         } else {
           showToast('❌ ' + streetName + ' nije pronađena');
         }
       })
       .catch(function() { showToast('❌ ' + streetName + ' nije pronađena'); });
-  } else {
-    // Nominatim fallback
-    try {
-      var cleanName2 = streetName.replace(/\s+ulica$/i, '').replace(/\s+i\s+.+$/i, '');
-      var query2 = encodeURIComponent(cleanName2 + ' Beograd');
-      fetch('https://nominatim.openstreetmap.org/search?q=' + query2 + '&format=json&limit=1')
-        .then(function(r) { return r.json(); })
-        .then(function(results) {
-          if (results.length > 0) {
-            var r = results[0];
-            var lat = parseFloat(r.lat);
-            var lon = parseFloat(r.lon);
-            goTo(lat, lon, streetName);
-            showNavButton(lat, lon);
-            showToast('✅ ' + streetName);
-          } else {
-            showToast('❌ ' + streetName + ' nije pronađena');
-          }
-        })
-        .catch(function() { showToast('❌ ' + streetName + ' nije pronađena'); });
-    } catch(e) { showToast('❌ ' + streetName + ' nije pronađena'); }
-  }
+  } catch(e) { showToast('❌ ' + streetName + ' nije pronađena'); }
 }
 
 function locateMe() {
@@ -20501,7 +20359,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v242';
+const KM_VERSION = 'v243';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
