@@ -2176,12 +2176,12 @@ document.addEventListener('click', function(e) {
         <span style="color:var(--accent);font-size:1rem;">›</span>
       </div>
     </a>
-    <a href="https://www.paragraf.rs/pregled-zakona.html" target="_blank" style="text-decoration:none;">
+    <a href="https://www.paragraf.rs/propisi.html" target="_blank" style="text-decoration:none;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
         <div style="width:38px;height:38px;background:rgba(200,168,75,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">📖</div>
         <div style="flex:1;">
-          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Paragraf — pregled zakona</div>
-          <div style="font-size:0.72rem;color:var(--muted);">Hronološki pregled svih zakona</div>
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text);">Paragraf — svi propisi</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Lista svih zakona i podzakonskih akata</div>
         </div>
         <span style="color:var(--accent);font-size:1rem;">›</span>
       </div>
@@ -20304,7 +20304,7 @@ function searchGlasnik() {
   var results = document.getElementById('glasnik-results');
   results.innerHTML = '<div style="text-align:center;padding:12px;color:var(--muted);font-size:0.82rem;">🔍 Pretraga na Paragraf Lex...</div>';
   // Open Paragraf search in new tab
-  window.open('https://www.paragraf.rs/pregled-zakona.html?q=' + encodeURIComponent(q), '_blank');
+  window.open('https://www.paragraf.rs/propisi.html?q=' + encodeURIComponent(q), '_blank');
   results.innerHTML = '<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);border-radius:8px;padding:10px;font-size:0.78rem;color:#27ae60;">✅ Otvorena pretraga na Paragraf Lex sajt u novom prozoru.</div>';
 }
 
@@ -20428,7 +20428,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v246';
+const KM_VERSION = 'v247';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
