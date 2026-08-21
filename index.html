@@ -18302,7 +18302,7 @@ function closeImenikModal() {
 <script src="js/mammoth.browser.min.js"></script>
 
 <!-- ===== MAPA ===== -->
-<div class="screen" id="screen-mapa" style="display: none;">
+<div class="screen" id="screen-mapa" style="display: none;overflow:hidden;padding-bottom:0 !important;">
 
   <!-- Toolbar -->
   <div style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;z-index:10;">
@@ -18329,8 +18329,8 @@ function closeImenikModal() {
   </div>
 
   <!-- Mapa - Leaflet -->
-  <div id="map-container" style="min-height:300px;flex:1;position:relative;display:flex;flex-direction:column;">
-    <div id="leaflet-map" style="width:100%;flex:1;min-height:300px;border:none;z-index:1;"></div>
+  <div id="map-container" style="flex:1;position:relative;display:flex;flex-direction:column;min-height:0;">
+    <div id="leaflet-map" style="width:100%;flex:1;min-height:0;border:none;z-index:1;"></div>
     <!-- Tracking info overlay -->
     <!-- Marker info -->
     <div id="map-info" style="display:none;position:absolute;bottom:12px;left:12px;right:12px;background:var(--card);border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:0.82rem;z-index:20;">
@@ -18340,7 +18340,7 @@ function closeImenikModal() {
   </div>
 
   <!-- Brzi linkovi -->
-  <div style="background:var(--card);border-top:1px solid var(--border);padding:10px 12px;">
+  <div style="background:var(--card);border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0;">
     <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Brzi pristup</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <button onclick="goTo(44.8176,20.4568,&#39;Beograd — centar&#39;)" style="flex:1;min-width:80px;padding:7px 4px;font-size:0.7rem;font-weight:700;border-radius:8px;border:1px solid var(--border);background:var(--light);color:var(--text);cursor:pointer;">🏙️ Centar</button>
@@ -20359,7 +20359,7 @@ if (new URLSearchParams(window.location.search).get('reset') !== null) {
 }
 
 // Version check - forces reload if version mismatch
-const KM_VERSION = 'v243';
+const KM_VERSION = 'v244';
 if (localStorage.getItem('km_version') && localStorage.getItem('km_version') !== KM_VERSION) {
   localStorage.setItem('km_version', KM_VERSION);
   caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));

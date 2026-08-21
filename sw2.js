@@ -1,5 +1,5 @@
 // KMapp Service Worker v207 — network-first for index.html
-const CACHE = 'kmapp-v243';
+const CACHE = 'kmapp-v244';
 const STATIC_ASSETS = [
   './',
   './index.html',
