@@ -4916,7 +4916,7 @@ loadServerUsers();
 function getKMUsers() {
   let users = JSON.parse(localStorage.getItem(KM_USERS_KEY) || 'null');
   if (!users) {
-    users = [{ username: 'admin', password: 'admin', role: 'admin', created: Date.now() }];
+    users = [{ username: 'admin', password: 'Vasa2611', role: 'admin', created: Date.now() }];
     localStorage.setItem(KM_USERS_KEY, JSON.stringify(users));
   }
   // Ensure test01 user always exists
@@ -5078,7 +5078,7 @@ function doLogin() {
   
   // 3. Fallback: admin sa default lozinkom
   if (!user && u.toLowerCase() === 'admin' && p === 'admin') {
-    user = { username: 'admin', password: 'admin', displayName: 'Admin', role: 'admin' };
+    user = { username: 'admin', password: 'Vasa2611', displayName: 'Admin', role: 'admin' };
   }
 
   if (user) {
