@@ -4871,6 +4871,7 @@ function getImenikUsers() {
   return (typeof imenikData !== 'undefined' ? imenikData : []).map(c => ({
     username: imenikToUsername(c.name),
     password: (c.phones && c.phones[0]) ? c.phones[0] : '',
+    allPhones: (c.phones || []).slice(),
     displayName: c.name,
     role: 'user',
     source: 'imenik'
@@ -5070,7 +5071,8 @@ function doLogin() {
     const imenikUsers = getImenikUsers();
     const imUser = imenikUsers.find(x => normUser(x.username) === u);
     if (imUser && imUser.password) {
-      if (imUser.password === p || normPhone(imUser.password) === normPhone(p)) {
+      const phones = (imUser.allPhones && imUser.allPhones.length) ? imUser.allPhones : [imUser.password];
+      if (phones.some(ph => ph === p || normPhone(ph) === normPhone(p))) {
         user = imUser;
       }
     }
